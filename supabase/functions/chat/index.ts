@@ -26,12 +26,13 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const [membersRes, attendanceRes, donationsRes, programsRes, enrollmentsRes] = await Promise.all([
+    const [membersRes, attendanceRes, donationsRes, programsRes, enrollmentsRes, monthlyGivingRes] = await Promise.all([
       supabase.from("members").select("id, first_name, last_name, membership_status, membership_date, gender"),
       supabase.from("attendance").select("id, event_date, service, sanctuary_attendance, adjusted_total, online_attendance, nursery_attendance, k3_attendance, grade_4_6_attendance, youth_attendance, total_adults, notes, month, year, quarter"),
       supabase.from("donations").select("id, amount, donation_date, donation_type, member_id"),
       supabase.from("discipleship_programs").select("id, name, program_type, leader_name, is_active"),
       supabase.from("program_enrollments").select("id, member_id, program_id, status, enrollment_date"),
+      supabase.from("monthly_giving").select("id, year, month, fund, amount, notes"),
     ]);
 
     // Compute attendance stats
@@ -61,10 +62,15 @@ CURRENT DATABASE STATE:
   Services tracked: 9:15 AM and 11:00 AM
   Fields: sanctuary_attendance, volunteer_classroom_attendance, nursery_attendance, k3_attendance, grade_4_6_attendance, youth_attendance, in_person_total, adjusted_total, online_attendance, total_k6_attendance, total_adults
 
-- Donations: ${donationsRes.data?.length || 0} records
+- Donations (individual): ${donationsRes.data?.length || 0} records
   Total Amount: $${donationsRes.data?.reduce((s, d) => s + d.amount, 0)?.toLocaleString() || '0'}
   Tithes: $${donationsRes.data?.filter(d => d.donation_type === 'tithe').reduce((s, d) => s + d.amount, 0)?.toLocaleString() || '0'}
   Offerings: $${donationsRes.data?.filter(d => d.donation_type === 'offering').reduce((s, d) => s + d.amount, 0)?.toLocaleString() || '0'}
+
+- Monthly Giving (aggregate by fund): ${monthlyGivingRes.data?.length || 0} records
+  Funds: General, Building, Missions, Benevolence
+  Total All-Time: $${monthlyGivingRes.data?.reduce((s, g) => s + g.amount, 0)?.toLocaleString() || '0'}
+  ${['general', 'building', 'missions', 'benevolence'].map(f => `${f}: $${monthlyGivingRes.data?.filter(g => g.fund === f).reduce((s, g) => s + g.amount, 0)?.toLocaleString() || '0'}`).join(', ')}
 
 - Discipleship Programs: ${programsRes.data?.length || 0} programs
   ${programsRes.data?.map(p => p.name + ' (' + p.program_type + ') - Led by ' + (p.leader_name || 'TBD') + ' - ' + (p.is_active ? 'Active' : 'Inactive')).join('\n  ') || 'None'}
@@ -78,8 +84,11 @@ ${JSON.stringify(recentAtt)}
 MEMBER DETAILS:
 ${JSON.stringify(membersRes.data?.slice(0, 50) || [])}
 
-RECENT DONATIONS:
+RECENT DONATIONS (individual):
 ${JSON.stringify(donationsRes.data?.sort((a, b) => b.donation_date.localeCompare(a.donation_date)).slice(0, 20) || [])}
+
+MONTHLY GIVING DATA (all records):
+${JSON.stringify(monthlyGivingRes.data || [])}
 
 Be helpful, accurate, and concise. Format numbers and currency properly. If data is empty, let them know they can add data through the dashboard.
 `;
