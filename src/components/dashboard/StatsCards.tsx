@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Users, TrendingUp, DollarSign, BookOpen } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { parseISO, subYears, subMonths, format } from "date-fns";
 import {
   Select,
@@ -25,11 +26,17 @@ interface MonthlyGiving {
   amount: number;
 }
 
+interface Enrollment {
+  status: string;
+  discipleship_programs: { program_type: string } | null;
+}
+
 interface StatsCardsProps {
   attendance: AttendanceRecord[];
   totalDonations: number;
   totalEnrollments: number;
   monthlyGiving: MonthlyGiving[];
+  enrollments: Enrollment[];
 }
 
 const CHURCH_FAMILY = {
@@ -66,7 +73,21 @@ const getQuarter = (month: string) => {
   return "Q4";
 };
 
-const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGiving }: StatsCardsProps) => {
+const PROGRAM_TYPE_LABELS: Record<string, string> = {
+  pt_program: "PT Program",
+  discipleship_group: "Discipleship Groups",
+  bible_study: "Bible Studies",
+  life_group: "Life Groups",
+};
+const PROGRAM_TYPE_COLORS: Record<string, string> = {
+  pt_program: "hsl(var(--primary))",
+  discipleship_group: "hsl(var(--secondary))",
+  bible_study: "hsl(var(--accent))",
+  life_group: "hsl(140 50% 38%)",
+};
+const ALL_PROGRAM_TYPES = ["pt_program", "discipleship_group", "bible_study", "life_group"];
+
+const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGiving, enrollments }: StatsCardsProps) => {
   // Attendance filter state
   const [filterType, setFilterType] = useState<FilterType>("rolling");
   const [selectedYear, setSelectedYear] = useState<string>("");
@@ -368,10 +389,76 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
           </div>
         </div>
         <p className="text-2xl font-display font-bold mt-2 text-primary-foreground">{totalEnrollments}</p>
-        <p className="text-xs mt-0.5 text-primary-foreground/60">active enrollments</p>
+        <p className="text-xs mt-0.5 text-primary-foreground/60 mb-1">active enrollments</p>
+        <DiscipleshipDonut enrollments={enrollments} />
       </div>
     </div>
   );
 };
+
+function DiscipleshipDonut({ enrollments }: { enrollments: Enrollment[] }) {
+  const data = useMemo(() => {
+    const active = enrollments.filter((e) => e.status === "active");
+    const counts: Record<string, number> = {};
+    for (const t of ALL_PROGRAM_TYPES) counts[t] = 0;
+    active.forEach((e) => {
+      const type = e.discipleship_programs?.program_type;
+      if (type && counts[type] !== undefined) counts[type]++;
+    });
+    return ALL_PROGRAM_TYPES.map((t) => ({
+      name: PROGRAM_TYPE_LABELS[t],
+      value: counts[t],
+      color: PROGRAM_TYPE_COLORS[t],
+    })).filter((d) => d.value > 0);
+  }, [enrollments]);
+
+  if (data.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-2 -mb-1">
+      <div className="w-[72px] h-[72px] shrink-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={18}
+              outerRadius={34}
+              paddingAngle={3}
+              dataKey="value"
+              strokeWidth={0}
+            >
+              {data.map((d, i) => (
+                <Cell key={i} fill={d.color} />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{
+                background: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "12px",
+                fontSize: 12,
+                color: "hsl(var(--foreground))",
+              }}
+              formatter={(value: number, name: string) => [value, name]}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="space-y-1 flex-1">
+        {data.map((d) => (
+          <div key={d.name} className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
+              <span className="text-primary-foreground/70">{d.name}</span>
+            </div>
+            <span className="font-semibold text-primary-foreground">{d.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default StatsCards;
