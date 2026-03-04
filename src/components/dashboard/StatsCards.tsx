@@ -93,6 +93,7 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [selectedQuarter, setSelectedQuarter] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [selectedMonthYear, setSelectedMonthYear] = useState<string>("");
 
   // Giving filter state
   const [givingFilterType, setGivingFilterType] = useState<FilterType>("rolling");
@@ -142,10 +143,14 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
     } else if (filterType === "quarter" && selectedQuarter) {
       return attendance.filter((a) => a.quarter === selectedQuarter);
     } else if (filterType === "month" && selectedMonth) {
-      return attendance.filter((a) => a.month === selectedMonth);
+      return attendance.filter((a) => {
+        if (a.month !== selectedMonth) return false;
+        if (selectedMonthYear && a.year !== Number(selectedMonthYear)) return false;
+        return true;
+      });
     }
     return attendance;
-  }, [attendance, filterType, selectedYear, selectedQuarter, selectedMonth, rollingCutoff]);
+  }, [attendance, filterType, selectedYear, selectedQuarter, selectedMonth, selectedMonthYear, rollingCutoff]);
 
   const avgAttendance = useMemo(() => {
     const weeklyMap = new Map<string, number>();
@@ -230,6 +235,11 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
     setSelectedYear("");
     setSelectedQuarter("");
     setSelectedMonth("");
+    if (value === "month" && years.length > 0) {
+      setSelectedMonthYear(String(years[years.length - 1]));
+    } else {
+      setSelectedMonthYear("");
+    }
   };
 
   const handleGivingFilterChange = (value: string) => {
@@ -315,6 +325,20 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
                 {secondOptions.map((o) => (
                   <SelectItem key={o} value={String(o)}>
                     {filterType === "month" ? String(o).slice(0, 3) : o}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {filterType === "month" && (
+            <Select value={selectedMonthYear} onValueChange={setSelectedMonthYear}>
+              <SelectTrigger className="h-6 text-[11px] w-auto min-w-[55px] rounded-lg border-border/50 px-2 py-0">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((y) => (
+                  <SelectItem key={y} value={String(y)}>
+                    {y}
                   </SelectItem>
                 ))}
               </SelectContent>
