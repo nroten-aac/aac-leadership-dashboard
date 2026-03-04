@@ -16,44 +16,69 @@ export type Database = {
     Tables: {
       attendance: {
         Row: {
+          adjusted_total: number
           created_at: string
           event_date: string
-          event_name: string
-          event_type: string
+          grade_4_6_attendance: number
           id: string
-          member_id: string | null
+          in_person_total: number
+          k3_attendance: number
+          month: string
           notes: string | null
-          present: boolean
+          nursery_attendance: number
+          online_attendance: number
+          quarter: string
+          sanctuary_attendance: number
+          service: string
+          total_adults: number
+          total_k6_attendance: number
+          volunteer_classroom_attendance: number
+          year: number
+          youth_attendance: number
         }
         Insert: {
+          adjusted_total?: number
           created_at?: string
           event_date: string
-          event_name: string
-          event_type?: string
+          grade_4_6_attendance?: number
           id?: string
-          member_id?: string | null
+          in_person_total?: number
+          k3_attendance?: number
+          month: string
           notes?: string | null
-          present?: boolean
+          nursery_attendance?: number
+          online_attendance?: number
+          quarter: string
+          sanctuary_attendance?: number
+          service: string
+          total_adults?: number
+          total_k6_attendance?: number
+          volunteer_classroom_attendance?: number
+          year: number
+          youth_attendance?: number
         }
         Update: {
+          adjusted_total?: number
           created_at?: string
           event_date?: string
-          event_name?: string
-          event_type?: string
+          grade_4_6_attendance?: number
           id?: string
-          member_id?: string | null
+          in_person_total?: number
+          k3_attendance?: number
+          month?: string
           notes?: string | null
-          present?: boolean
+          nursery_attendance?: number
+          online_attendance?: number
+          quarter?: string
+          sanctuary_attendance?: number
+          service?: string
+          total_adults?: number
+          total_k6_attendance?: number
+          volunteer_classroom_attendance?: number
+          year?: number
+          youth_attendance?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "attendance_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       discipleship_programs: {
         Row: {

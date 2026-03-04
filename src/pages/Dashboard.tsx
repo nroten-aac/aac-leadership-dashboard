@@ -15,12 +15,9 @@ const Dashboard = () => {
   const totalDonations = donations.reduce((s, d) => s + d.amount, 0);
   const activeMembers = members.filter((m) => m.membership_status === "active").length;
 
-  // Average attendance per unique event date for sunday services
-  const sundayDates = new Set(
-    attendance.filter((a) => a.event_type === "sunday_service" && a.present).map((a) => a.event_date)
-  );
-  const avgAttendance = sundayDates.size > 0
-    ? Math.round(attendance.filter((a) => a.event_type === "sunday_service" && a.present).length / sundayDates.size)
+  // Average adjusted_total across all services
+  const avgAttendance = attendance.length > 0
+    ? Math.round(attendance.reduce((s, a) => s + a.adjusted_total, 0) / attendance.length)
     : 0;
 
   const activeEnrollments = enrollments.filter((e) => e.status === "active").length;
