@@ -136,10 +136,11 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Select value={yearFilter} onValueChange={(v) => { setYearFilter(v); setQuarterFilter("all"); setMonthFilter("all"); }}>
-              <SelectTrigger className="w-[100px] h-8 text-xs">
+              <SelectTrigger className="w-[120px] h-8 text-xs">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="rolling">Rolling Year</SelectItem>
                 <SelectItem value="all">All Years</SelectItem>
                 {years.map((y) => (
                   <SelectItem key={y} value={String(y)}>{y}</SelectItem>
