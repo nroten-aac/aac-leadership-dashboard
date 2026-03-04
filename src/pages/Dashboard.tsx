@@ -52,8 +52,6 @@ const Dashboard = () => {
         <DashboardHeader />
 
         <StatsCards
-          totalMembers={members.length}
-          activeMembers={activeMembers}
           totalDonations={totalDonations}
           avgAttendance={avgAttendance}
           totalEnrollments={activeEnrollments}

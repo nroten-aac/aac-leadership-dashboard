@@ -1,24 +1,28 @@
 import { Users, TrendingUp, DollarSign, BookOpen } from "lucide-react";
 
 interface StatsCardsProps {
-  totalMembers: number;
-  activeMembers: number;
   totalDonations: number;
   avgAttendance: number;
   totalEnrollments: number;
 }
 
-const StatsCards = ({ totalMembers, activeMembers, totalDonations, avgAttendance, totalEnrollments }: StatsCardsProps) => {
+const CHURCH_FAMILY = {
+  memberAdults: 55,
+  memberDependents: 17,
+  regularAdults: 38,
+  regularDependents: 14,
+};
+const CHURCH_FAMILY_TOTAL = Object.values(CHURCH_FAMILY).reduce((a, b) => a + b, 0);
+
+const StatsCards = ({ totalDonations, avgAttendance, totalEnrollments }: StatsCardsProps) => {
+  const familyGroups = [
+    { label: "Member Adults", value: CHURCH_FAMILY.memberAdults, color: "hsl(var(--primary))" },
+    { label: "Member Dependents", value: CHURCH_FAMILY.memberDependents, color: "hsl(var(--secondary))" },
+    { label: "RA Adults", value: CHURCH_FAMILY.regularAdults, color: "hsl(var(--accent))" },
+    { label: "RA Dependents", value: CHURCH_FAMILY.regularDependents, color: "hsl(var(--muted-foreground))" },
+  ];
+
   const cards = [
-    {
-      title: "Total Members",
-      value: totalMembers.toString(),
-      subtitle: `${activeMembers} active`,
-      icon: Users,
-      highlight: false,
-      iconBg: "bg-primary/10",
-      iconColor: "text-primary",
-    },
     {
       title: "Avg. Attendance",
       value: avgAttendance.toString(),
@@ -50,6 +54,28 @@ const StatsCards = ({ totalMembers, activeMembers, totalDonations, avgAttendance
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Church Family card */}
+      <div className="rounded-2xl p-5 bg-card shadow-card transition-all duration-300 hover:shadow-card-hover">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-muted-foreground">Church Family</p>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10">
+            <Users className="h-4.5 w-4.5 text-primary" />
+          </div>
+        </div>
+        <p className="text-2xl font-display font-bold mt-2 text-foreground">{CHURCH_FAMILY_TOTAL}</p>
+        <div className="mt-3 space-y-1.5">
+          {familyGroups.map((g) => (
+            <div key={g.label} className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: g.color }} />
+                <span className="text-muted-foreground">{g.label}</span>
+              </div>
+              <span className="font-semibold text-foreground">{g.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {cards.map((card) => (
         <div
           key={card.title}
