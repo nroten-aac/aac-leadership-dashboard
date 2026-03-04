@@ -72,9 +72,14 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments }: StatsCards
     } else if (filterType === "month" && selectedMonth) {
       filtered = attendance.filter((a) => a.month === selectedMonth);
     }
-    const nonZero = filtered.filter((a) => a.adjusted_total > 0);
-    if (nonZero.length === 0) return 0;
-    return Math.round(nonZero.reduce((s, a) => s + a.adjusted_total, 0) / nonZero.length);
+    // Aggregate by week (event_date) first, then average
+    const weeklyMap = new Map<string, number>();
+    filtered.forEach((a) => {
+      weeklyMap.set(a.event_date, (weeklyMap.get(a.event_date) || 0) + a.adjusted_total);
+    });
+    const nonZeroWeeks = Array.from(weeklyMap.values()).filter((v) => v > 0);
+    if (nonZeroWeeks.length === 0) return 0;
+    return Math.round(nonZeroWeeks.reduce((s, v) => s + v, 0) / nonZeroWeeks.length);
   }, [attendance, filterType, selectedYear, selectedQuarter, selectedMonth, rollingCutoff]);
 
   const filterLabel = useMemo(() => {
