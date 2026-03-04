@@ -93,14 +93,14 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [selectedQuarter, setSelectedQuarter] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
-  const [selectedMonthYear, setSelectedMonthYear] = useState<string>("");
+  const [selectedSubYear, setSelectedSubYear] = useState<string>("");
 
   // Giving filter state
   const [givingFilterType, setGivingFilterType] = useState<FilterType>("rolling");
   const [givingSelectedYear, setGivingSelectedYear] = useState<string>("");
   const [givingSelectedQuarter, setGivingSelectedQuarter] = useState<string>("");
   const [givingSelectedMonth, setGivingSelectedMonth] = useState<string>("");
-  const [givingSelectedMonthYear, setGivingSelectedMonthYear] = useState<string>("");
+  const [givingSelectedSubYear, setGivingSelectedSubYear] = useState<string>("");
 
   // Attendance options
   const years = useMemo(() => {
@@ -141,16 +141,20 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
     } else if (filterType === "year" && selectedYear) {
       return attendance.filter((a) => a.year === Number(selectedYear));
     } else if (filterType === "quarter" && selectedQuarter) {
-      return attendance.filter((a) => a.quarter === selectedQuarter);
+      return attendance.filter((a) => {
+        if (a.quarter !== selectedQuarter) return false;
+        if (selectedSubYear && a.year !== Number(selectedSubYear)) return false;
+        return true;
+      });
     } else if (filterType === "month" && selectedMonth) {
       return attendance.filter((a) => {
         if (a.month !== selectedMonth) return false;
-        if (selectedMonthYear && a.year !== Number(selectedMonthYear)) return false;
+        if (selectedSubYear && a.year !== Number(selectedSubYear)) return false;
         return true;
       });
     }
     return attendance;
-  }, [attendance, filterType, selectedYear, selectedQuarter, selectedMonth, selectedMonthYear, rollingCutoff]);
+  }, [attendance, filterType, selectedYear, selectedQuarter, selectedMonth, selectedSubYear, rollingCutoff]);
 
   const avgAttendance = useMemo(() => {
     const weeklyMap = new Map<string, number>();
@@ -211,9 +215,10 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
         if (g.year !== Number(givingSelectedYear)) return false;
       } else if (givingFilterType === "quarter" && givingSelectedQuarter) {
         if (getQuarter(g.month) !== givingSelectedQuarter) return false;
+        if (givingSelectedSubYear && g.year !== Number(givingSelectedSubYear)) return false;
       } else if (givingFilterType === "month" && givingSelectedMonth) {
         if (g.month !== givingSelectedMonth) return false;
-        if (givingSelectedMonthYear && g.year !== Number(givingSelectedMonthYear)) return false;
+        if (givingSelectedSubYear && g.year !== Number(givingSelectedSubYear)) return false;
       }
       return true;
     });
@@ -228,17 +233,17 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
       }
     });
     return { totals, grand };
-  }, [monthlyGiving, givingFilterType, givingSelectedYear, givingSelectedQuarter, givingSelectedMonth]);
+  }, [monthlyGiving, givingFilterType, givingSelectedYear, givingSelectedQuarter, givingSelectedMonth, givingSelectedSubYear]);
 
   const handleFilterChange = (value: string) => {
     setFilterType(value as FilterType);
     setSelectedYear("");
     setSelectedQuarter("");
     setSelectedMonth("");
-    if (value === "month" && years.length > 0) {
-      setSelectedMonthYear(String(years[years.length - 1]));
+    if ((value === "month" || value === "quarter") && years.length > 0) {
+      setSelectedSubYear(String(years[years.length - 1]));
     } else {
-      setSelectedMonthYear("");
+      setSelectedSubYear("");
     }
   };
 
@@ -247,10 +252,10 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
     setGivingSelectedYear("");
     setGivingSelectedQuarter("");
     setGivingSelectedMonth("");
-    if (value === "month" && givingYears.length > 0) {
-      setGivingSelectedMonthYear(String(givingYears[givingYears.length - 1]));
+    if ((value === "month" || value === "quarter") && givingYears.length > 0) {
+      setGivingSelectedSubYear(String(givingYears[givingYears.length - 1]));
     } else {
-      setGivingSelectedMonthYear("");
+      setGivingSelectedSubYear("");
     }
   };
 
@@ -330,8 +335,8 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
               </SelectContent>
             </Select>
           )}
-          {filterType === "month" && (
-            <Select value={selectedMonthYear} onValueChange={setSelectedMonthYear}>
+          {(filterType === "month" || filterType === "quarter") && (
+            <Select value={selectedSubYear} onValueChange={setSelectedSubYear}>
               <SelectTrigger className="h-6 text-[11px] w-auto min-w-[55px] rounded-lg border-border/50 px-2 py-0">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
@@ -395,8 +400,8 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
               </SelectContent>
             </Select>
           )}
-          {givingFilterType === "month" && (
-            <Select value={givingSelectedMonthYear} onValueChange={setGivingSelectedMonthYear}>
+          {(givingFilterType === "month" || givingFilterType === "quarter") && (
+            <Select value={givingSelectedSubYear} onValueChange={setGivingSelectedSubYear}>
               <SelectTrigger className="h-6 text-[11px] w-auto min-w-[55px] rounded-lg border-border/50 px-2 py-0">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
