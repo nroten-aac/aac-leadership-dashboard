@@ -12,7 +12,7 @@ import {
   Legend,
   LabelList,
 } from "recharts";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, subYears } from "date-fns";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import {
   Select,
@@ -36,7 +36,7 @@ interface AttendanceChartProps {
 }
 
 const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
-  const [yearFilter, setYearFilter] = useState<string>("all");
+  const [yearFilter, setYearFilter] = useState<string>("rolling");
   const [quarterFilter, setQuarterFilter] = useState<string>("all");
   const [monthFilter, setMonthFilter] = useState<string>("all");
 
@@ -57,15 +57,27 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
     return Array.from(set).sort((a, b) => order.indexOf(a) - order.indexOf(b));
   }, [attendance]);
 
+  // Compute rolling year cutoff (1 year before the most recent Sunday in data)
+  const rollingCutoff = useMemo(() => {
+    if (attendance.length === 0) return "";
+    const sorted = [...attendance].sort((a, b) => b.event_date.localeCompare(a.event_date));
+    const mostRecent = parseISO(sorted[0].event_date);
+    return format(subYears(mostRecent, 1), "yyyy-MM-dd");
+  }, [attendance]);
+
   // Apply filters
   const filtered = useMemo(() => {
     return attendance.filter((a) => {
-      if (yearFilter !== "all" && a.year !== Number(yearFilter)) return false;
+      if (yearFilter === "rolling") {
+        if (a.event_date < rollingCutoff) return false;
+      } else if (yearFilter !== "all") {
+        if (a.year !== Number(yearFilter)) return false;
+      }
       if (quarterFilter !== "all" && a.quarter !== quarterFilter) return false;
       if (monthFilter !== "all" && a.month !== monthFilter) return false;
       return true;
     });
-  }, [attendance, yearFilter, quarterFilter, monthFilter]);
+  }, [attendance, yearFilter, quarterFilter, monthFilter, rollingCutoff]);
 
   // Group by event_date, sum adjusted_total across both services
   const chartData = useMemo(() => {
@@ -124,10 +136,11 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Select value={yearFilter} onValueChange={(v) => { setYearFilter(v); setQuarterFilter("all"); setMonthFilter("all"); }}>
-              <SelectTrigger className="w-[100px] h-8 text-xs">
+              <SelectTrigger className="w-[120px] h-8 text-xs">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="rolling">Rolling Year</SelectItem>
                 <SelectItem value="all">All Years</SelectItem>
                 {years.map((y) => (
                   <SelectItem key={y} value={String(y)}>{y}</SelectItem>
