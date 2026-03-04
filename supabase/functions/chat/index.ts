@@ -67,7 +67,7 @@ CURRENT DATABASE STATE:
   Offerings: $${donationsRes.data?.filter(d => d.donation_type === 'offering').reduce((s, d) => s + d.amount, 0)?.toLocaleString() || '0'}
 
 - Discipleship Programs: ${programsRes.data?.length || 0} programs
-  ${programsRes.data?.map(p => \`\${p.name} (\${p.program_type}) - Led by \${p.leader_name || 'TBD'} - \${p.is_active ? 'Active' : 'Inactive'}\`).join('\\n  ') || 'None'}
+  ${programsRes.data?.map(p => p.name + ' (' + p.program_type + ') - Led by ' + (p.leader_name || 'TBD') + ' - ' + (p.is_active ? 'Active' : 'Inactive')).join('\n  ') || 'None'}
 
 - Program Enrollments: ${enrollmentsRes.data?.length || 0} total
   Active: ${enrollmentsRes.data?.filter(e => e.status === 'active').length || 0}
