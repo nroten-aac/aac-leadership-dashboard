@@ -99,6 +99,7 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
   const [givingSelectedYear, setGivingSelectedYear] = useState<string>("");
   const [givingSelectedQuarter, setGivingSelectedQuarter] = useState<string>("");
   const [givingSelectedMonth, setGivingSelectedMonth] = useState<string>("");
+  const [givingSelectedMonthYear, setGivingSelectedMonthYear] = useState<string>("");
 
   // Attendance options
   const years = useMemo(() => {
@@ -207,6 +208,7 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
         if (getQuarter(g.month) !== givingSelectedQuarter) return false;
       } else if (givingFilterType === "month" && givingSelectedMonth) {
         if (g.month !== givingSelectedMonth) return false;
+        if (givingSelectedMonthYear && g.year !== Number(givingSelectedMonthYear)) return false;
       }
       return true;
     });
@@ -235,6 +237,7 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
     setGivingSelectedYear("");
     setGivingSelectedQuarter("");
     setGivingSelectedMonth("");
+    setGivingSelectedMonthYear("");
   };
 
   const needsSecondSelect = filterType === "year" || filterType === "quarter" || filterType === "month";
@@ -359,6 +362,20 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
                 {givingSecondOptions.map((o) => (
                   <SelectItem key={o} value={String(o)}>
                     {givingFilterType === "month" ? String(o).slice(0, 3) : o}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {givingFilterType === "month" && (
+            <Select value={givingSelectedMonthYear} onValueChange={setGivingSelectedMonthYear}>
+              <SelectTrigger className="h-6 text-[11px] w-auto min-w-[55px] rounded-lg border-border/50 px-2 py-0">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent>
+                {givingYears.map((y) => (
+                  <SelectItem key={y} value={String(y)}>
+                    {y}
                   </SelectItem>
                 ))}
               </SelectContent>
