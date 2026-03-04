@@ -44,7 +44,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background flex">
       <DashboardSidebar />
-      <main className="flex-1 ml-[72px] p-8 max-w-[1400px]">
+      <main id="dashboard-content" className="flex-1 ml-[72px] p-8 max-w-[1400px]">
         <DashboardHeader />
 
         <StatsCards
