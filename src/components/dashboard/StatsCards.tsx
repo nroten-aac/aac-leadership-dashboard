@@ -112,25 +112,61 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
     return format(subYears(parseISO(sorted[0].event_date), 1), "yyyy-MM-dd");
   }, [attendance]);
 
-  const avgAttendance = useMemo(() => {
-    let filtered = attendance;
+  const filteredAttendance = useMemo(() => {
     if (filterType === "rolling") {
-      filtered = attendance.filter((a) => a.event_date >= rollingCutoff);
+      return attendance.filter((a) => a.event_date >= rollingCutoff);
     } else if (filterType === "year" && selectedYear) {
-      filtered = attendance.filter((a) => a.year === Number(selectedYear));
+      return attendance.filter((a) => a.year === Number(selectedYear));
     } else if (filterType === "quarter" && selectedQuarter) {
-      filtered = attendance.filter((a) => a.quarter === selectedQuarter);
+      return attendance.filter((a) => a.quarter === selectedQuarter);
     } else if (filterType === "month" && selectedMonth) {
-      filtered = attendance.filter((a) => a.month === selectedMonth);
+      return attendance.filter((a) => a.month === selectedMonth);
     }
+    return attendance;
+  }, [attendance, filterType, selectedYear, selectedQuarter, selectedMonth, rollingCutoff]);
+
+  const avgAttendance = useMemo(() => {
     const weeklyMap = new Map<string, number>();
-    filtered.forEach((a) => {
+    filteredAttendance.forEach((a) => {
       weeklyMap.set(a.event_date, (weeklyMap.get(a.event_date) || 0) + a.adjusted_total);
     });
     const nonZeroWeeks = Array.from(weeklyMap.values()).filter((v) => v > 0);
     if (nonZeroWeeks.length === 0) return 0;
     return Math.round(nonZeroWeeks.reduce((s, v) => s + v, 0) / nonZeroWeeks.length);
-  }, [attendance, filterType, selectedYear, selectedQuarter, selectedMonth, rollingCutoff]);
+  }, [filteredAttendance]);
+
+  const roomAverages = useMemo(() => {
+    const rooms = ["sanctuary_attendance", "nursery_attendance", "k3_attendance", "grade_4_6_attendance", "youth_attendance"] as const;
+    const roomLabels: Record<string, string> = {
+      sanctuary_attendance: "Sanctuary",
+      nursery_attendance: "Nursery",
+      k3_attendance: "K-3",
+      grade_4_6_attendance: "Gr. 4-6",
+      youth_attendance: "Youth",
+    };
+    const roomColors: Record<string, string> = {
+      sanctuary_attendance: "hsl(var(--primary))",
+      nursery_attendance: "hsl(var(--secondary))",
+      k3_attendance: "hsl(var(--accent))",
+      grade_4_6_attendance: "hsl(140 50% 38%)",
+      youth_attendance: "hsl(var(--muted-foreground))",
+    };
+    const weeklyMaps: Record<string, Map<string, number>> = {};
+    for (const r of rooms) weeklyMaps[r] = new Map();
+    filteredAttendance.forEach((a) => {
+      for (const r of rooms) {
+        weeklyMaps[r].set(a.event_date, (weeklyMaps[r].get(a.event_date) || 0) + (a as any)[r]);
+      }
+    });
+    return rooms.map((r) => {
+      const vals = Array.from(weeklyMaps[r].values()).filter((v) => v > 0);
+      return {
+        label: roomLabels[r],
+        color: roomColors[r],
+        value: vals.length === 0 ? 0 : Math.round(vals.reduce((s, v) => s + v, 0) / vals.length),
+      };
+    });
+  }, [filteredAttendance]);
 
   // Giving totals by fund
   const givingByFund = useMemo(() => {
@@ -256,6 +292,17 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
               </SelectContent>
             </Select>
           )}
+        </div>
+        <div className="mt-3 space-y-1.5">
+          {roomAverages.map((r) => (
+            <div key={r.label} className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: r.color }} />
+                <span className="text-muted-foreground">{r.label}</span>
+              </div>
+              <span className="font-semibold text-foreground">{r.value}</span>
+            </div>
+          ))}
         </div>
       </div>
 
