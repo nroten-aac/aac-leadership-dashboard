@@ -16,6 +16,7 @@ const Dashboard = () => {
   const totalDonations = donations.reduce((s, d) => s + d.amount, 0);
   const activeMembers = members.filter((m) => m.membership_status === "active").length;
 
+  // Average adjusted_total per service record
   const avgAttendance = attendance.length > 0
     ? Math.round(attendance.reduce((s, a) => s + a.adjusted_total, 0) / attendance.length)
     : 0;
