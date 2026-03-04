@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, LabelList } from "recharts";
+import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, LabelList } from "recharts";
 import { format, subMonths } from "date-fns";
 import { useState, useMemo } from "react";
 import {
@@ -75,7 +75,6 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
     const cutoffMonthIdx = cutoff.getMonth();
 
     return monthlyGiving.filter((g) => {
-      // Year filter
       if (yearFilter === "rolling") {
         const gMonthIdx = MONTH_ORDER.indexOf(g.month);
         if (g.year < cutoffYear) return false;
@@ -83,15 +82,12 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
       } else if (yearFilter !== "all") {
         if (g.year !== Number(yearFilter)) return false;
       }
-      // Quarter filter
       if (quarterFilter !== "all" && getQuarter(g.month) !== quarterFilter) return false;
-      // Month filter
       if (monthFilter !== "all" && g.month !== monthFilter) return false;
       return true;
     });
   }, [monthlyGiving, yearFilter, quarterFilter, monthFilter]);
 
-  // Build chart data from filtered records
   const chartData = useMemo(() => {
     const map = new Map<string, Record<string, any>>();
     filtered.forEach((g) => {
@@ -111,6 +107,37 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
     return Array.from(map.values()).sort((a, b) => a._sort.localeCompare(b._sort));
   }, [filtered]);
 
+  // Compute total per month for active funds (used for trendline)
+  const dataWithTrend = useMemo(() => {
+    const withTotals = chartData.map((d) => {
+      let total = 0;
+      for (const fund of activeFunds) {
+        total += (d[FUND_LABELS[fund]] as number) || 0;
+      }
+      return { ...d, _total: total };
+    });
+
+    const n = withTotals.length;
+    if (n < 2) return withTotals.map((d) => ({ ...d, trend: null as number | null }));
+
+    const nonZero = withTotals.map((d, i) => ({ i, total: d._total })).filter((d) => d.total > 0);
+    if (nonZero.length < 2) return withTotals.map((d) => ({ ...d, trend: null as number | null }));
+
+    const nz = nonZero.length;
+    const sumX = nonZero.reduce((s, d) => s + d.i, 0);
+    const sumY = nonZero.reduce((s, d) => s + d.total, 0);
+    const sumXY = nonZero.reduce((s, d) => s + d.i * d.total, 0);
+    const sumX2 = nonZero.reduce((s, d) => s + d.i * d.i, 0);
+    const denom = nz * sumX2 - sumX * sumX;
+    const slope = denom !== 0 ? (nz * sumXY - sumX * sumY) / denom : 0;
+    const intercept = (sumY - slope * sumX) / nz;
+
+    return withTotals.map((d, i) => ({
+      ...d,
+      trend: d._total > 0 ? Math.round(slope * i + intercept) : null,
+    }));
+  }, [chartData, activeFunds]);
+
   const totalGiving = chartData.reduce((s, d) => {
     let sum = s;
     for (const fund of activeFunds) {
@@ -119,7 +146,6 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
     return sum;
   }, 0);
 
-  // Dynamic title
   const titleSuffix = useMemo(() => {
     const parts: string[] = [];
     if (yearFilter === "rolling") parts.push("Rolling 12 Months");
@@ -196,19 +222,19 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
           </button>
         ))}
       </div>
-      {chartData.length === 0 ? (
+      {dataWithTrend.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-16">No data for selected filters</p>
       ) : (
         <ResponsiveContainer width="100%" height={380}>
-          <BarChart data={chartData} barCategoryGap="20%" barGap={2}>
+          <ComposedChart data={dataWithTrend} barCategoryGap="20%" barGap={2}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
               dataKey="month"
               tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-              interval={chartData.length > 18 ? Math.floor(chartData.length / 12) : 0}
-              angle={chartData.length > 12 ? -45 : 0}
-              textAnchor={chartData.length > 12 ? "end" : "middle"}
-              height={chartData.length > 12 ? 55 : 30}
+              interval={dataWithTrend.length > 18 ? Math.floor(dataWithTrend.length / 12) : 0}
+              angle={dataWithTrend.length > 12 ? -45 : 0}
+              textAnchor={dataWithTrend.length > 12 ? "end" : "middle"}
+              height={dataWithTrend.length > 12 ? 55 : 30}
             />
             <YAxis
               tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
@@ -221,7 +247,9 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
                 borderRadius: "12px",
                 fontSize: 13,
               }}
-              formatter={(value: number) => `$${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+              formatter={(value: number, name: string) =>
+                name === "Trend" ? `$${value.toLocaleString()}` : `$${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+              }
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             {ALL_FUNDS.map((fund) =>
@@ -231,13 +259,13 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
                   dataKey={FUND_LABELS[fund]}
                   fill={FUND_COLORS[fund]}
                   radius={[4, 4, 0, 0]}
-                  barSize={chartData.length > 18 ? 10 : chartData.length > 6 ? 16 : 28}
+                  barSize={dataWithTrend.length > 18 ? 10 : dataWithTrend.length > 6 ? 16 : 28}
                 >
                   <LabelList
                     dataKey={FUND_LABELS[fund]}
                     position="top"
                     style={{
-                      fontSize: chartData.length > 18 ? 7 : 9,
+                      fontSize: dataWithTrend.length > 18 ? 7 : 9,
                       fill: "hsl(var(--foreground))",
                       fontWeight: 700,
                     }}
@@ -246,7 +274,17 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
                 </Bar>
               ) : null
             )}
-          </BarChart>
+            <Line
+              type="monotone"
+              dataKey="trend"
+              name="Trend"
+              stroke="hsl(var(--accent))"
+              strokeWidth={2.5}
+              strokeDasharray="6 3"
+              dot={false}
+              connectNulls={false}
+            />
+          </ComposedChart>
         </ResponsiveContainer>
       )}
     </div>
