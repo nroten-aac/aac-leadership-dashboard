@@ -228,8 +228,8 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
             >
               <LabelList
                 dataKey="combined"
-                position="center"
-                style={{ fontSize: dataWithTrend.length > 30 ? 7 : 10, fill: "white", fontWeight: 700 }}
+                position="top"
+                style={{ fontSize: dataWithTrend.length > 30 ? 9 : 12, fill: "hsl(var(--foreground))", fontWeight: 700 }}
                 formatter={(value: number) => value}
               />
             </Bar>
