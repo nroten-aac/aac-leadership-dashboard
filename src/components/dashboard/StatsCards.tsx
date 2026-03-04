@@ -237,7 +237,11 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
     setGivingSelectedYear("");
     setGivingSelectedQuarter("");
     setGivingSelectedMonth("");
-    setGivingSelectedMonthYear("");
+    if (value === "month" && givingYears.length > 0) {
+      setGivingSelectedMonthYear(String(givingYears[givingYears.length - 1]));
+    } else {
+      setGivingSelectedMonthYear("");
+    }
   };
 
   const needsSecondSelect = filterType === "year" || filterType === "quarter" || filterType === "month";
