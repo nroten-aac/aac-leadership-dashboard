@@ -14,7 +14,250 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attendance: {
+        Row: {
+          created_at: string
+          event_date: string
+          event_name: string
+          event_type: string
+          id: string
+          member_id: string | null
+          notes: string | null
+          present: boolean
+        }
+        Insert: {
+          created_at?: string
+          event_date: string
+          event_name: string
+          event_type?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          present?: boolean
+        }
+        Update: {
+          created_at?: string
+          event_date?: string
+          event_name?: string
+          event_type?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          present?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discipleship_programs: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          leader_name: string | null
+          location: string | null
+          meeting_day: string | null
+          meeting_time: string | null
+          name: string
+          program_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          leader_name?: string | null
+          location?: string | null
+          meeting_day?: string | null
+          meeting_time?: string | null
+          name: string
+          program_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          leader_name?: string | null
+          location?: string | null
+          meeting_day?: string | null
+          meeting_time?: string | null
+          name?: string
+          program_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      donations: {
+        Row: {
+          amount: number
+          created_at: string
+          donation_date: string
+          donation_type: string
+          id: string
+          member_id: string | null
+          notes: string | null
+          payment_method: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          donation_date?: string
+          donation_type?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          payment_method?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          donation_date?: string
+          donation_type?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          payment_method?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      members: {
+        Row: {
+          address: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          first_name: string
+          gender: string | null
+          id: string
+          last_name: string
+          membership_date: string
+          membership_status: string
+          notes: string | null
+          phone: string | null
+          photo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          first_name: string
+          gender?: string | null
+          id?: string
+          last_name: string
+          membership_date?: string
+          membership_status?: string
+          notes?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          first_name?: string
+          gender?: string | null
+          id?: string
+          last_name?: string
+          membership_date?: string
+          membership_status?: string
+          notes?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      program_enrollments: {
+        Row: {
+          created_at: string
+          enrollment_date: string
+          id: string
+          member_id: string
+          program_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          enrollment_date?: string
+          id?: string
+          member_id: string
+          program_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          enrollment_date?: string
+          id?: string
+          member_id?: string
+          program_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_enrollments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "program_enrollments_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "discipleship_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
