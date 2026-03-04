@@ -70,7 +70,7 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
 
   const filtered = useMemo(() => {
     const now = new Date();
-    const cutoff = subMonths(now, 24);
+    const cutoff = subMonths(now, 12);
     const cutoffYear = cutoff.getFullYear();
     const cutoffMonthIdx = cutoff.getMonth();
 
@@ -122,7 +122,7 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
   // Dynamic title
   const titleSuffix = useMemo(() => {
     const parts: string[] = [];
-    if (yearFilter === "rolling") parts.push("Rolling 24 Months");
+    if (yearFilter === "rolling") parts.push("Rolling 12 Months");
     else if (yearFilter === "all") parts.push("All Time");
     else parts.push(yearFilter);
     if (quarterFilter !== "all") parts.push(quarterFilter);
@@ -145,7 +145,7 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
               <SelectValue placeholder="Year" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="rolling">Rolling 24mo</SelectItem>
+              <SelectItem value="rolling">Rolling 12mo</SelectItem>
               <SelectItem value="all">All Years</SelectItem>
               {years.map((y) => (
                 <SelectItem key={y} value={String(y)}>{y}</SelectItem>
@@ -241,7 +241,7 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
                       fill: "hsl(var(--muted-foreground))",
                       fontWeight: 600,
                     }}
-                    formatter={(value: number) => (value > 0 ? `$${(value / 1000).toFixed(1)}k` : "")}
+                    formatter={(value: number) => (value > 0 ? `$${value.toLocaleString()}` : "")}
                   />
                 </Bar>
               ) : null
