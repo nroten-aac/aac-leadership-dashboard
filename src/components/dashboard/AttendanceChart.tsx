@@ -205,18 +205,18 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar
-              dataKey="combined"
-              name="In-Person"
-              stackId="attendance"
-              fill="hsl(var(--primary))"
-              radius={[0, 0, 0, 0]}
-              barSize={dataWithTrend.length > 30 ? 12 : 22}
-            />
-            <Bar
               dataKey="online"
               name="Online"
               stackId="attendance"
               fill="hsl(var(--accent))"
+              radius={[0, 0, 0, 0]}
+              barSize={dataWithTrend.length > 30 ? 12 : 22}
+            />
+            <Bar
+              dataKey="combined"
+              name="In-Person"
+              stackId="attendance"
+              fill="hsl(var(--primary))"
               radius={[6, 6, 0, 0]}
             >
               <LabelList
