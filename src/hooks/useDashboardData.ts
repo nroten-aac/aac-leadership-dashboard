@@ -29,6 +29,15 @@ export function useDashboardData() {
     },
   });
 
+  const monthlyGiving = useQuery({
+    queryKey: ["monthly_giving"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("monthly_giving").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const programs = useQuery({
     queryKey: ["discipleship_programs"],
     queryFn: async () => {
@@ -49,7 +58,7 @@ export function useDashboardData() {
     },
   });
 
-  const isLoading = members.isLoading || attendance.isLoading || donations.isLoading || programs.isLoading || enrollments.isLoading;
+  const isLoading = members.isLoading || attendance.isLoading || donations.isLoading || programs.isLoading || enrollments.isLoading || monthlyGiving.isLoading;
 
   return {
     members: members.data ?? [],
@@ -57,6 +66,7 @@ export function useDashboardData() {
     donations: donations.data ?? [],
     programs: programs.data ?? [],
     enrollments: enrollments.data ?? [],
+    monthlyGiving: monthlyGiving.data ?? [],
     isLoading,
   };
 }
