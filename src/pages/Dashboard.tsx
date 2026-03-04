@@ -58,11 +58,11 @@ const Dashboard = () => {
           totalEnrollments={activeEnrollments}
         />
 
-        {/* Row 1: Line chart + Stacked bar */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          <AttendanceChart attendance={attendance} />
-          <DonationsChart donations={donations} />
-        </div>
+        {/* Full-width attendance chart */}
+        <AttendanceChart attendance={attendance} />
+
+        {/* Donations chart */}
+        <DonationsChart donations={donations} />
 
         {/* Row 2: Donut pie + Horizontal bar + Donut breakdown */}
         <div className="grid gap-6 lg:grid-cols-3">
