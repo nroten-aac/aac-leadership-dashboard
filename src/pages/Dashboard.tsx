@@ -1,6 +1,7 @@
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import StatsCards from "@/components/dashboard/StatsCards";
 import AttendanceChart from "@/components/dashboard/AttendanceChart";
+import AttendanceBreakdown from "@/components/dashboard/AttendanceBreakdown";
 import DonationsChart from "@/components/dashboard/DonationsChart";
 import DiscipleshipOverview from "@/components/dashboard/DiscipleshipOverview";
 import MembershipBreakdown from "@/components/dashboard/MembershipBreakdown";
@@ -15,7 +16,6 @@ const Dashboard = () => {
   const totalDonations = donations.reduce((s, d) => s + d.amount, 0);
   const activeMembers = members.filter((m) => m.membership_status === "active").length;
 
-  // Average adjusted_total across all services
   const avgAttendance = attendance.length > 0
     ? Math.round(attendance.reduce((s, a) => s + a.adjusted_total, 0) / attendance.length)
     : 0;
@@ -56,15 +56,22 @@ const Dashboard = () => {
           avgAttendance={avgAttendance}
           totalEnrollments={activeEnrollments}
         />
+
+        {/* Row 1: Line chart + Stacked bar */}
         <div className="grid gap-6 lg:grid-cols-2">
           <AttendanceChart attendance={attendance} />
           <DonationsChart donations={donations} />
         </div>
+
+        {/* Row 2: Donut pie + Horizontal bar + Donut breakdown */}
         <div className="grid gap-6 lg:grid-cols-3">
-          <MembershipBreakdown members={members} />
+          <AttendanceBreakdown attendance={attendance} />
           <DiscipleshipOverview enrollments={enrollments as any} />
-          <RecentActivity donations={donations as any} attendance={attendance as any} />
+          <MembershipBreakdown members={members} />
         </div>
+
+        {/* Row 3: Recent activity full width */}
+        <RecentActivity donations={donations as any} attendance={attendance as any} />
       </main>
       <AIChatPanel />
     </div>
