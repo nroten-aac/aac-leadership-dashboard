@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 
 interface DiscipleshipOverviewProps {
@@ -33,40 +32,36 @@ const DiscipleshipOverview = ({ enrollments }: DiscipleshipOverviewProps) => {
   const total = activeEnrollments.length;
 
   return (
-    <Card className="border-0 shadow-card">
-      <CardHeader className="pb-2">
-        <CardTitle className="font-display text-lg">Discipleship</CardTitle>
-        <p className="text-xs text-muted-foreground">{total} active enrollments</p>
-      </CardHeader>
-      <CardContent>
-        {total === 0 ? (
-          <div className="flex items-center justify-center h-[260px] text-muted-foreground text-sm">
-            No active enrollments yet
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={data} layout="vertical" barCategoryGap="25%">
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} width={100} />
-              <Tooltip
-                contentStyle={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  fontSize: 13,
-                }}
-              />
-              <Bar dataKey="value" radius={[0, 6, 6, 0]} name="Enrolled">
-                {data.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </CardContent>
-    </Card>
+    <div className="bg-card rounded-2xl shadow-card p-6">
+      <h3 className="font-display font-semibold text-foreground">Discipleship</h3>
+      <p className="text-xs text-muted-foreground mt-0.5 mb-2">{total} active enrollments</p>
+      {total === 0 ? (
+        <div className="flex items-center justify-center h-[240px] text-muted-foreground text-sm">
+          No active enrollments yet
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={data} layout="vertical" barCategoryGap="25%">
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+            <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+            <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} width={100} />
+            <Tooltip
+              contentStyle={{
+                background: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "12px",
+                fontSize: 13,
+              }}
+            />
+            <Bar dataKey="value" radius={[0, 8, 8, 0]} name="Enrolled">
+              {data.map((_, i) => (
+                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+    </div>
   );
 };
 

@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Badge } from "@/components/ui/badge";
 
@@ -49,71 +48,66 @@ const MembershipBreakdown = ({ members }: MembershipBreakdownProps) => {
   }).length;
 
   return (
-    <Card className="border-0 shadow-card">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="font-display text-lg">Membership</CardTitle>
+    <div className="bg-card rounded-2xl shadow-card p-6">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-display font-semibold text-foreground">Membership</h3>
         {thisMonth > 0 && (
-          <Badge variant="secondary" className="bg-accent text-accent-foreground">
+          <Badge className="bg-accent/20 text-accent-foreground border-0 rounded-lg text-xs">
             +{thisMonth} this month
           </Badge>
         )}
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-2">
-          {/* Status donut */}
-          <div className="flex-1">
-            <p className="text-xs text-muted-foreground text-center mb-1">Status</p>
-            <ResponsiveContainer width="100%" height={140}>
-              <PieChart>
-                <Pie data={statusData} cx="50%" cy="50%" innerRadius={35} outerRadius={55} paddingAngle={3} dataKey="value" strokeWidth={0}>
-                  {statusData.map((_, i) => (
-                    <Cell key={i} fill={STATUS_COLORS[i % STATUS_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    fontSize: 12,
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          {/* Gender donut */}
-          <div className="flex-1">
-            <p className="text-xs text-muted-foreground text-center mb-1">Gender</p>
-            <ResponsiveContainer width="100%" height={140}>
-              <PieChart>
-                <Pie data={genderData} cx="50%" cy="50%" innerRadius={35} outerRadius={55} paddingAngle={3} dataKey="value" strokeWidth={0}>
-                  {genderData.map((_, i) => (
-                    <Cell key={i} fill={GENDER_COLORS[i % GENDER_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    fontSize: 12,
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="flex-1">
+          <p className="text-xs text-muted-foreground text-center mb-1">Status</p>
+          <ResponsiveContainer width="100%" height={130}>
+            <PieChart>
+              <Pie data={statusData} cx="50%" cy="50%" innerRadius={32} outerRadius={50} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                {statusData.map((_, i) => (
+                  <Cell key={i} fill={STATUS_COLORS[i % STATUS_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "12px",
+                  fontSize: 12,
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
-        {/* Legend */}
-        <div className="flex flex-wrap gap-3 justify-center mt-2 text-xs">
-          {statusData.map((s, i) => (
-            <div key={s.name} className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[i] }} />
-              <span className="text-muted-foreground">{s.name}: <strong className="text-foreground">{s.value}</strong></span>
-            </div>
-          ))}
+        <div className="flex-1">
+          <p className="text-xs text-muted-foreground text-center mb-1">Gender</p>
+          <ResponsiveContainer width="100%" height={130}>
+            <PieChart>
+              <Pie data={genderData} cx="50%" cy="50%" innerRadius={32} outerRadius={50} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                {genderData.map((_, i) => (
+                  <Cell key={i} fill={GENDER_COLORS[i % GENDER_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "12px",
+                  fontSize: 12,
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      <div className="flex flex-wrap gap-3 justify-center mt-2 text-xs">
+        {statusData.map((s, i) => (
+          <div key={s.name} className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[i] }} />
+            <span className="text-muted-foreground">{s.name}: <strong className="text-foreground">{s.value}</strong></span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
