@@ -214,6 +214,36 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_giving: {
+        Row: {
+          amount: number
+          created_at: string
+          fund: string
+          id: string
+          month: string
+          notes: string | null
+          year: number
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          fund?: string
+          id?: string
+          month: string
+          notes?: string | null
+          year: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          fund?: string
+          id?: string
+          month?: string
+          notes?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
