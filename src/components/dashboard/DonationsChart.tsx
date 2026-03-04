@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { format, parseISO, startOfMonth, subMonths } from "date-fns";
 
 interface DonationsChartProps {
@@ -12,35 +12,42 @@ interface DonationsChartProps {
 
 const DonationsChart = ({ donations }: DonationsChartProps) => {
   const now = new Date();
-  const months = Array.from({ length: 6 }, (_, i) => {
-    const date = subMonths(now, 5 - i);
+  const months = Array.from({ length: 12 }, (_, i) => {
+    const date = subMonths(now, 11 - i);
     return {
-      month: format(startOfMonth(date), "MMM yyyy"),
+      month: format(startOfMonth(date), "MMM yy"),
       key: format(startOfMonth(date), "yyyy-MM"),
     };
   });
 
   const chartData = months.map(({ month, key }) => {
-    const monthDonations = donations.filter((d) => format(parseISO(d.donation_date), "yyyy-MM") === key);
+    const md = donations.filter((d) => format(parseISO(d.donation_date), "yyyy-MM") === key);
     return {
       month,
-      tithes: monthDonations.filter((d) => d.donation_type === "tithe").reduce((s, d) => s + d.amount, 0),
-      offerings: monthDonations.filter((d) => d.donation_type === "offering").reduce((s, d) => s + d.amount, 0),
-      other: monthDonations.filter((d) => !["tithe", "offering"].includes(d.donation_type)).reduce((s, d) => s + d.amount, 0),
+      Tithes: md.filter((d) => d.donation_type === "tithe").reduce((s, d) => s + d.amount, 0),
+      Offerings: md.filter((d) => d.donation_type === "offering").reduce((s, d) => s + d.amount, 0),
+      Other: md.filter((d) => !["tithe", "offering"].includes(d.donation_type)).reduce((s, d) => s + d.amount, 0),
     };
   });
 
+  const totalGiving = chartData.reduce((s, d) => s + d.Tithes + d.Offerings + d.Other, 0);
+
   return (
     <Card className="border-0 shadow-card">
-      <CardHeader>
-        <CardTitle className="font-display text-lg">Giving Overview</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle className="font-display text-lg">Giving Overview</CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            ${totalGiving.toLocaleString()} over 12 months
+          </p>
+        </div>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={280}>
-          <AreaChart data={chartData}>
+          <BarChart data={chartData} barCategoryGap="15%">
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="month" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-            <YAxis tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `$${v}`} />
+            <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+            <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `$${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} />
             <Tooltip
               contentStyle={{
                 background: "hsl(var(--card))",
@@ -50,10 +57,11 @@ const DonationsChart = ({ donations }: DonationsChartProps) => {
               }}
               formatter={(value: number) => `$${value.toLocaleString()}`}
             />
-            <Area type="monotone" dataKey="tithes" name="Tithes" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.2)" strokeWidth={2} />
-            <Area type="monotone" dataKey="offerings" name="Offerings" stroke="hsl(var(--accent))" fill="hsl(var(--accent) / 0.2)" strokeWidth={2} />
-            <Area type="monotone" dataKey="other" name="Other" stroke="hsl(var(--secondary))" fill="hsl(var(--secondary) / 0.2)" strokeWidth={2} />
-          </AreaChart>
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Bar dataKey="Tithes" stackId="a" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
+            <Bar dataKey="Offerings" stackId="a" fill="hsl(var(--secondary))" radius={[0, 0, 0, 0]} />
+            <Bar dataKey="Other" stackId="a" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
