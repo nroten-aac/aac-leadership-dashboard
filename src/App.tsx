@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "./pages/Dashboard";
+import DataEntry from "./pages/DataEntry";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/data-entry" element={<ProtectedRoute><DataEntry /></ProtectedRoute>} />
           <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>

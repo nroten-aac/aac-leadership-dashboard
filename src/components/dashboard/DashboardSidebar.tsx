@@ -1,17 +1,21 @@
-import { LayoutDashboard, Users, Calendar, DollarSign, BookOpen, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, DollarSign, BookOpen, Settings, LogOut, ClipboardEdit } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", active: true },
-  { icon: Users, label: "Members" },
-  { icon: Calendar, label: "Attendance" },
-  { icon: DollarSign, label: "Giving" },
-  { icon: BookOpen, label: "Discipleship" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: ClipboardEdit, label: "Data Entry", path: "/data-entry" },
+  { icon: Users, label: "Members", path: "/members" },
+  { icon: Calendar, label: "Attendance", path: "/attendance" },
+  { icon: DollarSign, label: "Giving", path: "/giving" },
+  { icon: BookOpen, label: "Discipleship", path: "/discipleship" },
 ];
 
 const DashboardSidebar = () => {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[72px] bg-card flex flex-col items-center py-6 z-40 shadow-soft">
@@ -22,19 +26,23 @@ const DashboardSidebar = () => {
 
       {/* Nav items */}
       <nav className="flex-1 flex flex-col items-center gap-1">
-        {navItems.map((item) => (
-          <button
-            key={item.label}
-            title={item.label}
-            className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 ${
-              item.active
-                ? "bg-primary text-primary-foreground shadow-soft"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            <item.icon className="h-5 w-5" />
-          </button>
-        ))}
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={item.label}
+              title={item.label}
+              onClick={() => navigate(item.path)}
+              className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-soft"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <item.icon className="h-5 w-5" />
+            </button>
+          );
+        })}
       </nav>
 
       {/* Bottom actions */}

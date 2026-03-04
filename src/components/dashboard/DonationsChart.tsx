@@ -16,10 +16,10 @@ interface DonationsChartProps {
 
 const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const FUND_COLORS: Record<string, string> = {
-  general: "hsl(var(--primary))",
+  general: "hsl(140 50% 38%)",
   building: "hsl(var(--secondary))",
   missions: "hsl(var(--accent))",
-  benevolence: "hsl(49 86% 66%)",
+  benevolence: "hsl(var(--primary))",
 };
 const FUND_LABELS: Record<string, string> = {
   general: "General",
