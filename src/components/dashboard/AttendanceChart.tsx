@@ -172,7 +172,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
       {dataWithTrend.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-16">No data for selected filters</p>
       ) : (
-        <ResponsiveContainer width="100%" height={340}>
+        <ResponsiveContainer width="100%" height={420}>
           <ComposedChart data={dataWithTrend}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
@@ -210,7 +210,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
               <LabelList
                 dataKey="combined"
                 position="top"
-                style={{ fontSize: dataWithTrend.length > 30 ? 7 : 9, fill: "hsl(var(--muted-foreground))" }}
+                style={{ fontSize: dataWithTrend.length > 30 ? 9 : 12, fill: "hsl(var(--foreground))", fontWeight: 700 }}
               />
             </Bar>
             <Line
