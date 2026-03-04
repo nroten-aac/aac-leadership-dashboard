@@ -52,6 +52,7 @@ const Dashboard = () => {
           totalDonations={totalDonations}
           totalEnrollments={activeEnrollments}
           monthlyGiving={monthlyGiving}
+          enrollments={enrollments as any}
         />
 
         {/* Full-width attendance chart */}
