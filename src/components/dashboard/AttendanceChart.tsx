@@ -25,6 +25,8 @@ interface AttendanceRecord {
   event_date: string;
   service: string;
   adjusted_total: number;
+  online_attendance?: number;
+  notes?: string | null;
   year: number;
   quarter: string;
   month: string;
@@ -76,12 +78,15 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
   }, [attendance, yearFilter, quarterFilter, monthFilter, rollingCutoff]);
 
   const chartData = useMemo(() => {
-    const weeklyMap = new Map<string, { combined: number; online: number }>();
+    const weeklyMap = new Map<string, { combined: number; online: number; notes: string[] }>();
     filtered.forEach((r) => {
-      const existing = weeklyMap.get(r.event_date) || { combined: 0, online: 0 };
+      const existing = weeklyMap.get(r.event_date) || { combined: 0, online: 0, notes: [] };
+      const notesList = existing.notes;
+      if (r.notes) notesList.push(r.notes);
       weeklyMap.set(r.event_date, {
-        combined: existing.combined + (r as any).adjusted_total,
+        combined: existing.combined + r.adjusted_total,
         online: existing.online + ((r as any).online_attendance || 0),
+        notes: notesList,
       });
     });
     return Array.from(weeklyMap.entries())
@@ -91,22 +96,31 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
         label: format(parseISO(date), "M/d/yy"),
         combined: vals.combined,
         online: vals.online,
+        notes: vals.notes.filter(Boolean).join("; ") || null,
       }));
   }, [filtered]);
 
   const dataWithTrend = useMemo(() => {
     const n = chartData.length;
     if (n === 0) return [];
-    const sumX = chartData.reduce((s, _, i) => s + i, 0);
-    const sumY = chartData.reduce((s, d) => s + d.combined, 0);
-    const sumXY = chartData.reduce((s, d, i) => s + i * d.combined, 0);
-    const sumX2 = chartData.reduce((s, _, i) => s + i * i, 0);
-    const denom = n * sumX2 - sumX * sumX;
-    const slope = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
-    const intercept = (sumY - slope * sumX) / n;
+    // Only use non-zero adjusted total weeks for trendline regression
+    const nonZero = chartData
+      .map((d, i) => ({ i, total: d.combined + d.online }))
+      .filter((d) => d.total > 0);
+    if (nonZero.length < 2) {
+      return chartData.map((d) => ({ ...d, trend: null as number | null }));
+    }
+    const nz = nonZero.length;
+    const sumX = nonZero.reduce((s, d) => s + d.i, 0);
+    const sumY = nonZero.reduce((s, d) => s + d.total, 0);
+    const sumXY = nonZero.reduce((s, d) => s + d.i * d.total, 0);
+    const sumX2 = nonZero.reduce((s, d) => s + d.i * d.i, 0);
+    const denom = nz * sumX2 - sumX * sumX;
+    const slope = denom !== 0 ? (nz * sumXY - sumX * sumY) / denom : 0;
+    const intercept = (sumY - slope * sumX) / nz;
     return chartData.map((d, i) => ({
       ...d,
-      trend: Math.round(slope * i + intercept),
+      trend: (d.combined + d.online) > 0 ? Math.round(slope * i + intercept) : null,
     }));
   }, [chartData]);
 
@@ -194,14 +208,19 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "12px",
                 fontSize: 13,
+                maxWidth: 280,
               }}
               labelFormatter={(_, payload) => {
                 if (payload && payload.length > 0) {
                   const item = payload[0]?.payload;
-                  return item?.date ? format(parseISO(item.date), "MMM d, yyyy") : "";
+                  if (!item) return "";
+                  const dateStr = item.date ? format(parseISO(item.date), "MMM d, yyyy") : "";
+                  const notes = item.notes;
+                  return notes ? `${dateStr}\n📝 ${notes}` : dateStr;
                 }
                 return "";
               }}
+              labelStyle={{ whiteSpace: "pre-wrap" }}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar
