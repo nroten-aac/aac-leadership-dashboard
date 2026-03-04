@@ -9,8 +9,9 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   Legend,
+  LabelList,
 } from "recharts";
-import { format, parseISO, startOfMonth, subMonths } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
 interface AttendanceRecord {
@@ -24,44 +25,33 @@ interface AttendanceChartProps {
 }
 
 const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
-  const now = new Date();
-  const months = Array.from({ length: 12 }, (_, i) => {
-    const date = subMonths(now, 11 - i);
-    return {
-      month: format(startOfMonth(date), "MMM yy"),
-      key: format(startOfMonth(date), "yyyy-MM"),
-    };
+  // Group by event_date, sum adjusted_total across both services
+  const weeklyMap = new Map<string, number>();
+  attendance.forEach((r) => {
+    const existing = weeklyMap.get(r.event_date) || 0;
+    weeklyMap.set(r.event_date, existing + r.adjusted_total);
   });
 
-  // Combine both services' adjusted_total per month
-  const chartData = months.map(({ month, key }) => {
-    const monthRecords = attendance.filter(
-      (a) => format(parseISO(a.event_date), "yyyy-MM") === key
-    );
+  // Sort by date and take last 20 weeks for readability
+  const allWeeks = Array.from(weeklyMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, total]) => ({
+      date,
+      label: format(parseISO(date), "M/d"),
+      combined: total,
+    }));
 
-    // Group by week (event_date) and sum both services' adjusted_total per week, then average across weeks
-    const weeklyTotals = new Map<string, number>();
-    monthRecords.forEach((r) => {
-      const existing = weeklyTotals.get(r.event_date) || 0;
-      weeklyTotals.set(r.event_date, existing + r.adjusted_total);
-    });
+  const chartData = allWeeks.slice(-20);
 
-    const weeks = Array.from(weeklyTotals.values());
-    const combinedAvg = weeks.length > 0
-      ? Math.round(weeks.reduce((s, v) => s + v, 0) / weeks.length)
-      : 0;
-
-    return { month, combined: combinedAvg };
-  });
-
-  // Simple linear regression for trendline
+  // Linear regression for trendline
   const points = chartData.map((d, i) => ({ x: i, y: d.combined }));
   const n = points.length;
   const sumX = points.reduce((s, p) => s + p.x, 0);
   const sumY = points.reduce((s, p) => s + p.y, 0);
   const sumXY = points.reduce((s, p) => s + p.x * p.y, 0);
   const sumX2 = points.reduce((s, p) => s + p.x * p.x, 0);
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX || 1);
+  const denom = n * sumX2 - sumX * sumX;
+  const slope = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
   const intercept = (sumY - slope * sumX) / n;
 
   const dataWithTrend = chartData.map((d, i) => ({
@@ -69,9 +59,9 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
     trend: Math.round(slope * i + intercept),
   }));
 
-  // Trend percentage (last 3 vs prior 3)
-  const recent = chartData.slice(-3);
-  const older = chartData.slice(-6, -3);
+  // Trend percentage (last 4 weeks vs prior 4)
+  const recent = chartData.slice(-4);
+  const older = chartData.slice(-8, -4);
   const recentAvg = recent.reduce((s, d) => s + d.combined, 0) / (recent.length || 1);
   const olderAvg = older.reduce((s, d) => s + d.combined, 0) / (older.length || 1);
   const trendPct = olderAvg > 0 ? Math.round(((recentAvg - olderAvg) / olderAvg) * 100) : 0;
@@ -81,9 +71,9 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
     <Card className="border-0 shadow-card">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
-          <CardTitle className="font-display text-lg">Attendance Trend</CardTitle>
+          <CardTitle className="font-display text-lg">Weekly Attendance</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Combined adjusted total · 12-month avg
+            Combined adjusted total (both services)
           </p>
         </div>
         <div
@@ -96,12 +86,16 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={280}>
+        <ResponsiveContainer width="100%" height={300}>
           <ComposedChart data={dataWithTrend}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
-              dataKey="month"
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+              dataKey="label"
+              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              interval={0}
+              angle={-45}
+              textAnchor="end"
+              height={50}
             />
             <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
             <Tooltip
@@ -111,15 +105,28 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
                 borderRadius: "8px",
                 fontSize: 13,
               }}
+              labelFormatter={(label, payload) => {
+                if (payload && payload.length > 0) {
+                  const item = payload[0]?.payload;
+                  return item?.date ? format(parseISO(item.date), "MMM d, yyyy") : label;
+                }
+                return label;
+              }}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar
               dataKey="combined"
-              name="Adjusted Total"
+              name="Total Attendance"
               fill="hsl(var(--primary))"
               radius={[4, 4, 0, 0]}
-              barSize={28}
-            />
+              barSize={20}
+            >
+              <LabelList
+                dataKey="combined"
+                position="top"
+                style={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
+              />
+            </Bar>
             <Line
               type="monotone"
               dataKey="trend"
