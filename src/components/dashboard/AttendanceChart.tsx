@@ -76,17 +76,21 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
   }, [attendance, yearFilter, quarterFilter, monthFilter, rollingCutoff]);
 
   const chartData = useMemo(() => {
-    const weeklyMap = new Map<string, number>();
+    const weeklyMap = new Map<string, { combined: number; online: number }>();
     filtered.forEach((r) => {
-      const existing = weeklyMap.get(r.event_date) || 0;
-      weeklyMap.set(r.event_date, existing + r.adjusted_total);
+      const existing = weeklyMap.get(r.event_date) || { combined: 0, online: 0 };
+      weeklyMap.set(r.event_date, {
+        combined: existing.combined + (r as any).adjusted_total,
+        online: existing.online + ((r as any).online_attendance || 0),
+      });
     });
     return Array.from(weeklyMap.entries())
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, total]) => ({
+      .map(([date, vals]) => ({
         date,
         label: format(parseISO(date), "M/d/yy"),
-        combined: total,
+        combined: vals.combined,
+        online: vals.online,
       }));
   }, [filtered]);
 
@@ -202,15 +206,24 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar
               dataKey="combined"
-              name="Total Attendance"
+              name="In-Person"
+              stackId="attendance"
               fill="hsl(var(--primary))"
-              radius={[6, 6, 0, 0]}
+              radius={[0, 0, 0, 0]}
               barSize={dataWithTrend.length > 30 ? 12 : 22}
+            />
+            <Bar
+              dataKey="online"
+              name="Online"
+              stackId="attendance"
+              fill="hsl(var(--accent))"
+              radius={[6, 6, 0, 0]}
             >
               <LabelList
                 dataKey="combined"
                 position="top"
                 style={{ fontSize: dataWithTrend.length > 30 ? 9 : 12, fill: "hsl(var(--foreground))", fontWeight: 700 }}
+                formatter={(value: number) => value}
               />
             </Bar>
             <Line
