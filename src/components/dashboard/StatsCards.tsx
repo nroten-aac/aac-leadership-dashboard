@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Users, TrendingUp, DollarSign, BookOpen } from "lucide-react";
-import { parseISO, subYears, format } from "date-fns";
+import { parseISO, subYears, subMonths, format } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -17,10 +17,19 @@ interface AttendanceRecord {
   month: string;
 }
 
+interface MonthlyGiving {
+  id: string;
+  year: number;
+  month: string;
+  fund: string;
+  amount: number;
+}
+
 interface StatsCardsProps {
   attendance: AttendanceRecord[];
   totalDonations: number;
   totalEnrollments: number;
+  monthlyGiving: MonthlyGiving[];
 }
 
 const CHURCH_FAMILY = {
@@ -31,14 +40,46 @@ const CHURCH_FAMILY = {
 };
 const CHURCH_FAMILY_TOTAL = Object.values(CHURCH_FAMILY).reduce((a, b) => a + b, 0);
 
+const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+const FUND_COLORS: Record<string, string> = {
+  general: "hsl(140 50% 38%)",
+  building: "hsl(var(--secondary))",
+  missions: "hsl(var(--accent))",
+  benevolence: "hsl(var(--primary))",
+};
+const FUND_LABELS: Record<string, string> = {
+  general: "General",
+  building: "Building",
+  missions: "Missions",
+  benevolence: "Benevolence",
+};
+const ALL_FUNDS = ["general", "building", "missions", "benevolence"];
+
 type FilterType = "rolling" | "year" | "quarter" | "month";
 
-const StatsCards = ({ attendance, totalDonations, totalEnrollments }: StatsCardsProps) => {
+const getQuarter = (month: string) => {
+  const idx = MONTH_ORDER.indexOf(month);
+  if (idx < 3) return "Q1";
+  if (idx < 6) return "Q2";
+  if (idx < 9) return "Q3";
+  return "Q4";
+};
+
+const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGiving }: StatsCardsProps) => {
+  // Attendance filter state
   const [filterType, setFilterType] = useState<FilterType>("rolling");
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [selectedQuarter, setSelectedQuarter] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
 
+  // Giving filter state
+  const [givingFilterType, setGivingFilterType] = useState<FilterType>("rolling");
+  const [givingSelectedYear, setGivingSelectedYear] = useState<string>("");
+  const [givingSelectedQuarter, setGivingSelectedQuarter] = useState<string>("");
+  const [givingSelectedMonth, setGivingSelectedMonth] = useState<string>("");
+
+  // Attendance options
   const years = useMemo(() => {
     const set = new Set(attendance.map((a) => a.year));
     return Array.from(set).sort();
@@ -51,9 +92,19 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments }: StatsCards
 
   const months = useMemo(() => {
     const set = new Set(attendance.map((a) => a.month));
-    const order = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    return Array.from(set).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    return Array.from(set).sort((a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
   }, [attendance]);
+
+  // Giving options
+  const givingYears = useMemo(() => {
+    const set = new Set(monthlyGiving.map((g) => g.year));
+    return Array.from(set).sort();
+  }, [monthlyGiving]);
+
+  const givingMonths = useMemo(() => {
+    const set = new Set(monthlyGiving.map((g) => g.month));
+    return Array.from(set).sort((a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
+  }, [monthlyGiving]);
 
   const rollingCutoff = useMemo(() => {
     if (attendance.length === 0) return "";
@@ -72,7 +123,6 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments }: StatsCards
     } else if (filterType === "month" && selectedMonth) {
       filtered = attendance.filter((a) => a.month === selectedMonth);
     }
-    // Aggregate by week (event_date) first, then average
     const weeklyMap = new Map<string, number>();
     filtered.forEach((a) => {
       weeklyMap.set(a.event_date, (weeklyMap.get(a.event_date) || 0) + a.adjusted_total);
@@ -82,20 +132,39 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments }: StatsCards
     return Math.round(nonZeroWeeks.reduce((s, v) => s + v, 0) / nonZeroWeeks.length);
   }, [attendance, filterType, selectedYear, selectedQuarter, selectedMonth, rollingCutoff]);
 
-  const filterLabel = useMemo(() => {
-    if (filterType === "rolling") return "rolling year";
-    if (filterType === "year" && selectedYear) return selectedYear;
-    if (filterType === "quarter" && selectedQuarter) return selectedQuarter;
-    if (filterType === "month" && selectedMonth) return selectedMonth.slice(0, 3);
-    return "per service";
-  }, [filterType, selectedYear, selectedQuarter, selectedMonth]);
+  // Giving totals by fund
+  const givingByFund = useMemo(() => {
+    const now = new Date();
+    const cutoff = subMonths(now, 12);
+    const cutoffYear = cutoff.getFullYear();
+    const cutoffMonthIdx = cutoff.getMonth();
 
-  const familyGroups = [
-    { label: "Member Adults", value: CHURCH_FAMILY.memberAdults, color: "hsl(var(--primary))" },
-    { label: "Member Dependents", value: CHURCH_FAMILY.memberDependents, color: "hsl(var(--secondary))" },
-    { label: "RA Adults", value: CHURCH_FAMILY.regularAdults, color: "hsl(var(--accent))" },
-    { label: "RA Dependents", value: CHURCH_FAMILY.regularDependents, color: "hsl(var(--muted-foreground))" },
-  ];
+    const filtered = monthlyGiving.filter((g) => {
+      if (givingFilterType === "rolling") {
+        const gMonthIdx = MONTH_ORDER.indexOf(g.month);
+        if (g.year < cutoffYear) return false;
+        if (g.year === cutoffYear && gMonthIdx < cutoffMonthIdx) return false;
+      } else if (givingFilterType === "year" && givingSelectedYear) {
+        if (g.year !== Number(givingSelectedYear)) return false;
+      } else if (givingFilterType === "quarter" && givingSelectedQuarter) {
+        if (getQuarter(g.month) !== givingSelectedQuarter) return false;
+      } else if (givingFilterType === "month" && givingSelectedMonth) {
+        if (g.month !== givingSelectedMonth) return false;
+      }
+      return true;
+    });
+
+    const totals: Record<string, number> = {};
+    let grand = 0;
+    for (const fund of ALL_FUNDS) totals[fund] = 0;
+    filtered.forEach((g) => {
+      if (totals[g.fund] !== undefined) {
+        totals[g.fund] += g.amount;
+        grand += g.amount;
+      }
+    });
+    return { totals, grand };
+  }, [monthlyGiving, givingFilterType, givingSelectedYear, givingSelectedQuarter, givingSelectedMonth]);
 
   const handleFilterChange = (value: string) => {
     setFilterType(value as FilterType);
@@ -104,10 +173,29 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments }: StatsCards
     setSelectedMonth("");
   };
 
+  const handleGivingFilterChange = (value: string) => {
+    setGivingFilterType(value as FilterType);
+    setGivingSelectedYear("");
+    setGivingSelectedQuarter("");
+    setGivingSelectedMonth("");
+  };
+
   const needsSecondSelect = filterType === "year" || filterType === "quarter" || filterType === "month";
   const secondOptions = filterType === "year" ? years.map(String) : filterType === "quarter" ? quarters : months;
   const secondValue = filterType === "year" ? selectedYear : filterType === "quarter" ? selectedQuarter : selectedMonth;
   const setSecondValue = filterType === "year" ? setSelectedYear : filterType === "quarter" ? setSelectedQuarter : setSelectedMonth;
+
+  const givingNeedsSecond = givingFilterType === "year" || givingFilterType === "quarter" || givingFilterType === "month";
+  const givingSecondOptions = givingFilterType === "year" ? givingYears.map(String) : givingFilterType === "quarter" ? ["Q1","Q2","Q3","Q4"] : givingMonths;
+  const givingSecondValue = givingFilterType === "year" ? givingSelectedYear : givingFilterType === "quarter" ? givingSelectedQuarter : givingSelectedMonth;
+  const setGivingSecondValue = givingFilterType === "year" ? setGivingSelectedYear : givingFilterType === "quarter" ? setGivingSelectedQuarter : setGivingSelectedMonth;
+
+  const familyGroups = [
+    { label: "Member Adults", value: CHURCH_FAMILY.memberAdults, color: "hsl(var(--primary))" },
+    { label: "Member Dependents", value: CHURCH_FAMILY.memberDependents, color: "hsl(var(--secondary))" },
+    { label: "RA Adults", value: CHURCH_FAMILY.regularAdults, color: "hsl(var(--accent))" },
+    { label: "RA Dependents", value: CHURCH_FAMILY.regularDependents, color: "hsl(var(--muted-foreground))" },
+  ];
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -171,7 +259,7 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments }: StatsCards
         </div>
       </div>
 
-      {/* Total Giving */}
+      {/* Total Giving with filters + fund breakdown */}
       <div className="rounded-2xl p-5 bg-card shadow-card transition-all duration-300 hover:shadow-card-hover">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-muted-foreground">Total Giving</p>
@@ -179,8 +267,49 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments }: StatsCards
             <DollarSign className="h-4.5 w-4.5 text-accent-foreground" />
           </div>
         </div>
-        <p className="text-2xl font-display font-bold mt-2 text-foreground">${totalDonations.toLocaleString()}</p>
-        <p className="text-xs mt-0.5 text-muted-foreground">all time</p>
+        <p className="text-2xl font-display font-bold mt-2 text-foreground">
+          ${givingByFund.grand.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </p>
+        <div className="flex items-center gap-1.5 mt-1.5">
+          <Select value={givingFilterType} onValueChange={handleGivingFilterChange}>
+            <SelectTrigger className="h-6 text-[11px] w-auto min-w-[80px] rounded-lg border-border/50 px-2 py-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="rolling">Rolling Year</SelectItem>
+              <SelectItem value="year">Year</SelectItem>
+              <SelectItem value="quarter">Quarter</SelectItem>
+              <SelectItem value="month">Month</SelectItem>
+            </SelectContent>
+          </Select>
+          {givingNeedsSecond && (
+            <Select value={givingSecondValue} onValueChange={setGivingSecondValue}>
+              <SelectTrigger className="h-6 text-[11px] w-auto min-w-[70px] rounded-lg border-border/50 px-2 py-0">
+                <SelectValue placeholder="Select..." />
+              </SelectTrigger>
+              <SelectContent>
+                {givingSecondOptions.map((o) => (
+                  <SelectItem key={o} value={String(o)}>
+                    {givingFilterType === "month" ? String(o).slice(0, 3) : o}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+        <div className="mt-3 space-y-1.5">
+          {ALL_FUNDS.map((fund) => (
+            <div key={fund} className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: FUND_COLORS[fund] }} />
+                <span className="text-muted-foreground">{FUND_LABELS[fund]}</span>
+              </div>
+              <span className="font-semibold text-foreground">
+                ${givingByFund.totals[fund].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Discipleship */}
