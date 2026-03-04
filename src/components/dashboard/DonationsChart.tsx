@@ -37,7 +37,7 @@ const FUND_LABELS: Record<string, string> = {
 const ALL_FUNDS = ["general", "building", "missions", "benevolence"];
 
 const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
-  const [activeFunds, setActiveFunds] = useState<string[]>(ALL_FUNDS);
+  const [activeFunds, setActiveFunds] = useState<string[]>(["general"]);
   const [yearFilter, setYearFilter] = useState<string>("rolling");
   const [quarterFilter, setQuarterFilter] = useState<string>("all");
   const [monthFilter, setMonthFilter] = useState<string>("all");
@@ -238,8 +238,8 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
                     position="top"
                     style={{
                       fontSize: chartData.length > 18 ? 7 : 9,
-                      fill: "hsl(var(--muted-foreground))",
-                      fontWeight: 600,
+                      fill: "hsl(var(--foreground))",
+                      fontWeight: 700,
                     }}
                     formatter={(value: number) => (value > 0 ? `$${value.toLocaleString()}` : "")}
                   />
