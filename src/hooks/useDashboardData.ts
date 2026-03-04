@@ -14,7 +14,7 @@ export function useDashboardData() {
   const attendance = useQuery({
     queryKey: ["attendance"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("attendance").select("*, members(first_name, last_name)");
+      const { data, error } = await supabase.from("attendance").select("*");
       if (error) throw error;
       return data;
     },

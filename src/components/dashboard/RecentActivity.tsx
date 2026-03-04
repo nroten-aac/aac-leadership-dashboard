@@ -11,13 +11,13 @@ interface RecentActivityProps {
   }>;
   attendance: Array<{
     event_date: string;
-    event_name: string;
-    present: boolean;
-    members: { first_name: string; last_name: string } | null;
+    service: string;
+    adjusted_total: number;
+    notes: string | null;
   }>;
 }
 
-const RecentActivity = ({ donations, attendance }: RecentActivityProps) => {
+const RecentActivity = ({ donations }: RecentActivityProps) => {
   const recentDonations = [...donations]
     .sort((a, b) => new Date(b.donation_date).getTime() - new Date(a.donation_date).getTime())
     .slice(0, 5);
