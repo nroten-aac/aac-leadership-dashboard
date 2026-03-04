@@ -208,10 +208,17 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
               dataKey="online"
               name="Online"
               stackId="attendance"
-              fill="hsl(var(--accent))"
+              fill="hsl(var(--secondary))"
               radius={[0, 0, 0, 0]}
               barSize={dataWithTrend.length > 30 ? 12 : 22}
-            />
+            >
+              <LabelList
+                dataKey="online"
+                position="center"
+                style={{ fontSize: dataWithTrend.length > 30 ? 7 : 10, fill: "white", fontWeight: 700 }}
+                formatter={(value: number) => (value > 0 ? value : "")}
+              />
+            </Bar>
             <Bar
               dataKey="combined"
               name="In-Person"
@@ -221,8 +228,8 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
             >
               <LabelList
                 dataKey="combined"
-                position="top"
-                style={{ fontSize: dataWithTrend.length > 30 ? 9 : 12, fill: "hsl(var(--foreground))", fontWeight: 700 }}
+                position="center"
+                style={{ fontSize: dataWithTrend.length > 30 ? 7 : 10, fill: "white", fontWeight: 700 }}
                 formatter={(value: number) => value}
               />
             </Bar>
