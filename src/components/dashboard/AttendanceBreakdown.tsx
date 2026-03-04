@@ -1,5 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 interface AttendanceBreakdownProps {
   attendance: Array<{
@@ -22,7 +21,6 @@ const COLORS = [
 ];
 
 const AttendanceBreakdown = ({ attendance }: AttendanceBreakdownProps) => {
-  // Aggregate totals across all records
   const totals = attendance.reduce(
     (acc, a) => ({
       sanctuary: acc.sanctuary + a.sanctuary_attendance,
@@ -47,46 +45,42 @@ const AttendanceBreakdown = ({ attendance }: AttendanceBreakdownProps) => {
   const grand = data.reduce((s, d) => s + d.value, 0);
 
   return (
-    <Card className="border-0 shadow-card">
-      <CardHeader className="pb-2">
-        <CardTitle className="font-display text-lg">Where People Gather</CardTitle>
-        <p className="text-xs text-muted-foreground">All-time attendance by area</p>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={280}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={55}
-              outerRadius={95}
-              paddingAngle={3}
-              dataKey="value"
-              strokeWidth={0}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              labelLine={false}
-            >
-              {data.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip
-              contentStyle={{
-                background: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-                fontSize: 13,
-              }}
-              formatter={(value: number) => [value.toLocaleString(), ""]}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        <p className="text-center text-sm text-muted-foreground -mt-2">
-          <span className="font-semibold text-foreground">{grand.toLocaleString()}</span> total check-ins
-        </p>
-      </CardContent>
-    </Card>
+    <div className="bg-card rounded-2xl shadow-card p-6">
+      <h3 className="font-display font-semibold text-foreground">Where People Gather</h3>
+      <p className="text-xs text-muted-foreground mt-0.5 mb-2">All-time attendance by area</p>
+      <ResponsiveContainer width="100%" height={240}>
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            innerRadius={50}
+            outerRadius={85}
+            paddingAngle={3}
+            dataKey="value"
+            strokeWidth={0}
+            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+            labelLine={false}
+          >
+            {data.map((_, i) => (
+              <Cell key={i} fill={COLORS[i % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip
+            contentStyle={{
+              background: "hsl(var(--card))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: "12px",
+              fontSize: 13,
+            }}
+            formatter={(value: number) => [value.toLocaleString(), ""]}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+      <p className="text-center text-sm text-muted-foreground -mt-2">
+        <span className="font-semibold text-foreground">{grand.toLocaleString()}</span> total check-ins
+      </p>
+    </div>
   );
 };
 

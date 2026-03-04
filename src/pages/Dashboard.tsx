@@ -1,4 +1,5 @@
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import StatsCards from "@/components/dashboard/StatsCards";
 import AttendanceChart from "@/components/dashboard/AttendanceChart";
 import AttendanceBreakdown from "@/components/dashboard/AttendanceBreakdown";
@@ -16,7 +17,6 @@ const Dashboard = () => {
   const totalDonations = donations.reduce((s, d) => s + d.amount, 0);
   const activeMembers = members.filter((m) => m.membership_status === "active").length;
 
-  // Average adjusted_total per service record
   const avgAttendance = attendance.length > 0
     ? Math.round(attendance.reduce((s, a) => s + a.adjusted_total, 0) / attendance.length)
     : 0;
@@ -25,21 +25,20 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="gradient-primary px-6 py-4">
-          <div className="max-w-7xl mx-auto">
-            <Skeleton className="h-10 w-60 bg-primary-foreground/20" />
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto p-6 space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="min-h-screen bg-background flex">
+        <div className="w-[72px] bg-card shrink-0" />
+        <div className="flex-1 p-8">
+          <Skeleton className="h-12 w-72 rounded-2xl mb-8" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-28 rounded-xl" />
+              <Skeleton key={i} className="h-28 rounded-2xl" />
             ))}
           </div>
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Skeleton className="h-80 rounded-xl" />
-            <Skeleton className="h-80 rounded-xl" />
+          <Skeleton className="h-80 rounded-2xl mb-6" />
+          <div className="grid gap-6 lg:grid-cols-3">
+            <Skeleton className="h-72 rounded-2xl" />
+            <Skeleton className="h-72 rounded-2xl" />
+            <Skeleton className="h-72 rounded-2xl" />
           </div>
         </div>
       </div>
@@ -47,9 +46,11 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader />
-      <main className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-background flex">
+      <DashboardSidebar />
+      <main className="flex-1 ml-[72px] p-8 max-w-[1400px]">
+        <DashboardHeader />
+
         <StatsCards
           totalMembers={members.length}
           activeMembers={activeMembers}
@@ -59,20 +60,22 @@ const Dashboard = () => {
         />
 
         {/* Full-width attendance chart */}
-        <AttendanceChart attendance={attendance} />
+        <div className="mt-6">
+          <AttendanceChart attendance={attendance} />
+        </div>
 
-        {/* Donations chart */}
-        <DonationsChart donations={donations} />
+        {/* Giving + Recent Donations */}
+        <div className="grid gap-6 lg:grid-cols-2 mt-6">
+          <DonationsChart donations={donations} />
+          <RecentActivity donations={donations as any} attendance={attendance as any} />
+        </div>
 
-        {/* Row 2: Donut pie + Horizontal bar + Donut breakdown */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        {/* Bottom row: 3 cards */}
+        <div className="grid gap-6 lg:grid-cols-3 mt-6">
           <AttendanceBreakdown attendance={attendance} />
           <DiscipleshipOverview enrollments={enrollments as any} />
           <MembershipBreakdown members={members} />
         </div>
-
-        {/* Row 3: Recent activity full width */}
-        <RecentActivity donations={donations as any} attendance={attendance as any} />
       </main>
       <AIChatPanel />
     </div>
