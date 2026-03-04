@@ -36,7 +36,7 @@ interface AttendanceChartProps {
 }
 
 const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
-  const [yearFilter, setYearFilter] = useState<string>("all");
+  const [yearFilter, setYearFilter] = useState<string>("rolling");
   const [quarterFilter, setQuarterFilter] = useState<string>("all");
   const [monthFilter, setMonthFilter] = useState<string>("all");
 
