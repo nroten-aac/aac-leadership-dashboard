@@ -5,6 +5,7 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import GivingEntry from "@/components/data-entry/GivingEntry";
 import AttendanceEntry from "@/components/data-entry/AttendanceEntry";
 import MembersEntry from "@/components/data-entry/MembersEntry";
+import PlanningCenterImport from "@/components/data-entry/PlanningCenterImport";
 
 const DataEntry = () => {
   return (
@@ -31,6 +32,9 @@ const DataEntry = () => {
           </TabsContent>
           <TabsContent value="members">
             <MembersEntry />
+            <div className="mt-6">
+              <PlanningCenterImport />
+            </div>
           </TabsContent>
         </Tabs>
       </main>
