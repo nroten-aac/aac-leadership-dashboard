@@ -32,6 +32,9 @@ const DataEntry = () => {
           </TabsContent>
           <TabsContent value="members">
             <MembersEntry />
+            <div className="mt-6">
+              <PlanningCenterImport />
+            </div>
           </TabsContent>
         </Tabs>
       </main>
