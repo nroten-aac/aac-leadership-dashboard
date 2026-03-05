@@ -2,3 +2,6 @@ project_id = "pimsbchtatfyezssynfg"
 
 [functions.chat]
 verify_jwt = false
+
+[functions.import-planning-center-people]
+verify_jwt = false
