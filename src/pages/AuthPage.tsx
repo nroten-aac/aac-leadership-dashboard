@@ -15,9 +15,21 @@ const AuthPage = () => {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [forgotPassword, setForgotPassword] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (forgotPassword) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) toast.error(error.message);
+      else toast.success("Check your email for a password reset link!");
+      setLoading(false);
+      return;
+    }
 
     if (isSignUp) {
       const { error } = await signUp(email, password, displayName);
