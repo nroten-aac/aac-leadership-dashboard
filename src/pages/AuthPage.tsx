@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,9 +16,21 @@ const AuthPage = () => {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [forgotPassword, setForgotPassword] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (forgotPassword) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) toast.error(error.message);
+      else toast.success("Check your email for a password reset link!");
+      setLoading(false);
+      return;
+    }
 
     if (isSignUp) {
       const { error } = await signUp(email, password, displayName);
@@ -38,16 +51,16 @@ const AuthPage = () => {
           <img src={logo} alt="Ashe Alliance Church" className="h-24 mx-auto" />
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground">
-              {isSignUp ? "Create Account" : "Welcome Back"}
+              {forgotPassword ? "Reset Password" : isSignUp ? "Create Account" : "Welcome Back"}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              {isSignUp ? "Join the leadership dashboard" : "Sign in to your leadership dashboard"}
+              {forgotPassword ? "Enter your email to receive a reset link" : isSignUp ? "Join the leadership dashboard" : "Sign in to your leadership dashboard"}
             </p>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
+            {isSignUp && !forgotPassword && (
               <div className="space-y-2">
                 <Label htmlFor="displayName">Full Name</Label>
                 <Input
@@ -70,28 +83,50 @@ const AuthPage = () => {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
-            </div>
+            {!forgotPassword && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            )}
+            {!isSignUp && !forgotPassword && (
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => setForgotPassword(true)}
+                  className="text-sm text-secondary hover:text-primary transition-colors"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Loading..." : isSignUp ? "Create Account" : "Sign In"}
+              {loading ? "Loading..." : forgotPassword ? "Send Reset Link" : isSignUp ? "Create Account" : "Sign In"}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-secondary hover:text-primary transition-colors"
-            >
-              {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
-            </button>
+          <div className="mt-4 text-center space-y-2">
+            {forgotPassword ? (
+              <button
+                onClick={() => setForgotPassword(false)}
+                className="text-sm text-secondary hover:text-primary transition-colors"
+              >
+                Back to sign in
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-secondary hover:text-primary transition-colors"
+              >
+                {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
