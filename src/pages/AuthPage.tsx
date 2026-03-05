@@ -111,13 +111,22 @@ const AuthPage = () => {
               {loading ? "Loading..." : forgotPassword ? "Send Reset Link" : isSignUp ? "Create Account" : "Sign In"}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-secondary hover:text-primary transition-colors"
-            >
-              {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
-            </button>
+          <div className="mt-4 text-center space-y-2">
+            {forgotPassword ? (
+              <button
+                onClick={() => setForgotPassword(false)}
+                className="text-sm text-secondary hover:text-primary transition-colors"
+              >
+                Back to sign in
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-secondary hover:text-primary transition-colors"
+              >
+                {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
