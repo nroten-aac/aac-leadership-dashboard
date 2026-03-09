@@ -206,6 +206,19 @@ const AttendanceEntry = () => {
           <input type="file" accept=".csv" className="hidden" onChange={handleCSVUpload} />
         </label>
       </div>
+
+      <RecentEntries
+        table="attendance"
+        title="Recent Attendance Entries"
+        orderBy="event_date"
+        columns={[
+          { key: "event_date", label: "Date" },
+          { key: "service", label: "Service" },
+          { key: "sanctuary_attendance", label: "Sanctuary" },
+          { key: "online_attendance", label: "Online" },
+          { key: "adjusted_total", label: "Total" },
+        ]}
+      />
     </div>
   );
 };
