@@ -8,6 +8,7 @@ import DiscipleshipOverview from "@/components/dashboard/DiscipleshipOverview";
 import MembershipBreakdown from "@/components/dashboard/MembershipBreakdown";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 import AIChatPanel from "@/components/dashboard/AIChatPanel";
+import AdminSetupBanner from "@/components/dashboard/AdminSetupBanner";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -46,6 +47,7 @@ const Dashboard = () => {
       <DashboardSidebar />
       <main id="dashboard-content" className="flex-1 ml-[72px] p-8 max-w-[1400px]">
         <DashboardHeader />
+        <AdminSetupBanner />
 
         <StatsCards
           attendance={attendance}
