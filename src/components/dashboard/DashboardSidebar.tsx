@@ -22,7 +22,7 @@ const DashboardSidebar = () => {
   // Filter nav items based on permissions (admins see all)
   const navItems = isAdmin
     ? allNavItems
-    : allNavItems.filter((item) => allowedTabs.includes(item.tabId));
+    : allNavItems.filter((item) => allowedTabs.includes(item.tabId as any));
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[72px] bg-card flex flex-col items-center py-6 z-40 shadow-soft">
