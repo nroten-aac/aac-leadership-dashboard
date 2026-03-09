@@ -89,7 +89,7 @@ const PCO_LIST_COLORS: Record<string, string> = {
 };
 const PCO_LIST_KEYS = ["Life Groups", "AAC Bible Studies", "Discipleship Groups", "PT Mentorship"];
 
-const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGiving, enrollments }: StatsCardsProps) => {
+const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGiving, enrollments, pcoListCounts }: StatsCardsProps) => {
   // Attendance filter state
   const [filterType, setFilterType] = useState<FilterType>("rolling");
   const [selectedYear, setSelectedYear] = useState<string>("");
