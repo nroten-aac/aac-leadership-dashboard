@@ -472,16 +472,16 @@ function DiscipleshipDonut({ pcoListCounts }: { pcoListCounts: PcoListCounts }) 
   if (data.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-2 -mb-1">
-      <div className="w-[72px] h-[72px] shrink-0">
+    <div className="-mb-1">
+      <div className="w-[100px] h-[100px] mx-auto">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={18}
-              outerRadius={34}
+              innerRadius={24}
+              outerRadius={46}
               paddingAngle={3}
               dataKey="value"
               strokeWidth={0}
@@ -503,14 +503,12 @@ function DiscipleshipDonut({ pcoListCounts }: { pcoListCounts: PcoListCounts }) 
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="space-y-1 flex-1">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2">
         {data.map((d) => (
-          <div key={d.name} className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
-              <span className="text-primary-foreground/70">{d.name}</span>
-            </div>
-            <span className="font-semibold text-primary-foreground">{d.value}</span>
+          <div key={d.name} className="flex items-center gap-1.5 text-xs">
+            <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+            <span className="text-primary-foreground/70 truncate">{d.name}</span>
+            <span className="font-semibold text-primary-foreground ml-auto">{d.value}</span>
           </div>
         ))}
       </div>
