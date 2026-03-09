@@ -48,19 +48,17 @@ const AttendanceBreakdown = ({ attendance }: AttendanceBreakdownProps) => {
     <div className="bg-card rounded-2xl shadow-card p-6">
       <h3 className="font-display font-semibold text-foreground">Where People Gather</h3>
       <p className="text-xs text-muted-foreground mt-0.5 mb-2">All-time attendance by area</p>
-      <ResponsiveContainer width="100%" height={240}>
+      <ResponsiveContainer width="100%" height={200}>
         <PieChart>
           <Pie
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={50}
-            outerRadius={85}
+            innerRadius={60}
+            outerRadius={90}
             paddingAngle={3}
             dataKey="value"
             strokeWidth={0}
-            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-            labelLine={false}
           >
             {data.map((_, i) => (
               <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -77,9 +75,18 @@ const AttendanceBreakdown = ({ attendance }: AttendanceBreakdownProps) => {
           />
         </PieChart>
       </ResponsiveContainer>
-      <p className="text-center text-sm text-muted-foreground -mt-2">
+      <p className="text-center text-sm text-muted-foreground -mt-2 mb-3">
         <span className="font-semibold text-foreground">{grand.toLocaleString()}</span> total check-ins
       </p>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+        {data.map((d, i) => (
+          <div key={d.name} className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+            <span className="text-muted-foreground truncate">{d.name}</span>
+            <span className="font-semibold text-foreground ml-auto">{d.value.toLocaleString()}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
