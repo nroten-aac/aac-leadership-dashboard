@@ -41,13 +41,12 @@ interface StatsCardsProps {
   pcoListCounts: PcoListCounts | null;
 }
 
-const CHURCH_FAMILY = {
-  memberAdults: 55,
-  memberDependents: 17,
-  regularAdults: 38,
-  regularDependents: 14,
-};
-const CHURCH_FAMILY_TOTAL = Object.values(CHURCH_FAMILY).reduce((a, b) => a + b, 0);
+const CHURCH_FAMILY_KEYS = [
+  { key: "Member Adults" as const, label: "Member Adults", color: "hsl(var(--primary))" },
+  { key: "Member Children" as const, label: "Member Children", color: "hsl(var(--secondary))" },
+  { key: "Regular Attender Adults" as const, label: "RA Adults", color: "hsl(var(--accent))" },
+  { key: "Regular Attender Children" as const, label: "RA Children", color: "hsl(var(--muted-foreground))" },
+];
 
 const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
