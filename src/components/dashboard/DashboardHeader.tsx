@@ -28,17 +28,58 @@ const handleDownload = async () => {
 
 const handlePrint = async () => {
   toast.info("Preparing print...");
+  const el = document.getElementById("dashboard-content");
+  if (!el) return;
+
+  // Find the element with data-print-break-after and calculate the split point
+  const breakEl = el.querySelector("[data-print-break-after]") as HTMLElement | null;
+  const breakY = breakEl
+    ? (breakEl.offsetTop + breakEl.offsetHeight - el.offsetTop) * 2 // scale=2
+    : null;
+
   const canvas = await captureDashboard();
   if (!canvas) return;
+
+  const pages: string[] = [];
+
+  if (breakY && breakY < canvas.height) {
+    // Page 1: top to breakY
+    const c1 = document.createElement("canvas");
+    c1.width = canvas.width;
+    c1.height = breakY;
+    c1.getContext("2d")!.drawImage(canvas, 0, 0, canvas.width, breakY, 0, 0, canvas.width, breakY);
+    pages.push(c1.toDataURL("image/png"));
+
+    // Page 2: breakY to bottom
+    const c2 = document.createElement("canvas");
+    c2.width = canvas.width;
+    c2.height = canvas.height - breakY;
+    c2.getContext("2d")!.drawImage(canvas, 0, breakY, canvas.width, canvas.height - breakY, 0, 0, canvas.width, canvas.height - breakY);
+    pages.push(c2.toDataURL("image/png"));
+  } else {
+    pages.push(canvas.toDataURL("image/png"));
+  }
+
   const win = window.open("", "_blank");
   if (!win) return;
   win.document.write(`
     <html><head><title>Dashboard</title><style>
-      body { margin: 0; display: flex; justify-content: center; }
-      img { max-width: 100%; height: auto; }
+      body { margin: 0; }
+      img { max-width: 100%; height: auto; display: block; }
+      .page-break { page-break-after: always; break-after: page; }
       @media print { body { margin: 0; } }
     </style></head><body>
-      <img src="${canvas.toDataURL("image/png")}" onload="window.print();window.close();" />
+      ${pages.map((src, i) =>
+        `<div class="${i < pages.length - 1 ? 'page-break' : ''}"><img src="${src}" /></div>`
+      ).join("")}
+      <script>
+        var imgs = document.querySelectorAll("img");
+        var loaded = 0;
+        imgs.forEach(function(img) {
+          img.onload = function() { loaded++; if (loaded === imgs.length) { window.print(); window.close(); } };
+          if (img.complete) { loaded++; if (loaded === imgs.length) { window.print(); window.close(); } }
+        });
+      </script>
     </body></html>
   `);
   win.document.close();
