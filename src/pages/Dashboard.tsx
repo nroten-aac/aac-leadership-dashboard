@@ -74,7 +74,7 @@ const Dashboard = () => {
         {/* Bottom row: 3 cards */}
         <div className="grid gap-6 lg:grid-cols-3 mt-6">
           <AttendanceBreakdown attendance={attendance} />
-          <DiscipleshipOverview enrollments={enrollments as any} />
+          <DiscipleshipOverview enrollments={enrollments as any} pcoListCounts={pcoListCounts} />
           <MembershipBreakdown members={members} />
         </div>
       </main>

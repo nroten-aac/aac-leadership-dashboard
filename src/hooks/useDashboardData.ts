@@ -1,6 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface PcoListCounts {
+  "Life Groups": number;
+  "AAC Bible Studies": number;
+  "Discipleship Groups": number;
+  "PT Mentorship": number;
+}
+
 export function useDashboardData() {
   const members = useQuery({
     queryKey: ["members"],
@@ -58,6 +65,16 @@ export function useDashboardData() {
     },
   });
 
+  const pcoListCounts = useQuery({
+    queryKey: ["pco_list_counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("fetch-pco-list-counts");
+      if (error) throw error;
+      return (data as { lists: PcoListCounts }).lists;
+    },
+    staleTime: 5 * 60 * 1000, // cache for 5 minutes
+  });
+
   const isLoading = members.isLoading || attendance.isLoading || donations.isLoading || programs.isLoading || enrollments.isLoading || monthlyGiving.isLoading;
 
   return {
@@ -67,6 +84,8 @@ export function useDashboardData() {
     programs: programs.data ?? [],
     enrollments: enrollments.data ?? [],
     monthlyGiving: monthlyGiving.data ?? [],
+    pcoListCounts: pcoListCounts.data ?? null,
+    pcoListCountsLoading: pcoListCounts.isLoading,
     isLoading,
   };
 }
