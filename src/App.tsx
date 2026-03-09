@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import DataEntry from "./pages/DataEntry";
 import AuthPage from "./pages/AuthPage";
 import AdminPanel from "./pages/AdminPanel";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 
