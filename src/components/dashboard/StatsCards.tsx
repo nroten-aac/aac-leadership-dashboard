@@ -460,21 +460,14 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
   );
 };
 
-function DiscipleshipDonut({ enrollments }: { enrollments: Enrollment[] }) {
+function DiscipleshipDonut({ pcoListCounts }: { pcoListCounts: PcoListCounts }) {
   const data = useMemo(() => {
-    const active = enrollments.filter((e) => e.status === "active");
-    const counts: Record<string, number> = {};
-    for (const t of ALL_PROGRAM_TYPES) counts[t] = 0;
-    active.forEach((e) => {
-      const type = e.discipleship_programs?.program_type;
-      if (type && counts[type] !== undefined) counts[type]++;
-    });
-    return ALL_PROGRAM_TYPES.map((t) => ({
-      name: PROGRAM_TYPE_LABELS[t],
-      value: counts[t],
-      color: PROGRAM_TYPE_COLORS[t],
+    return PCO_LIST_KEYS.map((key) => ({
+      name: PCO_LIST_LABELS[key],
+      value: pcoListCounts[key as keyof PcoListCounts] ?? 0,
+      color: PCO_LIST_COLORS[key],
     })).filter((d) => d.value > 0);
-  }, [enrollments]);
+  }, [pcoListCounts]);
 
   if (data.length === 0) return null;
 
@@ -523,6 +516,12 @@ function DiscipleshipDonut({ enrollments }: { enrollments: Enrollment[] }) {
       </div>
     </div>
   );
+}
+
+function DiscipleshipDonutFallback({ enrollments }: { enrollments: Enrollment[] }) {
+  // Fallback using local enrollment data if PCO is unavailable
+  if (enrollments.length === 0) return null;
+  return <p className="text-xs text-primary-foreground/50">PCO data unavailable</p>;
 }
 
 export default StatsCards;
