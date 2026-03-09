@@ -19,7 +19,6 @@ const TARGET_LISTS = [
 
 async function pcFetch(path: string, appId: string, secret: string) {
   const url = path.startsWith("http") ? path : `${PC_BASE}${path}`;
-  console.log(`Fetching PCO: ${url}`);
   const res = await fetch(url, {
     headers: {
       Authorization: "Basic " + btoa(`${appId}:${secret}`),
@@ -69,27 +68,12 @@ serve(async (req) => {
       );
     }
 
-    console.log(`PCO credentials: APP_ID length=${PC_APP_ID.length}, SECRET length=${PC_SECRET.length}`);
-
-    // First test: try the base people endpoint to verify credentials
-    try {
-      const testData = await pcFetch("/people?per_page=1", PC_APP_ID, PC_SECRET);
-      console.log("PCO credentials verified - people endpoint works");
-    } catch (testErr) {
-      console.error("PCO credentials test failed:", testErr);
-      return new Response(
-        JSON.stringify({ error: "Planning Center credentials are invalid or expired. Please update them." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Fetch all lists with pagination
+    // Fetch all lists
     const allLists: any[] = [];
     let nextUrl: string | null = "/lists?per_page=100";
 
     while (nextUrl) {
       const data = await pcFetch(nextUrl, PC_APP_ID, PC_SECRET);
-      console.log(`Fetched ${data.data?.length || 0} lists`);
       allLists.push(...(data.data || []));
       if (data.links?.next) {
         nextUrl = data.links.next;
@@ -98,29 +82,27 @@ serve(async (req) => {
       }
     }
 
-    // Find our target lists and get their count
-    // Log first list's attributes for debugging
-    if (allLists.length > 0) {
-      console.log("Sample list attributes:", JSON.stringify(Object.keys(allLists[0].attributes)));
-      const sample = allLists[0];
-      console.log("Sample list data:", JSON.stringify({ name: sample.attributes.name, ...sample.attributes }));
-    }
+    console.log(`Found ${allLists.length} total lists`);
 
+    // For each target list, find the list ID then get the people count
     const results: Record<string, number> = {};
     for (const name of TARGET_LISTS) {
       const list = allLists.find(
         (l: any) => l.attributes.name?.toLowerCase() === name.toLowerCase()
       );
       if (list) {
-        // Try different attribute names for the count
-        const count = list.attributes.total_people_count 
-          ?? list.attributes.total_people 
-          ?? list.attributes.people_count
-          ?? list.attributes.count
-          ?? 0;
-        console.log(`List "${name}": id=${list.id}, attrs=${JSON.stringify(list.attributes)}`);
-        results[name] = count;
+        // Fetch the list's people with per_page=1 to get meta.total_count
+        try {
+          const peopleData = await pcFetch(`/lists/${list.id}/people?per_page=1`, PC_APP_ID, PC_SECRET);
+          const count = peopleData.meta?.total_count ?? peopleData.data?.length ?? 0;
+          console.log(`List "${name}" (id=${list.id}): ${count} people`);
+          results[name] = count;
+        } catch (e) {
+          console.error(`Error fetching people for list "${name}":`, e);
+          results[name] = 0;
+        }
       } else {
+        console.log(`List "${name}": not found in PCO`);
         results[name] = 0;
       }
     }
