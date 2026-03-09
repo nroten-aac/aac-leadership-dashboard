@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Upload } from "lucide-react";
+import RecentEntries from "./RecentEntries";
 
 const STATUSES = ["active", "inactive", "visitor", "transferred"];
 const GENDERS = ["Male", "Female"];
