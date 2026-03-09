@@ -68,10 +68,6 @@ const Dashboard = () => {
           <DonationsChart monthlyGiving={monthlyGiving} />
         </div>
 
-        {/* Bottom row */}
-        <div className="grid gap-6 lg:grid-cols-1 mt-6">
-          <AttendanceBreakdown attendance={attendance} />
-        </div>
       </main>
       <AIChatPanel />
     </div>
