@@ -6,6 +6,7 @@ import GivingEntry from "@/components/data-entry/GivingEntry";
 import AttendanceEntry from "@/components/data-entry/AttendanceEntry";
 import MembersEntry from "@/components/data-entry/MembersEntry";
 import PlanningCenterImport from "@/components/data-entry/PlanningCenterImport";
+import DataDownload from "@/components/data-entry/DataDownload";
 
 const DataEntry = () => {
   return (
@@ -37,6 +38,10 @@ const DataEntry = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        <div className="mt-6">
+          <DataDownload />
+        </div>
       </main>
     </div>
   );
