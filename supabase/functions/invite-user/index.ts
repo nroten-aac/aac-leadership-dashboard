@@ -12,7 +12,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  console.log("invite-user: request received");
+  try {
+    console.log("invite-user: request received");
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Not authenticated" }), {
