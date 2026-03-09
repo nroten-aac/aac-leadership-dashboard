@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Upload } from "lucide-react";
 import { format } from "date-fns";
+import RecentEntries from "./RecentEntries";
 
 const SERVICES = ["Sunday AM", "Sunday PM", "Wednesday"];
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
