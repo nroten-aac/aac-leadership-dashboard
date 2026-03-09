@@ -98,14 +98,31 @@ serve(async (req) => {
       }
     }
 
-    // Find our target lists and get their total_count
+    // Find our target lists and get their count
+    // Log first list's attributes for debugging
+    if (allLists.length > 0) {
+      console.log("Sample list attributes:", JSON.stringify(Object.keys(allLists[0].attributes)));
+      const sample = allLists[0];
+      console.log("Sample list data:", JSON.stringify({ name: sample.attributes.name, ...sample.attributes }));
+    }
+
     const results: Record<string, number> = {};
     for (const name of TARGET_LISTS) {
       const list = allLists.find(
         (l: any) => l.attributes.name?.toLowerCase() === name.toLowerCase()
       );
-      console.log(`List "${name}": found=${!!list}, count=${list?.attributes?.total_people_count ?? 'N/A'}`);
-      results[name] = list ? (list.attributes.total_people_count ?? 0) : 0;
+      if (list) {
+        // Try different attribute names for the count
+        const count = list.attributes.total_people_count 
+          ?? list.attributes.total_people 
+          ?? list.attributes.people_count
+          ?? list.attributes.count
+          ?? 0;
+        console.log(`List "${name}": id=${list.id}, attrs=${JSON.stringify(list.attributes)}`);
+        results[name] = count;
+      } else {
+        results[name] = 0;
+      }
     }
 
     return new Response(JSON.stringify({ lists: results }), {
