@@ -13,6 +13,7 @@ serve(async (req) => {
   }
 
   try {
+    console.log("invite-user: request received");
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Not authenticated" }), {
