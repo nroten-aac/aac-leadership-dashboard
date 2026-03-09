@@ -68,16 +68,9 @@ const Dashboard = () => {
           <DonationsChart monthlyGiving={monthlyGiving} />
         </div>
 
-        {/* Recent Activity */}
+        {/* Bottom row */}
         <div className="grid gap-6 lg:grid-cols-1 mt-6">
-          <RecentActivity donations={donations as any} attendance={attendance as any} />
-        </div>
-
-        {/* Bottom row: 3 cards */}
-        <div className="grid gap-6 lg:grid-cols-3 mt-6">
           <AttendanceBreakdown attendance={attendance} />
-          <DiscipleshipOverview enrollments={enrollments as any} pcoListCounts={pcoListCounts} />
-          <MembershipBreakdown members={members} />
         </div>
       </main>
       <AIChatPanel />
