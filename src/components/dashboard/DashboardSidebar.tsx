@@ -69,7 +69,12 @@ const DashboardSidebar = () => {
         )}
         <button
           title="Settings"
-          className="w-11 h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
+          onClick={() => navigate("/settings")}
+          className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 ${
+            location.pathname === "/settings"
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
         >
           <Settings className="h-5 w-5" />
         </button>
