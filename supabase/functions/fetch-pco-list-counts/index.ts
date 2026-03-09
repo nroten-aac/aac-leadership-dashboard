@@ -19,6 +19,7 @@ const TARGET_LISTS = [
 
 async function pcFetch(path: string, appId: string, secret: string) {
   const url = path.startsWith("http") ? path : `${PC_BASE}${path}`;
+  console.log(`Fetching PCO: ${url}`);
   const res = await fetch(url, {
     headers: {
       Authorization: "Basic " + btoa(`${appId}:${secret}`),
