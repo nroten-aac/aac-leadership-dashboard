@@ -440,9 +440,21 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
             <BookOpen className="h-4.5 w-4.5 text-primary-foreground" />
           </div>
         </div>
-        <p className="text-2xl font-display font-bold mt-2 text-primary-foreground">{totalEnrollments}</p>
-        <p className="text-xs mt-0.5 text-primary-foreground/60 mb-1">active enrollments</p>
-        <DiscipleshipDonut enrollments={enrollments} />
+        {pcoListCounts ? (
+          <>
+            <p className="text-2xl font-display font-bold mt-2 text-primary-foreground">
+              {Object.values(pcoListCounts).reduce((s, v) => s + v, 0)}
+            </p>
+            <p className="text-xs mt-0.5 text-primary-foreground/60 mb-1">people in lists</p>
+            <DiscipleshipDonut pcoListCounts={pcoListCounts} />
+          </>
+        ) : (
+          <>
+            <p className="text-2xl font-display font-bold mt-2 text-primary-foreground">{totalEnrollments}</p>
+            <p className="text-xs mt-0.5 text-primary-foreground/60 mb-1">active enrollments</p>
+            <DiscipleshipDonutFallback enrollments={enrollments} />
+          </>
+        )}
       </div>
     </div>
   );
