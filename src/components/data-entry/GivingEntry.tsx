@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Plus } from "lucide-react";
+import RecentEntries from "./RecentEntries";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const FUNDS = ["general","building","missions","benevolence"];
@@ -130,6 +131,18 @@ const GivingEntry = () => {
           <input type="file" accept=".csv" className="hidden" onChange={handleCSVUpload} />
         </label>
       </div>
+
+      <RecentEntries
+        table="monthly_giving"
+        title="Recent Giving Entries"
+        columns={[
+          { key: "month", label: "Month" },
+          { key: "year", label: "Year" },
+          { key: "fund", label: "Fund", render: (v) => FUND_LABELS[v] || v },
+          { key: "amount", label: "Amount", render: (v) => `$${Number(v).toLocaleString("en-US", { minimumFractionDigits: 2 })}` },
+          { key: "created_at", label: "Added", render: (v) => new Date(v).toLocaleDateString() },
+        ]}
+      />
     </div>
   );
 };

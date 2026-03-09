@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Upload } from "lucide-react";
+import RecentEntries from "./RecentEntries";
 
 const STATUSES = ["active", "inactive", "visitor", "transferred"];
 const GENDERS = ["Male", "Female"];
@@ -162,6 +163,18 @@ const MembersEntry = () => {
           <input type="file" accept=".csv" className="hidden" onChange={handleCSVUpload} />
         </label>
       </div>
+
+      <RecentEntries
+        table="members"
+        title="Recent Members"
+        columns={[
+          { key: "first_name", label: "First Name" },
+          { key: "last_name", label: "Last Name" },
+          { key: "email", label: "Email" },
+          { key: "membership_status", label: "Status", render: (v) => <span className="capitalize">{v}</span> },
+          { key: "membership_date", label: "Member Since" },
+        ]}
+      />
     </div>
   );
 };
