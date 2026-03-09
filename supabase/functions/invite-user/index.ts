@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Not authenticated" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -25,24 +25,28 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify the caller is an admin
+    // Verify the caller using getClaims
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { authorization: authHeader } },
     });
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Invalid user" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const userId = claimsData.claims.sub as string;
+    const userEmail = claimsData.claims.email as string;
+
     // Check admin role using service role client
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
     const { data: roleData } = await adminClient
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("role", "admin")
       .maybeSingle();
 
@@ -67,7 +71,7 @@ serve(async (req) => {
       .from("invitations")
       .insert({
         email,
-        invited_by: user.id,
+        invited_by: userId,
         allowed_tabs: allowed_tabs || [],
       })
       .select()
@@ -80,20 +84,17 @@ serve(async (req) => {
       });
     }
 
-    // Send invite via Supabase Auth (sends a magic link / invite email)
+    // Send invite via Supabase Auth
     const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
       redirectTo: `${req.headers.get("origin") || supabaseUrl}`,
     });
 
     if (inviteError) {
-      // If user already exists, that's okay - just update invitation status
       if (inviteError.message.includes("already been registered")) {
-        // User exists - check if they need role/permissions updated
         const { data: existingUser } = await adminClient.auth.admin.listUsers();
         const foundUser = existingUser?.users?.find((u: any) => u.email === email);
 
         if (foundUser) {
-          // Apply role if admin
           if (role === "admin") {
             await adminClient.from("user_roles").upsert({
               user_id: foundUser.id,
@@ -101,7 +102,6 @@ serve(async (req) => {
             }, { onConflict: "user_id,role" });
           }
 
-          // Apply tab permissions
           if (allowed_tabs?.length) {
             for (const tab of allowed_tabs) {
               await adminClient.from("user_tab_permissions").upsert({
@@ -130,8 +130,6 @@ serve(async (req) => {
       });
     }
 
-    // If the invited user should be admin, store that for when they accept
-    // (the trigger handles viewer role + tab permissions from invitation)
     if (role === "admin" && inviteData?.user) {
       await adminClient.from("user_roles").upsert({
         user_id: inviteData.user.id,

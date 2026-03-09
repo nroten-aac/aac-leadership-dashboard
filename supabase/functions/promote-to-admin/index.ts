@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Not authenticated" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -25,18 +25,20 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Get the calling user
+    // Verify the caller using getClaims
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { authorization: authHeader } },
     });
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Invalid user" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const userId = claimsData.claims.sub as string;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     // Only allow if there are NO admins yet (first-time setup)
@@ -54,7 +56,7 @@ serve(async (req) => {
 
     // Promote this user to admin
     await adminClient.from("user_roles").upsert({
-      user_id: user.id,
+      user_id: userId,
       role: "admin",
     }, { onConflict: "user_id,role" });
 
@@ -62,7 +64,7 @@ serve(async (req) => {
     const allTabs = ["dashboard", "data-entry", "members", "attendance", "giving", "discipleship"];
     for (const tab of allTabs) {
       await adminClient.from("user_tab_permissions").upsert({
-        user_id: user.id,
+        user_id: userId,
         tab_name: tab,
       }, { onConflict: "user_id,tab_name" });
     }
