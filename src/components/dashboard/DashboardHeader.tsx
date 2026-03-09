@@ -64,10 +64,15 @@ const handlePrint = async () => {
   if (!win) return;
   win.document.write(`
     <html><head><title>Dashboard</title><style>
-      body { margin: 0; }
-      img { max-width: 100%; height: auto; display: block; }
+      * { margin: 0; padding: 0; }
+      html, body { width: 100%; }
+      img { width: 100%; height: auto; display: block; }
       .page-break { page-break-after: always; break-after: page; }
-      @media print { body { margin: 0; } }
+      @media print {
+        @page { margin: 0; size: auto; }
+        body { margin: 0; }
+        img { width: 100vw; }
+      }
     </style></head><body>
       ${pages.map((src, i) =>
         `<div class="${i < pages.length - 1 ? 'page-break' : ''}"><img src="${src}" /></div>`
