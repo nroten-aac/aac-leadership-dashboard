@@ -19,6 +19,7 @@ const TARGET_LISTS = [
 
 async function pcFetch(path: string, appId: string, secret: string) {
   const url = path.startsWith("http") ? path : `${PC_BASE}${path}`;
+  console.log(`Fetching PCO: ${url}`);
   const res = await fetch(url, {
     headers: {
       Authorization: "Basic " + btoa(`${appId}:${secret}`),
@@ -68,12 +69,27 @@ serve(async (req) => {
       );
     }
 
+    console.log(`PCO credentials: APP_ID length=${PC_APP_ID.length}, SECRET length=${PC_SECRET.length}`);
+
+    // First test: try the base people endpoint to verify credentials
+    try {
+      const testData = await pcFetch("/people?per_page=1", PC_APP_ID, PC_SECRET);
+      console.log("PCO credentials verified - people endpoint works");
+    } catch (testErr) {
+      console.error("PCO credentials test failed:", testErr);
+      return new Response(
+        JSON.stringify({ error: "Planning Center credentials are invalid or expired. Please update them." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Fetch all lists with pagination
     const allLists: any[] = [];
     let nextUrl: string | null = "/lists?per_page=100";
 
     while (nextUrl) {
       const data = await pcFetch(nextUrl, PC_APP_ID, PC_SECRET);
+      console.log(`Fetched ${data.data?.length || 0} lists`);
       allLists.push(...(data.data || []));
       if (data.links?.next) {
         nextUrl = data.links.next;
@@ -88,6 +104,7 @@ serve(async (req) => {
       const list = allLists.find(
         (l: any) => l.attributes.name?.toLowerCase() === name.toLowerCase()
       );
+      console.log(`List "${name}": found=${!!list}, count=${list?.attributes?.total_people_count ?? 'N/A'}`);
       results[name] = list ? (list.attributes.total_people_count ?? 0) : 0;
     }
 
