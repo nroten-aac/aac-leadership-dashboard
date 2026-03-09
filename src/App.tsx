@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "./pages/Dashboard";
 import DataEntry from "./pages/DataEntry";
 import AuthPage from "./pages/AuthPage";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 
@@ -35,6 +36,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/data-entry" element={<ProtectedRoute><DataEntry /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
           <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="*" element={<NotFound />} />
