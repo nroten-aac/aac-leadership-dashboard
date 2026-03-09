@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { decode } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,22 +24,31 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify the caller using getUser
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { authorization: authHeader } },
-    });
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid user" }), {
+    // Decode JWT to get user ID
+    const token = authHeader.replace("Bearer ", "");
+    let userId: string;
+    try {
+      const [, payload] = decode(token);
+      userId = (payload as any).sub;
+      if (!userId) throw new Error("No sub in token");
+    } catch (e) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = user.id;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Verify user exists
+    const { data: adminUser, error: adminUserError } = await adminClient.auth.admin.getUserById(userId);
+    if (adminUserError || !adminUser?.user) {
+      return new Response(JSON.stringify({ error: "Invalid user" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Only allow if there are NO admins yet (first-time setup)
     const { data: existingAdmins } = await adminClient
