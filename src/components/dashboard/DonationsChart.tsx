@@ -259,7 +259,7 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
                   dataKey={FUND_LABELS[fund]}
                   fill={FUND_COLORS[fund]}
                   radius={[4, 4, 0, 0]}
-                  barSize={dataWithTrend.length > 18 ? 10 : dataWithTrend.length > 6 ? 16 : 28}
+                  barSize={dataWithTrend.length > 18 ? 18 : dataWithTrend.length > 6 ? 28 : 44}
                 >
                   <LabelList
                     dataKey={FUND_LABELS[fund]}
