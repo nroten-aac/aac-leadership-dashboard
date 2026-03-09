@@ -9,13 +9,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
 
 const AuthPage = () => {
-  const { signIn, signUp } = useAuth();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [forgotPassword, setForgotPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,15 +29,8 @@ const AuthPage = () => {
       return;
     }
 
-    if (isSignUp) {
-      const { error } = await signUp(email, password, displayName);
-      if (error) toast.error(error.message);
-      else toast.success("Check your email to confirm your account!");
-    } else {
-      const { error } = await signIn(email, password);
-      if (error) toast.error(error.message);
-    }
-
+    const { error } = await signIn(email, password);
+    if (error) toast.error(error.message);
     setLoading(false);
   };
 
@@ -51,27 +41,17 @@ const AuthPage = () => {
           <img src={logo} alt="Ashe Alliance Church" className="h-24 mx-auto" />
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground">
-              {forgotPassword ? "Reset Password" : isSignUp ? "Create Account" : "Welcome Back"}
+              {forgotPassword ? "Reset Password" : "Welcome Back"}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              {forgotPassword ? "Enter your email to receive a reset link" : isSignUp ? "Join the leadership dashboard" : "Sign in to your leadership dashboard"}
+              {forgotPassword
+                ? "Enter your email to receive a reset link"
+                : "Sign in to your leadership dashboard"}
             </p>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && !forgotPassword && (
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Full Name</Label>
-                <Input
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Pastor John Smith"
-                  required
-                />
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -96,7 +76,7 @@ const AuthPage = () => {
                 />
               </div>
             )}
-            {!isSignUp && !forgotPassword && (
+            {!forgotPassword && (
               <div className="text-right">
                 <button
                   type="button"
@@ -108,24 +88,22 @@ const AuthPage = () => {
               </div>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Loading..." : forgotPassword ? "Send Reset Link" : isSignUp ? "Create Account" : "Sign In"}
+              {loading ? "Loading..." : forgotPassword ? "Send Reset Link" : "Sign In"}
             </Button>
           </form>
-          <div className="mt-4 text-center space-y-2">
-            {forgotPassword ? (
+          <div className="mt-4 text-center">
+            {forgotPassword && (
               <button
                 onClick={() => setForgotPassword(false)}
                 className="text-sm text-secondary hover:text-primary transition-colors"
               >
                 Back to sign in
               </button>
-            ) : (
-              <button
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-secondary hover:text-primary transition-colors"
-              >
-                {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
-              </button>
+            )}
+            {!forgotPassword && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Access is by invitation only. Contact your administrator.
+              </p>
             )}
           </div>
         </CardContent>
