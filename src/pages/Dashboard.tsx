@@ -61,7 +61,7 @@ const Dashboard = () => {
         </div>
 
         {/* Full-width giving chart */}
-        <div className="mt-6">
+        <div className="mt-6" data-print-break-after>
           <DonationsChart monthlyGiving={monthlyGiving} />
         </div>
 
