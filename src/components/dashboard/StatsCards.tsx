@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Users, TrendingUp, DollarSign, BookOpen } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { parseISO, subYears, subMonths, format } from "date-fns";
+import type { PcoListCounts } from "@/hooks/useDashboardData";
 import {
   Select,
   SelectContent,
