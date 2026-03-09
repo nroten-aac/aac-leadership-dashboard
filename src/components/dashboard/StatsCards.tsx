@@ -75,19 +75,19 @@ const getQuarter = (month: string) => {
   return "Q4";
 };
 
-const PROGRAM_TYPE_LABELS: Record<string, string> = {
-  pt_program: "PT Program",
-  discipleship_group: "Discipleship Groups",
-  bible_study: "Bible Studies",
-  life_group: "Life Groups",
+const PCO_LIST_LABELS: Record<string, string> = {
+  "Life Groups": "Life Groups",
+  "AAC Bible Studies": "Bible Studies",
+  "Discipleship Groups": "Discipleship Groups",
+  "PT Mentorship": "PT Mentorship",
 };
-const PROGRAM_TYPE_COLORS: Record<string, string> = {
-  pt_program: "hsl(var(--primary))",
-  discipleship_group: "hsl(var(--secondary))",
-  bible_study: "hsl(var(--accent))",
-  life_group: "hsl(140 50% 38%)",
+const PCO_LIST_COLORS: Record<string, string> = {
+  "Life Groups": "hsl(140 50% 38%)",
+  "AAC Bible Studies": "hsl(var(--accent))",
+  "Discipleship Groups": "hsl(var(--secondary))",
+  "PT Mentorship": "hsl(var(--primary))",
 };
-const ALL_PROGRAM_TYPES = ["pt_program", "discipleship_group", "bible_study", "life_group"];
+const PCO_LIST_KEYS = ["Life Groups", "AAC Bible Studies", "Discipleship Groups", "PT Mentorship"];
 
 const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGiving, enrollments }: StatsCardsProps) => {
   // Attendance filter state
