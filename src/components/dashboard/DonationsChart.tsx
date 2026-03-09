@@ -1,13 +1,7 @@
 import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, LabelList } from "recharts";
-import { format, subMonths } from "date-fns";
+import { subMonths } from "date-fns";
 import { useState, useMemo } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MultiSelectFilter from "./MultiSelectFilter";
 
 interface MonthlyGiving {
   id: string;
@@ -38,9 +32,9 @@ const ALL_FUNDS = ["general", "building", "missions", "benevolence"];
 
 const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
   const [activeFunds, setActiveFunds] = useState<string[]>(["general"]);
-  const [yearFilter, setYearFilter] = useState<string>("rolling");
-  const [quarterFilter, setQuarterFilter] = useState<string>("all");
-  const [monthFilter, setMonthFilter] = useState<string>("all");
+  const [yearFilter, setYearFilter] = useState<string[]>(["rolling"]);
+  const [quarterFilter, setQuarterFilter] = useState<string[]>([]);
+  const [monthFilter, setMonthFilter] = useState<string[]>([]);
 
   const toggleFund = (fund: string) => {
     setActiveFunds((prev) =>
@@ -53,7 +47,7 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
     return Array.from(set).sort();
   }, [monthlyGiving]);
 
-  const quarters = ["Q1", "Q2", "Q3", "Q4"];
+  const ALL_QUARTERS = ["Q1", "Q2", "Q3", "Q4"];
 
   const months = useMemo(() => {
     const set = new Set(monthlyGiving.map((g) => g.month));
@@ -75,15 +69,17 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
     const cutoffMonthIdx = cutoff.getMonth();
 
     return monthlyGiving.filter((g) => {
-      if (yearFilter === "rolling") {
-        const gMonthIdx = MONTH_ORDER.indexOf(g.month);
-        if (g.year < cutoffYear) return false;
-        if (g.year === cutoffYear && gMonthIdx < cutoffMonthIdx) return false;
-      } else if (yearFilter !== "all") {
-        if (g.year !== Number(yearFilter)) return false;
+      if (yearFilter.length > 0) {
+        if (yearFilter.includes("rolling")) {
+          const gMonthIdx = MONTH_ORDER.indexOf(g.month);
+          if (g.year < cutoffYear) return false;
+          if (g.year === cutoffYear && gMonthIdx < cutoffMonthIdx) return false;
+        } else {
+          if (!yearFilter.includes(String(g.year))) return false;
+        }
       }
-      if (quarterFilter !== "all" && getQuarter(g.month) !== quarterFilter) return false;
-      if (monthFilter !== "all" && g.month !== monthFilter) return false;
+      if (quarterFilter.length > 0 && !quarterFilter.includes(getQuarter(g.month))) return false;
+      if (monthFilter.length > 0 && !monthFilter.includes(g.month)) return false;
       return true;
     });
   }, [monthlyGiving, yearFilter, quarterFilter, monthFilter]);
@@ -107,7 +103,6 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
     return Array.from(map.values()).sort((a, b) => a._sort.localeCompare(b._sort));
   }, [filtered]);
 
-  // Compute total per month for active funds (used for trendline)
   const dataWithTrend = useMemo(() => {
     const withTotals = chartData.map((d) => {
       let total = 0;
@@ -148,13 +143,20 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
 
   const titleSuffix = useMemo(() => {
     const parts: string[] = [];
-    if (yearFilter === "rolling") parts.push("Rolling 12 Months");
-    else if (yearFilter === "all") parts.push("All Time");
-    else parts.push(yearFilter);
-    if (quarterFilter !== "all") parts.push(quarterFilter);
-    if (monthFilter !== "all") parts.push(monthFilter);
+    if (yearFilter.length === 0) parts.push("All Time");
+    else if (yearFilter.includes("rolling")) parts.push("Rolling 12 Months");
+    else parts.push(yearFilter.join(", "));
+    if (quarterFilter.length > 0) parts.push(quarterFilter.join(", "));
+    if (monthFilter.length > 0) parts.push(monthFilter.map((m) => m.slice(0, 3)).join(", "));
     return parts.join(" · ");
   }, [yearFilter, quarterFilter, monthFilter]);
+
+  const yearOptions = [
+    { value: "rolling", label: "Rolling 12mo" },
+    ...years.map((y) => ({ value: String(y), label: String(y) })),
+  ];
+  const quarterOptions = ALL_QUARTERS.map((q) => ({ value: q, label: q }));
+  const monthOptions = months.map((m) => ({ value: m, label: m.slice(0, 3) }));
 
   return (
     <div className="bg-card rounded-2xl shadow-card p-6">
@@ -166,40 +168,9 @@ const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Select value={yearFilter} onValueChange={(v) => { setYearFilter(v); setQuarterFilter("all"); setMonthFilter("all"); }}>
-            <SelectTrigger className="w-[120px] h-8 text-xs rounded-xl border-border/50">
-              <SelectValue placeholder="Year" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="rolling">Rolling 12mo</SelectItem>
-              <SelectItem value="all">All Years</SelectItem>
-              {years.map((y) => (
-                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={quarterFilter} onValueChange={setQuarterFilter}>
-            <SelectTrigger className="w-[100px] h-8 text-xs rounded-xl border-border/50">
-              <SelectValue placeholder="Quarter" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Qtrs</SelectItem>
-              {quarters.map((q) => (
-                <SelectItem key={q} value={q}>{q}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={monthFilter} onValueChange={setMonthFilter}>
-            <SelectTrigger className="w-[110px] h-8 text-xs rounded-xl border-border/50">
-              <SelectValue placeholder="Month" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Months</SelectItem>
-              {months.map((m) => (
-                <SelectItem key={m} value={m}>{m.slice(0, 3)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelectFilter label="Years" options={yearOptions} selected={yearFilter} onChange={setYearFilter} width="w-[130px]" />
+          <MultiSelectFilter label="Qtrs" options={quarterOptions} selected={quarterFilter} onChange={setQuarterFilter} width="w-[110px]" />
+          <MultiSelectFilter label="Months" options={monthOptions} selected={monthFilter} onChange={setMonthFilter} width="w-[120px]" />
         </div>
       </div>
       <div className="flex gap-2 flex-wrap mb-4">
