@@ -95,7 +95,21 @@ const handlePrint = async () => {
 const DashboardHeader = () => {
   const { user } = useAuth();
 
-  const displayName = user?.email?.split("@")[0] ?? "there";
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const displayName = profile?.display_name?.split(" ")[0] || user?.email?.split("@")[0] || "there";
   const greeting = (() => {
     const h = new Date().getHours();
     if (h < 12) return "Good morning";
