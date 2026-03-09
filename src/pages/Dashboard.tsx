@@ -12,7 +12,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Dashboard = () => {
-  const { members, attendance, donations, programs, enrollments, monthlyGiving, isLoading } = useDashboardData();
+  const { members, attendance, donations, programs, enrollments, monthlyGiving, pcoListCounts, isLoading } = useDashboardData();
 
   const totalDonations = donations.reduce((s, d) => s + d.amount, 0);
   const activeMembers = members.filter((m) => m.membership_status === "active").length;
