@@ -38,6 +38,7 @@ interface StatsCardsProps {
   totalEnrollments: number;
   monthlyGiving: MonthlyGiving[];
   enrollments: Enrollment[];
+  pcoListCounts: PcoListCounts | null;
 }
 
 const CHURCH_FAMILY = {
