@@ -1,4 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Search, Bell, Download, Printer } from "lucide-react";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
