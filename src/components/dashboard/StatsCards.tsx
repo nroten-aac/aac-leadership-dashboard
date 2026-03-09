@@ -444,7 +444,7 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
         {pcoListCounts ? (
           <>
             <p className="text-2xl font-display font-bold mt-2 text-primary-foreground">
-              {Object.values(pcoListCounts).reduce((s, v) => s + v, 0)}
+              {PCO_LIST_KEYS.reduce((s, key) => s + (pcoListCounts[key as keyof PcoListCounts] ?? 0), 0)}
             </p>
             <p className="text-xs mt-0.5 text-primary-foreground/60 mb-1">people in discipling relationships</p>
             <DiscipleshipDonut pcoListCounts={pcoListCounts} />
