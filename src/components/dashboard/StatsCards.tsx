@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Users, TrendingUp, DollarSign, BookOpen } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { parseISO, subYears, subMonths, format } from "date-fns";
+import type { PcoListCounts } from "@/hooks/useDashboardData";
 import {
   Select,
   SelectContent,
@@ -37,6 +38,7 @@ interface StatsCardsProps {
   totalEnrollments: number;
   monthlyGiving: MonthlyGiving[];
   enrollments: Enrollment[];
+  pcoListCounts: PcoListCounts | null;
 }
 
 const CHURCH_FAMILY = {
@@ -73,21 +75,21 @@ const getQuarter = (month: string) => {
   return "Q4";
 };
 
-const PROGRAM_TYPE_LABELS: Record<string, string> = {
-  pt_program: "PT Program",
-  discipleship_group: "Discipleship Groups",
-  bible_study: "Bible Studies",
-  life_group: "Life Groups",
+const PCO_LIST_LABELS: Record<string, string> = {
+  "Life Groups": "Life Groups",
+  "AAC Bible Studies": "Bible Studies",
+  "Discipleship Groups": "Discipleship Groups",
+  "PT Mentorship": "PT Mentorship",
 };
-const PROGRAM_TYPE_COLORS: Record<string, string> = {
-  pt_program: "hsl(var(--primary))",
-  discipleship_group: "hsl(var(--secondary))",
-  bible_study: "hsl(var(--accent))",
-  life_group: "hsl(140 50% 38%)",
+const PCO_LIST_COLORS: Record<string, string> = {
+  "Life Groups": "hsl(140 50% 38%)",
+  "AAC Bible Studies": "hsl(var(--accent))",
+  "Discipleship Groups": "hsl(var(--secondary))",
+  "PT Mentorship": "hsl(var(--primary))",
 };
-const ALL_PROGRAM_TYPES = ["pt_program", "discipleship_group", "bible_study", "life_group"];
+const PCO_LIST_KEYS = ["Life Groups", "AAC Bible Studies", "Discipleship Groups", "PT Mentorship"];
 
-const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGiving, enrollments }: StatsCardsProps) => {
+const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGiving, enrollments, pcoListCounts }: StatsCardsProps) => {
   // Attendance filter state
   const [filterType, setFilterType] = useState<FilterType>("rolling");
   const [selectedYear, setSelectedYear] = useState<string>("");
@@ -438,29 +440,34 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
             <BookOpen className="h-4.5 w-4.5 text-primary-foreground" />
           </div>
         </div>
-        <p className="text-2xl font-display font-bold mt-2 text-primary-foreground">{totalEnrollments}</p>
-        <p className="text-xs mt-0.5 text-primary-foreground/60 mb-1">active enrollments</p>
-        <DiscipleshipDonut enrollments={enrollments} />
+        {pcoListCounts ? (
+          <>
+            <p className="text-2xl font-display font-bold mt-2 text-primary-foreground">
+              {Object.values(pcoListCounts).reduce((s, v) => s + v, 0)}
+            </p>
+            <p className="text-xs mt-0.5 text-primary-foreground/60 mb-1">people in lists</p>
+            <DiscipleshipDonut pcoListCounts={pcoListCounts} />
+          </>
+        ) : (
+          <>
+            <p className="text-2xl font-display font-bold mt-2 text-primary-foreground">{totalEnrollments}</p>
+            <p className="text-xs mt-0.5 text-primary-foreground/60 mb-1">active enrollments</p>
+            <DiscipleshipDonutFallback enrollments={enrollments} />
+          </>
+        )}
       </div>
     </div>
   );
 };
 
-function DiscipleshipDonut({ enrollments }: { enrollments: Enrollment[] }) {
+function DiscipleshipDonut({ pcoListCounts }: { pcoListCounts: PcoListCounts }) {
   const data = useMemo(() => {
-    const active = enrollments.filter((e) => e.status === "active");
-    const counts: Record<string, number> = {};
-    for (const t of ALL_PROGRAM_TYPES) counts[t] = 0;
-    active.forEach((e) => {
-      const type = e.discipleship_programs?.program_type;
-      if (type && counts[type] !== undefined) counts[type]++;
-    });
-    return ALL_PROGRAM_TYPES.map((t) => ({
-      name: PROGRAM_TYPE_LABELS[t],
-      value: counts[t],
-      color: PROGRAM_TYPE_COLORS[t],
+    return PCO_LIST_KEYS.map((key) => ({
+      name: PCO_LIST_LABELS[key],
+      value: pcoListCounts[key as keyof PcoListCounts] ?? 0,
+      color: PCO_LIST_COLORS[key],
     })).filter((d) => d.value > 0);
-  }, [enrollments]);
+  }, [pcoListCounts]);
 
   if (data.length === 0) return null;
 
@@ -509,6 +516,12 @@ function DiscipleshipDonut({ enrollments }: { enrollments: Enrollment[] }) {
       </div>
     </div>
   );
+}
+
+function DiscipleshipDonutFallback({ enrollments }: { enrollments: Enrollment[] }) {
+  // Fallback using local enrollment data if PCO is unavailable
+  if (enrollments.length === 0) return null;
+  return <p className="text-xs text-primary-foreground/50">PCO data unavailable</p>;
 }
 
 export default StatsCards;

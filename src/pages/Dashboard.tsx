@@ -12,7 +12,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Dashboard = () => {
-  const { members, attendance, donations, programs, enrollments, monthlyGiving, isLoading } = useDashboardData();
+  const { members, attendance, donations, programs, enrollments, monthlyGiving, pcoListCounts, isLoading } = useDashboardData();
 
   const totalDonations = donations.reduce((s, d) => s + d.amount, 0);
   const activeMembers = members.filter((m) => m.membership_status === "active").length;
@@ -53,6 +53,7 @@ const Dashboard = () => {
           totalEnrollments={activeEnrollments}
           monthlyGiving={monthlyGiving}
           enrollments={enrollments as any}
+          pcoListCounts={pcoListCounts}
         />
 
         {/* Full-width attendance chart */}
@@ -73,7 +74,7 @@ const Dashboard = () => {
         {/* Bottom row: 3 cards */}
         <div className="grid gap-6 lg:grid-cols-3 mt-6">
           <AttendanceBreakdown attendance={attendance} />
-          <DiscipleshipOverview enrollments={enrollments as any} />
+          <DiscipleshipOverview enrollments={enrollments as any} pcoListCounts={pcoListCounts} />
           <MembershipBreakdown members={members} />
         </div>
       </main>
