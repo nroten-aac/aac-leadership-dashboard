@@ -270,12 +270,12 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
   const givingSecondValue = givingFilterType === "year" ? givingSelectedYear : givingFilterType === "quarter" ? givingSelectedQuarter : givingSelectedMonth;
   const setGivingSecondValue = givingFilterType === "year" ? setGivingSelectedYear : givingFilterType === "quarter" ? setGivingSelectedQuarter : setGivingSelectedMonth;
 
-  const familyGroups = [
-    { label: "Member Adults", value: CHURCH_FAMILY.memberAdults, color: "hsl(var(--primary))" },
-    { label: "Member Dependents", value: CHURCH_FAMILY.memberDependents, color: "hsl(var(--secondary))" },
-    { label: "RA Adults", value: CHURCH_FAMILY.regularAdults, color: "hsl(var(--accent))" },
-    { label: "RA Dependents", value: CHURCH_FAMILY.regularDependents, color: "hsl(var(--muted-foreground))" },
-  ];
+  const familyGroups = CHURCH_FAMILY_KEYS.map((g) => ({
+    label: g.label,
+    value: pcoListCounts?.[g.key] ?? 0,
+    color: g.color,
+  }));
+  const churchFamilyTotal = familyGroups.reduce((s, g) => s + g.value, 0);
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -287,7 +287,9 @@ const StatsCards = ({ attendance, totalDonations, totalEnrollments, monthlyGivin
             <Users className="h-4.5 w-4.5 text-primary" />
           </div>
         </div>
-        <p className="text-2xl font-display font-bold mt-2 text-foreground">{CHURCH_FAMILY_TOTAL}</p>
+        <p className="text-2xl font-display font-bold mt-2 text-foreground">
+          {pcoListCounts ? churchFamilyTotal : "…"}
+        </p>
         <div className="mt-3 space-y-1.5">
           {familyGroups.map((g) => (
             <div key={g.label} className="flex items-center justify-between text-xs">
