@@ -16,11 +16,26 @@ const ResetPassword = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check URL hash for recovery token (handles case where event fires before listener)
+    const hash = window.location.hash;
+    if (hash.includes("type=recovery")) {
+      setIsRecovery(true);
+    }
+
+    // Also listen for the auth event
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
       }
     });
+
+    // Check if there's already a session (user clicked link and was auto-logged in)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session && hash.includes("type=recovery")) {
+        setIsRecovery(true);
+      }
+    });
+
     return () => subscription.unsubscribe();
   }, []);
 
