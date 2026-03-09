@@ -1,25 +1,10 @@
 import { useState, useMemo } from "react";
 import {
-  ComposedChart,
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Legend,
-  LabelList,
+  ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, LabelList,
 } from "recharts";
 import { format, parseISO, subYears } from "date-fns";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MultiSelectFilter from "./MultiSelectFilter";
 
 interface AttendanceRecord {
   event_date: string;
@@ -36,10 +21,12 @@ interface AttendanceChartProps {
   attendance: AttendanceRecord[];
 }
 
+const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
 const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
-  const [yearFilter, setYearFilter] = useState<string>("rolling");
-  const [quarterFilter, setQuarterFilter] = useState<string>("all");
-  const [monthFilter, setMonthFilter] = useState<string>("all");
+  const [yearFilter, setYearFilter] = useState<string[]>(["rolling"]);
+  const [quarterFilter, setQuarterFilter] = useState<string[]>([]);
+  const [monthFilter, setMonthFilter] = useState<string[]>([]);
 
   const years = useMemo(() => {
     const set = new Set(attendance.map((a) => a.year));
@@ -53,8 +40,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
 
   const months = useMemo(() => {
     const set = new Set(attendance.map((a) => a.month));
-    const order = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    return Array.from(set).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    return Array.from(set).sort((a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
   }, [attendance]);
 
   const rollingCutoff = useMemo(() => {
@@ -66,13 +52,16 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
 
   const filtered = useMemo(() => {
     return attendance.filter((a) => {
-      if (yearFilter === "rolling") {
-        if (a.event_date < rollingCutoff) return false;
-      } else if (yearFilter !== "all") {
-        if (a.year !== Number(yearFilter)) return false;
+      // Year filter
+      if (yearFilter.length > 0) {
+        if (yearFilter.includes("rolling")) {
+          if (a.event_date < rollingCutoff) return false;
+        } else {
+          if (!yearFilter.includes(String(a.year))) return false;
+        }
       }
-      if (quarterFilter !== "all" && a.quarter !== quarterFilter) return false;
-      if (monthFilter !== "all" && a.month !== monthFilter) return false;
+      if (quarterFilter.length > 0 && !quarterFilter.includes(a.quarter)) return false;
+      if (monthFilter.length > 0 && !monthFilter.includes(a.month)) return false;
       return true;
     });
   }, [attendance, yearFilter, quarterFilter, monthFilter, rollingCutoff]);
@@ -103,7 +92,6 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
   const dataWithTrend = useMemo(() => {
     const n = chartData.length;
     if (n === 0) return [];
-    // Only use non-zero adjusted total weeks for trendline regression
     const nonZero = chartData
       .map((d, i) => ({ i, total: d.combined + d.online }))
       .filter((d) => d.total > 0);
@@ -133,6 +121,13 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
     return { trendPct: pct, isUp: pct >= 0 };
   }, [chartData]);
 
+  const yearOptions = [
+    { value: "rolling", label: "Rolling Year" },
+    ...years.map((y) => ({ value: String(y), label: String(y) })),
+  ];
+  const quarterOptions = quarters.map((q) => ({ value: q, label: q }));
+  const monthOptions = months.map((m) => ({ value: m, label: m.slice(0, 3) }));
+
   return (
     <div className="bg-card rounded-2xl shadow-card p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
@@ -143,40 +138,9 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <Select value={yearFilter} onValueChange={(v) => { setYearFilter(v); setQuarterFilter("all"); setMonthFilter("all"); }}>
-            <SelectTrigger className="w-[120px] h-8 text-xs rounded-xl border-border/50">
-              <SelectValue placeholder="Year" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="rolling">Rolling Year</SelectItem>
-              <SelectItem value="all">All Years</SelectItem>
-              {years.map((y) => (
-                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={quarterFilter} onValueChange={setQuarterFilter}>
-            <SelectTrigger className="w-[100px] h-8 text-xs rounded-xl border-border/50">
-              <SelectValue placeholder="Quarter" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Qtrs</SelectItem>
-              {quarters.map((q) => (
-                <SelectItem key={q} value={q}>{q}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={monthFilter} onValueChange={setMonthFilter}>
-            <SelectTrigger className="w-[110px] h-8 text-xs rounded-xl border-border/50">
-              <SelectValue placeholder="Month" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Months</SelectItem>
-              {months.map((m) => (
-                <SelectItem key={m} value={m}>{m.slice(0, 3)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelectFilter label="Years" options={yearOptions} selected={yearFilter} onChange={(v) => { setYearFilter(v); if (!v.includes("rolling")) { /* keep quarter/month */ } }} width="w-[130px]" />
+          <MultiSelectFilter label="Qtrs" options={quarterOptions} selected={quarterFilter} onChange={setQuarterFilter} width="w-[110px]" />
+          <MultiSelectFilter label="Months" options={monthOptions} selected={monthFilter} onChange={setMonthFilter} width="w-[120px]" />
           <div
             className={`flex items-center gap-1 text-sm font-semibold px-2.5 py-1 rounded-lg ${
               isUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
