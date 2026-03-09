@@ -13,9 +13,11 @@ serve(async (req) => {
   }
 
   try {
-    console.log("invite-user: request received");
+    console.log("invite-user: start");
+
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
+      console.log("invite-user: no auth header");
       return new Response(JSON.stringify({ error: "Not authenticated" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -26,29 +28,33 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify the caller using getUser
+    console.log("invite-user: verifying user");
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { authorization: authHeader } },
     });
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) {
+    const { data: userData, error: userError } = await userClient.auth.getUser();
+    console.log("invite-user: getUser result", JSON.stringify({ error: userError?.message, userId: userData?.user?.id }));
+
+    if (userError || !userData?.user) {
       return new Response(JSON.stringify({ error: "Invalid user" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = user.id;
-    const userEmail = user.email;
+    const userId = userData.user.id;
+    const userEmail = userData.user.email;
 
-    // Check admin role using service role client
+    console.log("invite-user: checking admin role for", userId);
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
-    const { data: roleData } = await adminClient
+    const { data: roleData, error: roleError } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
       .eq("role", "admin")
       .maybeSingle();
+
+    console.log("invite-user: role check", JSON.stringify({ roleData, roleError: roleError?.message }));
 
     if (!roleData) {
       return new Response(JSON.stringify({ error: "Admin access required" }), {
@@ -57,7 +63,9 @@ serve(async (req) => {
       });
     }
 
-    const { email, allowed_tabs, role } = await req.json();
+    const body = await req.json();
+    const { email, allowed_tabs, role } = body;
+    console.log("invite-user: parsed body", JSON.stringify({ email, allowed_tabs, role }));
 
     if (!email) {
       return new Response(JSON.stringify({ error: "Email is required" }), {
@@ -66,7 +74,7 @@ serve(async (req) => {
       });
     }
 
-    // Create invitation record
+    console.log("invite-user: creating invitation record");
     const { data: invitation, error: invError } = await adminClient
       .from("invitations")
       .insert({
@@ -78,19 +86,23 @@ serve(async (req) => {
       .single();
 
     if (invError) {
+      console.log("invite-user: invitation insert error", invError.message);
       return new Response(JSON.stringify({ error: invError.message }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Send invite via Supabase Auth
+    console.log("invite-user: sending auth invite email");
     const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
       redirectTo: `${req.headers.get("origin") || supabaseUrl}`,
     });
 
+    console.log("invite-user: auth invite result", JSON.stringify({ error: inviteError?.message, userId: inviteData?.user?.id }));
+
     if (inviteError) {
       if (inviteError.message.includes("already been registered")) {
+        console.log("invite-user: user already exists, updating permissions");
         const { data: existingUser } = await adminClient.auth.admin.listUsers();
         const foundUser = existingUser?.users?.find((u: any) => u.email === email);
 
@@ -137,6 +149,7 @@ serve(async (req) => {
       }, { onConflict: "user_id,role" });
     }
 
+    console.log("invite-user: success");
     return new Response(JSON.stringify({
       message: "Invitation sent successfully",
       invitation,
@@ -144,6 +157,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    console.error("invite-user: uncaught error", err.message, err.stack);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
