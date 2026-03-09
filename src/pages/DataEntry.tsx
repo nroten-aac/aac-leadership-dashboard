@@ -38,6 +38,10 @@ const DataEntry = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        <div className="mt-6">
+          <DataDownload />
+        </div>
       </main>
     </div>
   );
