@@ -6,6 +6,10 @@ export interface PcoListCounts {
   "AAC Bible Studies": number;
   "Discipleship Groups": number;
   "PT Mentorship": number;
+  "Member Adults": number;
+  "Member Children": number;
+  "Regular Attender Adults": number;
+  "Regular Attender Children": number;
 }
 
 export function useDashboardData() {

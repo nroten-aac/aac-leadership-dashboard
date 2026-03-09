@@ -9,12 +9,16 @@ const corsHeaders = {
 
 const PC_BASE = "https://api.planningcenteronline.com/people/v2";
 
-// The 4 PCO list names to match
+// All PCO list names to fetch
 const TARGET_LISTS = [
   "Life Groups",
   "AAC Bible Studies",
   "Discipleship Groups",
   "PT Mentorship",
+  "Member Adults",
+  "Member Children",
+  "Regular Attender Adults",
+  "Regular Attender Children",
 ];
 
 async function pcFetch(path: string, appId: string, secret: string) {
@@ -36,7 +40,6 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Authenticate user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -51,8 +54,9 @@ serve(async (req) => {
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -75,11 +79,7 @@ serve(async (req) => {
     while (nextUrl) {
       const data = await pcFetch(nextUrl, PC_APP_ID, PC_SECRET);
       allLists.push(...(data.data || []));
-      if (data.links?.next) {
-        nextUrl = data.links.next;
-      } else {
-        nextUrl = null;
-      }
+      nextUrl = data.links?.next || null;
     }
 
     console.log(`Found ${allLists.length} total lists`);
@@ -91,7 +91,6 @@ serve(async (req) => {
         (l: any) => l.attributes.name?.toLowerCase() === name.toLowerCase()
       );
       if (list) {
-        // Fetch the list's people with per_page=1 to get meta.total_count
         try {
           const peopleData = await pcFetch(`/lists/${list.id}/people?per_page=1`, PC_APP_ID, PC_SECRET);
           const count = peopleData.meta?.total_count ?? peopleData.data?.length ?? 0;
