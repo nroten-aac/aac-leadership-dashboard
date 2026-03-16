@@ -24,6 +24,7 @@ const DataEntry = () => {
             <TabsTrigger value="giving">Giving</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
+            <TabsTrigger value="building">Building</TabsTrigger>
           </TabsList>
 
           <TabsContent value="giving">
@@ -37,6 +38,9 @@ const DataEntry = () => {
             <div className="mt-6">
               <PlanningCenterImport />
             </div>
+          </TabsContent>
+          <TabsContent value="building">
+            <BuildingEntry />
           </TabsContent>
         </Tabs>
 
