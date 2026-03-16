@@ -135,6 +135,11 @@ const GivingEntry = () => {
       <RecentEntries
         table="monthly_giving"
         title="Recent Giving Entries"
+        orderBy={[
+          { column: "year", ascending: false },
+          { column: "month", ascending: false },
+          { column: "created_at", ascending: false },
+        ]}
         columns={[
           { key: "month", label: "Month" },
           { key: "year", label: "Year" },
