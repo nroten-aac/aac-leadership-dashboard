@@ -5,6 +5,7 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import GivingEntry from "@/components/data-entry/GivingEntry";
 import AttendanceEntry from "@/components/data-entry/AttendanceEntry";
 import MembersEntry from "@/components/data-entry/MembersEntry";
+import BuildingEntry from "@/components/data-entry/BuildingEntry";
 import PlanningCenterImport from "@/components/data-entry/PlanningCenterImport";
 import DataDownload from "@/components/data-entry/DataDownload";
 
