@@ -5,6 +5,7 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import GivingEntry from "@/components/data-entry/GivingEntry";
 import AttendanceEntry from "@/components/data-entry/AttendanceEntry";
 import MembersEntry from "@/components/data-entry/MembersEntry";
+import BuildingEntry from "@/components/data-entry/BuildingEntry";
 import PlanningCenterImport from "@/components/data-entry/PlanningCenterImport";
 import DataDownload from "@/components/data-entry/DataDownload";
 
@@ -23,6 +24,7 @@ const DataEntry = () => {
             <TabsTrigger value="giving">Giving</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
+            <TabsTrigger value="building">Building</TabsTrigger>
           </TabsList>
 
           <TabsContent value="giving">
@@ -36,6 +38,9 @@ const DataEntry = () => {
             <div className="mt-6">
               <PlanningCenterImport />
             </div>
+          </TabsContent>
+          <TabsContent value="building">
+            <BuildingEntry />
           </TabsContent>
         </Tabs>
 
