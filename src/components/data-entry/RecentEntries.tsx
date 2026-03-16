@@ -13,7 +13,7 @@ type ColumnDef = {
 interface RecentEntriesProps {
   table: "attendance" | "monthly_giving" | "members";
   columns: ColumnDef[];
-  orderBy?: string;
+  orderBy?: string | { column: string; ascending: boolean }[];
   title?: string;
   limit?: number;
 }
@@ -22,11 +22,15 @@ const RecentEntries = ({ table, columns, orderBy = "created_at", title = "Recent
   const { data, isLoading } = useQuery({
     queryKey: [table, "recent"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from(table)
-        .select("*")
-        .order(orderBy, { ascending: false })
-        .limit(limit);
+      let query = supabase.from(table).select("*");
+      if (Array.isArray(orderBy)) {
+        orderBy.forEach((o) => {
+          query = query.order(o.column, { ascending: o.ascending });
+        });
+      } else {
+        query = query.order(orderBy, { ascending: false });
+      }
+      const { data, error } = await query.limit(limit);
       if (error) throw error;
       return data;
     },
