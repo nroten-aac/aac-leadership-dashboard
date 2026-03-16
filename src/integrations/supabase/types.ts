@@ -80,6 +80,36 @@ export type Database = {
         }
         Relationships: []
       }
+      building_fund_accounts: {
+        Row: {
+          account_name: string
+          amount: number
+          created_at: string
+          id: string
+          month: string
+          notes: string | null
+          year: number
+        }
+        Insert: {
+          account_name: string
+          amount: number
+          created_at?: string
+          id?: string
+          month: string
+          notes?: string | null
+          year: number
+        }
+        Update: {
+          account_name?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          month?: string
+          notes?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       discipleship_programs: {
         Row: {
           created_at: string
