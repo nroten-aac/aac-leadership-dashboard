@@ -116,8 +116,12 @@ const AttendanceEntry = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!eventDate || !service || !sanctuary) {
-      toast({ title: "Missing fields", description: "Date, service, and sanctuary attendance are required.", variant: "destructive" });
+    if (!eventDate || !service) {
+      toast({ title: "Missing fields", description: "Date and service are required.", variant: "destructive" });
+      return;
+    }
+    if (service !== "Not Applicable" && !sanctuary) {
+      toast({ title: "Missing fields", description: "Sanctuary attendance is required for this service.", variant: "destructive" });
       return;
     }
 
