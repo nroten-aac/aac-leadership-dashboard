@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,9 +7,19 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import RecentEntries from "./RecentEntries";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const SERVICES = ["1st Sunday Service (9:15)", "2nd Sunday Service (11:00)", "Wednesday"];
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -23,6 +33,7 @@ const AttendanceEntry = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
 
   const [eventDate, setEventDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [service, setService] = useState("");
@@ -35,13 +46,26 @@ const AttendanceEntry = () => {
   const [volunteers, setVolunteers] = useState("0");
   const [notes, setNotes] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!eventDate || !service || !sanctuary) {
-      toast({ title: "Missing fields", description: "Date, service, and sanctuary attendance are required.", variant: "destructive" });
-      return;
-    }
+  // Fetch existing entries for the selected date
+  const { data: existingEntries } = useQuery({
+    queryKey: ["attendance", "existing", eventDate],
+    queryFn: async () => {
+      if (!eventDate) return [];
+      const { data, error } = await supabase
+        .from("attendance")
+        .select("*")
+        .eq("event_date", eventDate)
+        .order("service", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!eventDate,
+  });
 
+  const matchingEntries = existingEntries?.filter(e => e.service === service) || [];
+  const hasExactMatch = matchingEntries.length > 0;
+
+  const doSave = async () => {
     const d = new Date(eventDate);
     const monthName = MONTHS[d.getMonth()];
     const year = d.getFullYear();
@@ -90,12 +114,26 @@ const AttendanceEntry = () => {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!eventDate || !service || !sanctuary) {
+      toast({ title: "Missing fields", description: "Date, service, and sanctuary attendance are required.", variant: "destructive" });
+      return;
+    }
+
+    if (hasExactMatch) {
+      setShowDuplicateWarning(true);
+      return;
+    }
+
+    await doSave();
+  };
+
   const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const text = await file.text();
     const lines = text.split("\n").filter(l => l.trim());
-    // Expect: event_date,service,sanctuary_attendance,online_attendance,nursery_attendance,k3_attendance,grade_4_6_attendance,youth_attendance,volunteer_classroom_attendance,notes
     const rows = lines.slice(1).map(line => {
       const c = line.split(",").map(s => s.trim().replace(/^"|"$/g, ""));
       const d = new Date(c[0]);
@@ -192,6 +230,78 @@ const AttendanceEntry = () => {
           <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Attendance"}</Button>
         </form>
       </div>
+
+      {/* Existing entries for selected date */}
+      {existingEntries && existingEntries.length > 0 && (
+        <div className="bg-accent/50 border border-accent rounded-2xl p-4">
+          <h4 className="font-display font-medium text-foreground mb-3 flex items-center gap-2 text-sm">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            Existing entries for {new Date(eventDate + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b border-border">
+                  <th className="pb-2 pr-4">Service</th>
+                  <th className="pb-2 pr-4">Sanctuary</th>
+                  <th className="pb-2 pr-4">Online</th>
+                  <th className="pb-2 pr-4">Nursery</th>
+                  <th className="pb-2 pr-4">K-3</th>
+                  <th className="pb-2 pr-4">4-6</th>
+                  <th className="pb-2 pr-4">Youth</th>
+                  <th className="pb-2">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {existingEntries.map((entry) => (
+                  <tr key={entry.id} className={`border-b border-border/50 ${service && entry.service === service ? "bg-amber-500/10 font-medium" : ""}`}>
+                    <td className="py-2 pr-4">{entry.service}</td>
+                    <td className="py-2 pr-4">{entry.sanctuary_attendance}</td>
+                    <td className="py-2 pr-4">{entry.online_attendance}</td>
+                    <td className="py-2 pr-4">{entry.nursery_attendance}</td>
+                    <td className="py-2 pr-4">{entry.k3_attendance}</td>
+                    <td className="py-2 pr-4">{entry.grade_4_6_attendance}</td>
+                    <td className="py-2 pr-4">{entry.youth_attendance}</td>
+                    <td className="py-2">{entry.adjusted_total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Duplicate confirmation dialog */}
+      <AlertDialog open={showDuplicateWarning} onOpenChange={setShowDuplicateWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Potential Duplicate Entry
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              An entry for <strong>{service}</strong> on{" "}
+              <strong>{new Date(eventDate + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong>{" "}
+              already exists with{" "}
+              <strong>{matchingEntries[0]?.sanctuary_attendance} sanctuary</strong> and{" "}
+              <strong>{matchingEntries[0]?.adjusted_total} total</strong>.
+              <br /><br />
+              Are you sure you want to add another entry?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setShowDuplicateWarning(false);
+                await doSave();
+              }}
+            >
+              Yes, Save Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="bg-card rounded-2xl shadow-card p-6">
         <h3 className="font-display font-semibold text-foreground mb-2 flex items-center gap-2">
