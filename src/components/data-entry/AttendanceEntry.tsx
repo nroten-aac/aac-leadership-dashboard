@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const SERVICES = ["1st Sunday Service (9:15)", "2nd Sunday Service (11:00)", "Wednesday"];
+const SERVICES = ["1st Sunday Service (9:15)", "2nd Sunday Service (11:00)", "Wednesday", "Not Applicable"];
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const QUARTERS = ["Q1","Q2","Q3","Q4"];
 
