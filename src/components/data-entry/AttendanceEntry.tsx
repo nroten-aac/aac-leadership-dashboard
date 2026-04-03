@@ -279,25 +279,41 @@ const AttendanceEntry = () => {
               <AlertTriangle className="h-5 w-5 text-amber-500" />
               Potential Duplicate Entry
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              An entry for <strong>{service}</strong> on{" "}
-              <strong>{new Date(eventDate + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong>{" "}
-              already exists with{" "}
-              <strong>{matchingEntries[0]?.sanctuary_attendance} sanctuary</strong> and{" "}
-              <strong>{matchingEntries[0]?.adjusted_total} total</strong>.
-              <br /><br />
-              Are you sure you want to add another entry?
+            <AlertDialogDescription asChild>
+              <div>
+                <p>
+                  An entry for <strong>{service}</strong> on{" "}
+                  <strong>{new Date(eventDate + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong>{" "}
+                  already exists with{" "}
+                  <strong>{matchingEntries[0]?.sanctuary_attendance} sanctuary</strong> and{" "}
+                  <strong>{matchingEntries[0]?.adjusted_total} total</strong>.
+                </p>
+                <p className="mt-2">What would you like to do?</p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              onClick={async () => {
+                setShowDuplicateWarning(false);
+                // Override: delete existing, then save new
+                for (const entry of matchingEntries) {
+                  await supabase.from("attendance").delete().eq("id", entry.id);
+                }
+                await doSave();
+              }}
+            >
+              Replace Existing
+            </AlertDialogAction>
             <AlertDialogAction
               onClick={async () => {
                 setShowDuplicateWarning(false);
                 await doSave();
               }}
             >
-              Yes, Save Anyway
+              Add as Duplicate
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
