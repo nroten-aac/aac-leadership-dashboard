@@ -219,7 +219,7 @@ const AttendanceEntry = () => {
               <Input type="number" value={youth} onChange={e => setYouth(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Volunteers</Label>
+              <Label>Kid's Volunteers</Label>
               <Input type="number" value={volunteers} onChange={e => setVolunteers(e.target.value)} />
             </div>
           </div>
