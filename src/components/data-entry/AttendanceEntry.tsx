@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const SERVICES = ["1st Sunday Service (9:15)", "2nd Sunday Service (11:00)", "Wednesday"];
+const SERVICES = ["1st Sunday Service (9:15)", "2nd Sunday Service (11:00)", "Wednesday", "Not Applicable"];
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const QUARTERS = ["Q1","Q2","Q3","Q4"];
 
@@ -219,7 +219,7 @@ const AttendanceEntry = () => {
               <Input type="number" value={youth} onChange={e => setYouth(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Volunteers</Label>
+              <Label>Kid's Volunteers</Label>
               <Input type="number" value={volunteers} onChange={e => setVolunteers(e.target.value)} />
             </div>
           </div>
