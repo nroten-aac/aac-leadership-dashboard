@@ -133,7 +133,7 @@ const GivingEntry = () => {
       </div>
 
       {/* Planning Center Import */}
-      <PcoGivingImport />
+      <PcoGivingImportSection queryClient={queryClient} toast={toast} />
 
       <RecentEntries
         table="monthly_giving"
