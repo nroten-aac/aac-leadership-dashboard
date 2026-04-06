@@ -108,7 +108,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
         online: vals.online,
         notes: vals.notes.filter(Boolean).join("; ") || null,
         firstService: vals.firstService,
-        secondService: vals.secondService,
+        firstServiceOriginal: vals.firstServiceOriginal,
         kids: vals.kids,
         nursery: vals.nursery,
         k3: vals.k3,
