@@ -195,24 +195,39 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
             />
             <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
             <Tooltip
-              contentStyle={{
-                background: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "12px",
-                fontSize: 13,
-                maxWidth: 280,
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const item = payload[0]?.payload;
+                if (!item) return null;
+                const dateStr = item.date ? format(parseISO(item.date), "MMM d, yyyy") : "";
+                const total = item.combined + item.online;
+                return (
+                  <div className="bg-card border border-border rounded-xl p-3 shadow-lg text-sm max-w-[300px]">
+                    <p className="font-semibold text-foreground mb-1.5">{dateStr}</p>
+                    <div className="space-y-0.5 text-muted-foreground">
+                      {item.firstService > 0 && <p>1st Service: <span className="text-foreground font-medium">{item.firstService}</span></p>}
+                      {item.secondService > 0 && <p>2nd Service: <span className="text-foreground font-medium">{item.secondService}</span></p>}
+                      {item.kids > 0 && (
+                        <div className="ml-0">
+                          <p>Children &amp; Volunteers: <span className="text-foreground font-medium">{item.kids}</span></p>
+                          <div className="ml-3 text-xs text-muted-foreground/80">
+                            {item.volunteers > 0 && <p>Volunteers: {item.volunteers}</p>}
+                            {item.nursery > 0 && <p>Nursery: {item.nursery}</p>}
+                            {item.k3 > 0 && <p>K–3: {item.k3}</p>}
+                            {item.grade46 > 0 && <p>Grades 4–6: {item.grade46}</p>}
+                            {item.youth > 0 && <p>Youth: {item.youth}</p>}
+                          </div>
+                        </div>
+                      )}
+                      {item.online > 0 && <p>Online: <span className="text-foreground font-medium">{item.online}</span></p>}
+                      <div className="border-t border-border mt-1.5 pt-1.5">
+                        <p className="font-semibold text-foreground">Total: {total}</p>
+                      </div>
+                    </div>
+                    {item.notes && <p className="mt-1.5 text-xs text-muted-foreground/70">📝 {item.notes}</p>}
+                  </div>
+                );
               }}
-              labelFormatter={(_, payload) => {
-                if (payload && payload.length > 0) {
-                  const item = payload[0]?.payload;
-                  if (!item) return "";
-                  const dateStr = item.date ? format(parseISO(item.date), "MMM d, yyyy") : "";
-                  const notes = item.notes;
-                  return notes ? `${dateStr}\n📝 ${notes}` : dateStr;
-                }
-                return "";
-              }}
-              labelStyle={{ whiteSpace: "pre-wrap" }}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar
