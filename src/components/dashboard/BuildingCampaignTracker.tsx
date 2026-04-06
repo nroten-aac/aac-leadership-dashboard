@@ -204,7 +204,13 @@ const BuildingCampaignTracker = () => {
           {/* Pledges */}
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Campaign Details</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
+              <Card className="bg-muted/30 border-muted-foreground/20">
+                <CardContent className="p-4 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Starting Balance Before Campaign</p>
+                  <p className="text-lg font-bold text-foreground">{fmt(408510.58)}</p>
+                </CardContent>
+              </Card>
               <Card className="bg-primary/5 border-primary/20">
                 <CardContent className="p-4 text-center">
                   <p className="text-xs text-muted-foreground mb-1">Total Pledged</p>
