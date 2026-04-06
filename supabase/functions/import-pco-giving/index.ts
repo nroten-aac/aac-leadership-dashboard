@@ -22,6 +22,8 @@ const FUND_MAP: Record<string, string> = {
   "building fund": "building",
   "missions": "missions",
   "missions fund": "missions",
+  "missions & outreach": "missions",
+  "missions and outreach": "missions",
   "benevolence": "benevolence",
   "benevolence fund": "benevolence",
 };
