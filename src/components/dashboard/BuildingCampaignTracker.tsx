@@ -1,19 +1,11 @@
-import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { Pencil, Check, X, Plus, Trash2 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend,
 } from "recharts";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Separator } from "@/components/ui/separator";
 
 const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const CAMPAIGN_GOAL = 925000;
@@ -39,12 +31,6 @@ const fmtShort = (v: number) => {
 };
 
 const BuildingCampaignTracker = () => {
-  const queryClient = useQueryClient();
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValues, setEditValues] = useState<Partial<CampaignRow>>({});
-  const [addOpen, setAddOpen] = useState(false);
-  const [newRow, setNewRow] = useState({ month: "January", year: new Date().getFullYear(), monthly_giving_deposits: 0, cd_0668: "", cd_1941: "", money_market: "", cd_2029: "" });
-
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["building_campaign"],
     queryFn: async () => {
@@ -57,32 +43,6 @@ const BuildingCampaignTracker = () => {
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, ...values }: Partial<CampaignRow> & { id: string }) => {
-      const { error } = await supabase.from("building_campaign").update(values).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["building_campaign"] }); toast.success("Updated"); setEditingId(null); },
-  });
-
-  const addMutation = useMutation({
-    mutationFn: async (row: any) => {
-      const { error } = await supabase.from("building_campaign").insert(row);
-      if (error) throw error;
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["building_campaign"] }); toast.success("Added"); setAddOpen(false); },
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("building_campaign").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["building_campaign"] }); toast.success("Deleted"); },
-  });
-
-  // Compute cumulative giving + chart data
   const { chartData, cumulativeGiving, totalFundsAvailable, latestRow } = useMemo(() => {
     let cumulative = 0;
     const chartData = rows.map((r) => {
@@ -103,24 +63,7 @@ const BuildingCampaignTracker = () => {
 
   const gap = CAMPAIGN_GOAL - totalFundsAvailable;
 
-  const startEdit = (row: CampaignRow) => {
-    setEditingId(row.id);
-    setEditValues({ monthly_giving_deposits: row.monthly_giving_deposits, cd_0668: row.cd_0668, cd_1941: row.cd_1941, money_market: row.money_market, cd_2029: row.cd_2029 });
-  };
-
-  const handleAdd = () => {
-    addMutation.mutate({
-      month: newRow.month,
-      year: newRow.year,
-      monthly_giving_deposits: Number(newRow.monthly_giving_deposits) || 0,
-      cd_0668: newRow.cd_0668 ? Number(newRow.cd_0668) : null,
-      cd_1941: newRow.cd_1941 ? Number(newRow.cd_1941) : null,
-      money_market: newRow.money_market ? Number(newRow.money_market) : null,
-      cd_2029: newRow.cd_2029 ? Number(newRow.cd_2029) : null,
-    });
-  };
-
-  // Compute cumulative for each row
+  // Compute cumulative for each row (for display)
   const rowsWithCumulative = useMemo(() => {
     let cum = 0;
     return rows.map((r) => {
@@ -135,45 +78,8 @@ const BuildingCampaignTracker = () => {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* LEFT: Grid */}
         <Card className="overflow-hidden flex flex-col h-full">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardHeader className="pb-2">
             <CardTitle className="text-base">Giving Tracker</CardTitle>
-            <Dialog open={addOpen} onOpenChange={setAddOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline" className="gap-1"><Plus className="h-4 w-4" /> Add Month</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Add Month</DialogTitle></DialogHeader>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-muted-foreground">Month</label>
-                    <Select value={newRow.month} onValueChange={(v) => setNewRow({ ...newRow, month: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{MONTH_ORDER.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground">Year</label>
-                    <Input type="number" value={newRow.year} onChange={(e) => setNewRow({ ...newRow, year: Number(e.target.value) })} />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-xs text-muted-foreground">Monthly Giving Deposits</label>
-                    <Input type="number" step="0.01" value={newRow.monthly_giving_deposits} onChange={(e) => setNewRow({ ...newRow, monthly_giving_deposits: Number(e.target.value) })} />
-                  </div>
-                  {[
-                    { key: "cd_0668", label: "CD-0668" },
-                    { key: "cd_1941", label: "CD-1941" },
-                    { key: "money_market", label: "Money Market" },
-                    { key: "cd_2029", label: "CD-2029" },
-                  ].map(({ key, label }) => (
-                    <div key={key}>
-                      <label className="text-xs text-muted-foreground">{label}</label>
-                      <Input type="number" step="0.01" placeholder="—" value={(newRow as any)[key]} onChange={(e) => setNewRow({ ...newRow, [key]: e.target.value })} />
-                    </div>
-                  ))}
-                </div>
-                <DialogFooter><Button onClick={handleAdd} disabled={addMutation.isPending}>Add</Button></DialogFooter>
-              </DialogContent>
-            </Dialog>
           </CardHeader>
           <CardContent className="p-0 flex-1 min-h-0">
             <div className="overflow-auto h-full">
@@ -187,54 +93,18 @@ const BuildingCampaignTracker = () => {
                     <th className="text-right px-2 py-2 font-medium text-muted-foreground">CD-1941</th>
                     <th className="text-right px-2 py-2 font-medium text-muted-foreground">Money Mkt</th>
                     <th className="text-right px-2 py-2 font-medium text-muted-foreground">CD-2029</th>
-                    <th className="px-2 py-2 w-16"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {[...rowsWithCumulative].reverse().map((row) => (
                     <tr key={row.id} className="border-b border-border/30 hover:bg-muted/30">
                       <td className="px-2 py-1.5 font-medium whitespace-nowrap">{row.month.slice(0, 3)} {row.year}</td>
-                      {editingId === row.id ? (
-                        <>
-                          <td className="px-1 py-1"><Input className="h-7 text-xs text-right" type="number" step="0.01" value={editValues.monthly_giving_deposits ?? ""} onChange={(e) => setEditValues({ ...editValues, monthly_giving_deposits: Number(e.target.value) })} /></td>
-                          <td className="px-2 py-1.5 text-right text-muted-foreground">{fmt(row.cumulative)}</td>
-                          <td className="px-1 py-1"><Input className="h-7 text-xs text-right" type="number" step="0.01" value={editValues.cd_0668 ?? ""} onChange={(e) => setEditValues({ ...editValues, cd_0668: e.target.value ? Number(e.target.value) : null })} /></td>
-                          <td className="px-1 py-1"><Input className="h-7 text-xs text-right" type="number" step="0.01" value={editValues.cd_1941 ?? ""} onChange={(e) => setEditValues({ ...editValues, cd_1941: e.target.value ? Number(e.target.value) : null })} /></td>
-                          <td className="px-1 py-1"><Input className="h-7 text-xs text-right" type="number" step="0.01" value={editValues.money_market ?? ""} onChange={(e) => setEditValues({ ...editValues, money_market: e.target.value ? Number(e.target.value) : null })} /></td>
-                          <td className="px-1 py-1"><Input className="h-7 text-xs text-right" type="number" step="0.01" value={editValues.cd_2029 ?? ""} onChange={(e) => setEditValues({ ...editValues, cd_2029: e.target.value ? Number(e.target.value) : null })} /></td>
-                          <td className="px-1 py-1 flex gap-1">
-                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => updateMutation.mutate({ id: row.id, ...editValues })}><Check className="h-3 w-3" /></Button>
-                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingId(null)}><X className="h-3 w-3" /></Button>
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="px-2 py-1.5 text-right">{fmt(row.monthly_giving_deposits)}</td>
-                          <td className="px-2 py-1.5 text-right font-semibold text-primary">{fmt(row.cumulative)}</td>
-                          <td className="px-2 py-1.5 text-right">{fmt(row.cd_0668)}</td>
-                          <td className="px-2 py-1.5 text-right">{fmt(row.cd_1941)}</td>
-                          <td className="px-2 py-1.5 text-right">{fmt(row.money_market)}</td>
-                          <td className="px-2 py-1.5 text-right">{fmt(row.cd_2029)}</td>
-                          <td className="px-1 py-1 flex gap-0.5">
-                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => startEdit(row)}><Pencil className="h-3 w-3" /></Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive"><Trash2 className="h-3 w-3" /></Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete entry?</AlertDialogTitle>
-                                  <AlertDialogDescription>Remove {row.month} {row.year} from the campaign tracker?</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteMutation.mutate(row.id)}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </td>
-                        </>
-                      )}
+                      <td className="px-2 py-1.5 text-right">{fmt(row.monthly_giving_deposits)}</td>
+                      <td className="px-2 py-1.5 text-right font-semibold text-primary">{fmt(row.cumulative)}</td>
+                      <td className="px-2 py-1.5 text-right">{fmt(row.cd_0668)}</td>
+                      <td className="px-2 py-1.5 text-right">{fmt(row.cd_1941)}</td>
+                      <td className="px-2 py-1.5 text-right">{fmt(row.money_market)}</td>
+                      <td className="px-2 py-1.5 text-right">{fmt(row.cd_2029)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -277,56 +147,68 @@ const BuildingCampaignTracker = () => {
             </CardContent>
           </Card>
 
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 gap-3">
-            <Card className="bg-primary/5 border-primary/20">
-              <CardContent className="p-4 text-center">
-                <p className="text-xs text-muted-foreground mb-1">Pledged Giving Received</p>
-                <p className="text-lg font-bold text-primary">{fmt(cumulativeGiving)}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-green-50 border-green-200">
-              <CardContent className="p-4 text-center">
-                <p className="text-xs text-muted-foreground mb-1">Total Funds Available</p>
-                <p className="text-lg font-bold text-green-700">{fmt(totalFundsAvailable)}</p>
-              </CardContent>
-            </Card>
-            {latestRow && (
-              <>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">Money Market</p>
-                    <p className="text-sm font-semibold">{fmt(latestRow.money_market)}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">CD-0668</p>
-                    <p className="text-sm font-semibold">{fmt(latestRow.cd_0668)}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">CD-1941</p>
-                    <p className="text-sm font-semibold">{fmt(latestRow.cd_1941)}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">CD-2029</p>
-                    <p className="text-sm font-semibold">{fmt(latestRow.cd_2029)}</p>
-                  </CardContent>
-                </Card>
-              </>
-            )}
-            <Card className={`col-span-2 ${gap > 0 ? "bg-amber-50 border-amber-200" : "bg-green-50 border-green-200"}`}>
-              <CardContent className="p-4 text-center">
-                <p className="text-xs text-muted-foreground mb-1">Gap to {fmtShort(CAMPAIGN_GOAL)} Goal</p>
-                <p className={`text-lg font-bold ${gap > 0 ? "text-amber-700" : "text-green-700"}`}>
-                  {gap > 0 ? fmt(gap) : "Goal Reached! 🎉"}
-                </p>
-              </CardContent>
-            </Card>
+          {/* Funds Available */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Funds Available</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="bg-accent/10 border-accent/30">
+                <CardContent className="p-4 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Total Funds Available</p>
+                  <p className="text-lg font-bold text-accent-foreground">{fmt(totalFundsAvailable)}</p>
+                </CardContent>
+              </Card>
+              {latestRow && (
+                <>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Money Market</p>
+                      <p className="text-sm font-semibold">{fmt(latestRow.money_market)}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">CD-0668</p>
+                      <p className="text-sm font-semibold">{fmt(latestRow.cd_0668)}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">CD-1941</p>
+                      <p className="text-sm font-semibold">{fmt(latestRow.cd_1941)}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">CD-2029</p>
+                      <p className="text-sm font-semibold">{fmt(latestRow.cd_2029)}</p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Pledges */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Pledges</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-4 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Pledged Giving Received</p>
+                  <p className="text-lg font-bold text-primary">{fmt(cumulativeGiving)}</p>
+                </CardContent>
+              </Card>
+              <Card className={gap > 0 ? "bg-amber-50 border-amber-200" : "bg-accent/10 border-accent/30"}>
+                <CardContent className="p-4 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Gap to {fmtShort(CAMPAIGN_GOAL)} Goal</p>
+                  <p className={`text-lg font-bold ${gap > 0 ? "text-amber-700" : "text-accent-foreground"}`}>
+                    {gap > 0 ? fmt(gap) : "Goal Reached! 🎉"}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
