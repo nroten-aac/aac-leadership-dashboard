@@ -255,7 +255,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
               <LabelList
                 dataKey="online"
                 position="top"
-                style={{ fontSize: dataWithTrend.length > 30 ? 7 : 10, fill: "hsl(var(--muted-foreground))", fontWeight: 700 }}
+                style={{ fontSize: dataWithTrend.length > 30 ? 7 : 10, fill: "white", fontWeight: 700 }}
                 formatter={(value: number) => (value > 0 ? value : "")}
               />
             </Bar>
