@@ -65,7 +65,7 @@ const Dashboard = () => {
 
         {/* Full-width giving chart */}
         <div className="mt-6" data-print-break-after>
-          <DonationsChart monthlyGiving={monthlyGiving} />
+          <DonationsChart monthlyGiving={monthlyGiving} defaultFunds={["general"]} defaultYearFilter={["rolling"]} />
         </div>
 
       </main>
