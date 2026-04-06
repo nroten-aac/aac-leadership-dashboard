@@ -134,7 +134,7 @@ const BuildingCampaignTracker = () => {
       <h2 className="text-xl font-bold text-foreground mb-4 font-heading">Building Expansion Campaign</h2>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* LEFT: Grid */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden flex flex-col h-full">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-base">Giving Tracker</CardTitle>
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
