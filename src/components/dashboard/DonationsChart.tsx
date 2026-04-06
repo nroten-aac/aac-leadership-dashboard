@@ -13,6 +13,8 @@ interface MonthlyGiving {
 
 interface DonationsChartProps {
   monthlyGiving: MonthlyGiving[];
+  defaultFunds?: string[];
+  defaultYearFilter?: string[];
 }
 
 const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -30,9 +32,10 @@ const FUND_LABELS: Record<string, string> = {
 };
 const ALL_FUNDS = ["general", "building", "missions", "benevolence"];
 
-const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
-  const [activeFunds, setActiveFunds] = useState<string[]>(["general"]);
-  const [yearFilter, setYearFilter] = useState<string[]>(["rolling"]);
+const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: DonationsChartProps) => {
+  const [activeFunds, setActiveFunds] = useState<string[]>(defaultFunds ?? ALL_FUNDS);
+  const [yearFilter, setYearFilter] = useState<string[]>(defaultYearFilter ?? [String(new Date().getFullYear())]);
+
   const [quarterFilter, setQuarterFilter] = useState<string[]>([]);
   const [monthFilter, setMonthFilter] = useState<string[]>([]);
 
