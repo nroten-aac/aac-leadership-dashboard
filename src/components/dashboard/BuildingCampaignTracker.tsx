@@ -216,7 +216,7 @@ const BuildingCampaignTracker = () => {
                 </Card>
                 <Card className="bg-accent/10 border-accent/30 flex-1">
                   <CardContent className="p-4 text-center flex flex-col items-center justify-center h-full">
-                    <p className="text-xs text-muted-foreground mb-1">Non-Pledge Giving</p>
+                    <p className="text-xs text-muted-foreground mb-1">One Time Non-Pledge Gifts</p>
                     {pledgeLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                     ) : (
