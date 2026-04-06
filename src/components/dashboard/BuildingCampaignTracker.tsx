@@ -77,7 +77,7 @@ const BuildingCampaignTracker = () => {
 
 
   return (
-    <div className="mt-8">
+    <div className="mt-8 pb-8">
       <h2 className="text-xl font-bold text-foreground mb-4 font-heading">Building Expansion Campaign</h2>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4">
