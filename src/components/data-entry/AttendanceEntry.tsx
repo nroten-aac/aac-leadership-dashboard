@@ -424,6 +424,7 @@ const AttendanceEntry = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      <div className="bg-card rounded-2xl shadow-card p-6">
         <h3 className="font-display font-semibold text-foreground mb-2 flex items-center gap-2">
           <Upload className="h-4 w-4" /> CSV Import
         </h3>
