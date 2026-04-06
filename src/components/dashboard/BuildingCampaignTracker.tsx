@@ -44,6 +44,16 @@ const BuildingCampaignTracker = () => {
     },
   });
 
+  const { data: pledgeData, isLoading: pledgeLoading } = useQuery({
+    queryKey: ["pco_pledges"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("fetch-pco-pledges");
+      if (error) throw error;
+      return data?.campaigns?.[0] || null;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { chartData, cumulativeGiving, totalFundsAvailable, latestRow } = useMemo(() => {
     let cumulative = 0;
     const chartData = rows.map((r) => {
