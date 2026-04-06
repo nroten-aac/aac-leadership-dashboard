@@ -205,48 +205,49 @@ const BuildingCampaignTracker = () => {
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Campaign Details</p>
             <div className="grid grid-cols-2 gap-4">
-              {/* Left: Starting Balance */}
-              <Card className="bg-muted/30 border-muted-foreground/20">
-                <CardContent className="p-4 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Starting Balance Before Campaign</p>
-                  <p className="text-lg font-bold text-foreground">{fmt(408510.58)}</p>
-                </CardContent>
-              </Card>
+              {/* Left: Starting Balance + Non-Pledge Giving */}
+              <div className="flex flex-col gap-3">
+                <Card className="bg-muted/30 border-muted-foreground/20">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Starting Balance Before Campaign</p>
+                    <p className="text-lg font-bold text-foreground">{fmt(408510.58)}</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-accent/10 border-accent/30">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Non-Pledge Giving</p>
+                    {pledgeLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
+                    ) : (
+                      <p className="text-lg font-bold text-accent-foreground">
+                        {pledgeData ? fmt((pledgeData.received_outside_pledges_cents || 0) / 100) : "—"}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
 
-              {/* Right: Pledges group with bracket */}
+              {/* Right: Total Campaign Giving bracket */}
               <div className="flex flex-col gap-2">
-                {/* Total Pledged as bracket header */}
                 <div className="text-center rounded-t-lg border border-primary/20 bg-primary/5 px-3 py-2">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total Campaign Giving</p>
                   {pledgeLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                   ) : (
                     <p className="text-base font-bold text-primary">
-                      {pledgeData ? fmt((pledgeData.total_pledged_cents || 0) / 100) : fmt(cumulativeGiving)}
+                      {pledgeData ? fmt(((pledgeData.received_from_pledges_cents || 0) + (pledgeData.not_yet_received_cents || 0)) / 100) : fmt(cumulativeGiving)}
                     </p>
                   )}
                 </div>
-                <div className="grid grid-cols-3 gap-2 border-x border-b border-primary/20 rounded-b-lg p-2 bg-primary/[0.02]">
+                <div className="grid grid-cols-2 gap-2 border-x border-b border-primary/20 rounded-b-lg p-2 bg-primary/[0.02]">
                   <Card className="bg-accent/10 border-accent/30 shadow-none">
                     <CardContent className="p-3 text-center">
-                      <p className="text-[10px] text-muted-foreground mb-1">From Pledgers</p>
+                      <p className="text-[10px] text-muted-foreground mb-1">Pledges Received</p>
                       {pledgeLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                       ) : (
                         <p className="text-sm font-bold text-accent-foreground">
                           {pledgeData ? fmt((pledgeData.received_from_pledges_cents || 0) / 100) : "—"}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-accent/10 border-accent/30 shadow-none">
-                    <CardContent className="p-3 text-center">
-                      <p className="text-[10px] text-muted-foreground mb-1">From Non-Pledgers</p>
-                      {pledgeLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
-                      ) : (
-                        <p className="text-sm font-bold text-accent-foreground">
-                          {pledgeData ? fmt((pledgeData.received_outside_pledges_cents || 0) / 100) : "—"}
                         </p>
                       )}
                     </CardContent>
