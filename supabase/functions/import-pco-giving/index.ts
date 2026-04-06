@@ -158,37 +158,38 @@ serve(async (req) => {
       console.log(`Unmapped fund names: ${Array.from(unmappedFunds).join(", ")}`);
     }
 
-    // Step 3: Upsert into monthly_giving
+    // Step 3: Only insert records that don't already exist
     const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
     const records = Array.from(aggregated.values()).map(r => ({
       ...r,
       amount: Math.round(r.amount * 100) / 100,
     }));
 
-    let upserted = 0;
+    // Fetch existing monthly_giving to check for duplicates
+    const { data: existingData } = await serviceClient
+      .from("monthly_giving")
+      .select("year, month, fund");
+
+    const existingKeys = new Set(
+      (existingData || []).map((e: any) => `${e.year}-${e.month}-${e.fund}`)
+    );
+
+    const newRecords = records.filter(
+      r => !existingKeys.has(`${r.year}-${r.month}-${r.fund}`)
+    );
+
+    let inserted = 0;
     const errors: string[] = [];
+    const skipped = records.length - newRecords.length;
 
-    // Delete existing records and re-insert (clean sync)
-    // Group by year to be efficient
-    const years = new Set(records.map(r => r.year));
-    for (const year of years) {
-      const { error } = await serviceClient
-        .from("monthly_giving")
-        .delete()
-        .eq("year", year);
-      if (error) {
-        errors.push(`Delete year ${year}: ${error.message}`);
-      }
-    }
-
-    // Insert in batches
-    for (let i = 0; i < records.length; i += 100) {
-      const batch = records.slice(i, i + 100);
+    // Insert new records in batches
+    for (let i = 0; i < newRecords.length; i += 100) {
+      const batch = newRecords.slice(i, i + 100);
       const { error } = await serviceClient.from("monthly_giving").insert(batch);
       if (error) {
         errors.push(`Batch ${Math.floor(i / 100) + 1}: ${error.message}`);
       } else {
-        upserted += batch.length;
+        inserted += batch.length;
       }
     }
 
@@ -198,8 +199,9 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        message: `Synced ${upserted} monthly giving records from ${totalDonations} donations${unmappedMsg}`,
-        upserted,
+        message: `Added ${inserted} new monthly records (${skipped} already existed) from ${totalDonations} donations${unmappedMsg}`,
+        inserted,
+        skipped,
         totalDonations,
         unmappedFunds: Array.from(unmappedFunds),
         errors: errors.length > 0 ? errors : undefined,
