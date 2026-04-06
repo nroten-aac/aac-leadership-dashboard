@@ -31,7 +31,6 @@ const GivingPage = () => {
             <GivingPieCharts monthlyGiving={monthlyGiving} />
           </>
         )}
-        )}
       </main>
       <AIChatPanel />
     </div>
