@@ -104,7 +104,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
       .map(([date, vals]) => ({
         date,
         label: format(parseISO(date), "M/d/yy"),
-        combined: vals.combined - vals.online,
+        combined: vals.combined,
         online: vals.online,
         notes: vals.notes.filter(Boolean).join("; ") || null,
         firstService: vals.firstService,
