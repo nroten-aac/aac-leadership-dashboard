@@ -13,6 +13,62 @@ const MONTHS = ["January","February","March","April","May","June","July","August
 const FUNDS = ["general","building","missions","benevolence"];
 const FUND_LABELS: Record<string, string> = { general: "General", building: "Building", missions: "Missions", benevolence: "Benevolence" };
 
+const PcoGivingImportSection = ({ queryClient, toast }: { queryClient: any; toast: any }) => {
+  const [importing, setImporting] = useState(false);
+  const [result, setResult] = useState<{ message: string; unmappedFunds?: string[]; errors?: string[] } | null>(null);
+
+  const handleImport = async () => {
+    setImporting(true);
+    setResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("import-pco-giving");
+      if (error) {
+        toast({ title: "Import failed", description: error.message, variant: "destructive" });
+        setResult({ message: error.message });
+      } else {
+        setResult(data);
+        toast({ title: "Import complete", description: data.message });
+        queryClient.invalidateQueries({ queryKey: ["monthly_giving"] });
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+      setResult({ message: err.message });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <div className="bg-card rounded-2xl shadow-card p-6">
+      <h3 className="font-display font-semibold text-foreground mb-2 flex items-center gap-2">
+        <Cloud className="h-4 w-4" /> Planning Center Giving Import
+      </h3>
+      <p className="text-xs text-muted-foreground mb-4">
+        Pull all donation data from Planning Center and sync it to the giving database. This replaces existing monthly giving records with fresh data from PCO.
+      </p>
+      <Button onClick={handleImport} disabled={importing} className="gap-2">
+        {importing ? (
+          <><Loader2 className="h-4 w-4 animate-spin" /> Importing...</>
+        ) : (
+          <><Cloud className="h-4 w-4" /> Import from Planning Center</>
+        )}
+      </Button>
+      {result && (
+        <div className={`mt-4 p-3 rounded-xl text-sm flex items-start gap-2 ${result.errors ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
+          {result.errors ? <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" /> : <CheckCircle className="h-4 w-4 mt-0.5 shrink-0" />}
+          <div>
+            <p>{result.message}</p>
+            {result.unmappedFunds && result.unmappedFunds.length > 0 && (
+              <p className="text-xs mt-1">Unmapped funds: {result.unmappedFunds.join(", ")}</p>
+            )}
+            {result.errors?.map((e, i) => <p key={i} className="text-xs mt-1">{e}</p>)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const GivingEntry = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
