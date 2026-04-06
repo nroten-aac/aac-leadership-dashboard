@@ -9,6 +9,7 @@ import DataEntry from "./pages/DataEntry";
 import AuthPage from "./pages/AuthPage";
 import AdminPanel from "./pages/AdminPanel";
 import SettingsPage from "./pages/SettingsPage";
+import GivingPage from "./pages/GivingPage";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 
@@ -37,6 +38,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/data-entry" element={<ProtectedRoute><DataEntry /></ProtectedRoute>} />
+          <Route path="/giving" element={<ProtectedRoute><GivingPage /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
