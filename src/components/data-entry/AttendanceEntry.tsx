@@ -85,33 +85,59 @@ const AttendanceEntry = () => {
     const adjustedTotal = inPersonTotal + onlineNum;
 
     setSaving(true);
-    const { error } = await supabase.from("attendance").insert({
-      event_date: eventDate,
-      service,
-      month: monthName,
-      year,
-      quarter,
-      sanctuary_attendance: sanctuaryNum,
-      online_attendance: onlineNum,
-      nursery_attendance: nurseryNum,
-      k3_attendance: k3Num,
-      grade_4_6_attendance: grade46Num,
-      youth_attendance: youthNum,
-      volunteer_classroom_attendance: volunteersNum,
-      total_k6_attendance: totalK6,
-      total_adults: totalAdults,
-      in_person_total: inPersonTotal,
-      adjusted_total: adjustedTotal,
-      notes: notes || null,
-    });
+    let error;
+    if (editingEntry) {
+      const res = await supabase.from("attendance").update({
+        event_date: eventDate,
+        service,
+        month: monthName,
+        year,
+        quarter,
+        sanctuary_attendance: sanctuaryNum,
+        online_attendance: onlineNum,
+        nursery_attendance: nurseryNum,
+        k3_attendance: k3Num,
+        grade_4_6_attendance: grade46Num,
+        youth_attendance: youthNum,
+        volunteer_classroom_attendance: volunteersNum,
+        total_k6_attendance: totalK6,
+        total_adults: totalAdults,
+        in_person_total: inPersonTotal,
+        adjusted_total: adjustedTotal,
+        notes: notes || null,
+      }).eq("id", editingEntry.id);
+      error = res.error;
+    } else {
+      const res = await supabase.from("attendance").insert({
+        event_date: eventDate,
+        service,
+        month: monthName,
+        year,
+        quarter,
+        sanctuary_attendance: sanctuaryNum,
+        online_attendance: onlineNum,
+        nursery_attendance: nurseryNum,
+        k3_attendance: k3Num,
+        grade_4_6_attendance: grade46Num,
+        youth_attendance: youthNum,
+        volunteer_classroom_attendance: volunteersNum,
+        total_k6_attendance: totalK6,
+        total_adults: totalAdults,
+        in_person_total: inPersonTotal,
+        adjusted_total: adjustedTotal,
+        notes: notes || null,
+      });
+      error = res.error;
+    }
     setSaving(false);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Saved", description: `Attendance for ${monthName} ${d.getDate()}, ${year} saved.` });
+      toast({ title: editingEntry ? "Updated" : "Saved", description: `Attendance for ${monthName} ${d.getDate()}, ${year} ${editingEntry ? "updated" : "saved"}.` });
       queryClient.invalidateQueries({ queryKey: ["attendance"] });
       setSanctuary(""); setOnline("0"); setNursery("0"); setK3("0"); setGrade46("0"); setYouth("0"); setVolunteers("0"); setNotes("");
+      setEditingEntry(null);
     }
   };
 
@@ -126,7 +152,7 @@ const AttendanceEntry = () => {
       return;
     }
 
-    if (hasExactMatch) {
+    if (hasExactMatch && !editingEntry) {
       setShowDuplicateWarning(true);
       return;
     }
@@ -232,7 +258,16 @@ const AttendanceEntry = () => {
             <Label>Notes (optional)</Label>
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
           </div>
-          <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Attendance"}</Button>
+          <div className="flex items-center gap-2">
+            <Button type="submit" disabled={saving}>{saving ? "Saving..." : editingEntry ? "Update Attendance" : "Save Attendance"}</Button>
+            {editingEntry && (
+              <Button type="button" variant="outline" onClick={() => {
+                setEditingEntry(null);
+                setSanctuary(""); setOnline("0"); setNursery("0"); setK3("0"); setGrade46("0"); setYouth("0"); setVolunteers("0"); setNotes("");
+                setService("");
+              }}>Cancel Edit</Button>
+            )}
+          </div>
         </form>
       </div>
 
