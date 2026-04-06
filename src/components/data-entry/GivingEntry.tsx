@@ -132,6 +132,9 @@ const GivingEntry = () => {
         </label>
       </div>
 
+      {/* Planning Center Import */}
+      <PcoGivingImport />
+
       <RecentEntries
         table="monthly_giving"
         title="Recent Giving Entries"
