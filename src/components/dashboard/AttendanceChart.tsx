@@ -206,7 +206,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
                   <div className="bg-card border border-border rounded-xl p-3 shadow-lg text-sm max-w-[300px]">
                     <p className="font-semibold text-foreground mb-1.5">{dateStr}</p>
                     <div className="space-y-0.5 text-muted-foreground">
-                      {item.firstService > 0 && <p>1st Service: <span className="text-foreground font-medium">{item.firstService}</span></p>}
+                      {item.firstService > 0 && <p>1st Service: <span className="text-foreground font-medium">{item.firstServiceOriginal !== item.firstService ? <>{item.firstServiceOriginal} <span className="text-muted-foreground">({item.firstService} adj.)</span></> : item.firstService}</span></p>}
                       {item.secondService > 0 && <p>2nd Service: <span className="text-foreground font-medium">{item.secondService}</span></p>}
                       {item.kids > 0 && (
                         <div className="ml-0">
