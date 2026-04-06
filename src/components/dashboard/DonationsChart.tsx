@@ -202,16 +202,16 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
         <ResponsiveContainer width="100%" height={380}>
           <ComposedChart data={dataWithTrend} barCategoryGap="20%" barGap={2}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-            <XAxis
+             <XAxis
               dataKey="month"
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
               interval={dataWithTrend.length > 18 ? Math.floor(dataWithTrend.length / 12) : 0}
               angle={dataWithTrend.length > 12 ? -45 : 0}
               textAnchor={dataWithTrend.length > 12 ? "end" : "middle"}
               height={dataWithTrend.length > 12 ? 55 : 30}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 13, fill: "hsl(var(--muted-foreground))" }}
               tickFormatter={(v) => `$${v >= 1000 ? (v / 1000).toFixed(0) + "k" : v}`}
             />
             <Tooltip
@@ -225,7 +225,7 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
                 name === "Trend" ? `$${value.toLocaleString()}` : `$${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
               }
             />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Legend wrapperStyle={{ fontSize: 14 }} />
             {ALL_FUNDS.map((fund) =>
               activeFunds.includes(fund) ? (
                 <Bar
@@ -239,7 +239,7 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
                     dataKey={FUND_LABELS[fund]}
                     position="top"
                     style={{
-                      fontSize: dataWithTrend.length > 18 ? 7 : 9,
+                      fontSize: dataWithTrend.length > 18 ? 9 : 11,
                       fill: "hsl(var(--foreground))",
                       fontWeight: 700,
                     }}
