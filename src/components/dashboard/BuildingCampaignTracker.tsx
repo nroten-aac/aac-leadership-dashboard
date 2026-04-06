@@ -203,7 +203,7 @@ const BuildingCampaignTracker = () => {
 
           {/* Pledges */}
           <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Pledges</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Campaign Details</p>
             <div className="grid grid-cols-3 gap-3">
               <Card className="bg-primary/5 border-primary/20">
                 <CardContent className="p-4 text-center">
