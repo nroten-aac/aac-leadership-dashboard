@@ -66,6 +66,43 @@ const AttendanceEntry = () => {
   const matchingEntries = existingEntries?.filter(e => e.service === service) || [];
   const hasExactMatch = matchingEntries.length > 0;
 
+  // After any save/delete, recalculate adjusted_total for all rows on that date
+  const recalculateForDate = async (date: string) => {
+    const { data: rows } = await supabase
+      .from("attendance")
+      .select("*")
+      .eq("event_date", date);
+    if (!rows || rows.length === 0) return;
+
+    // Sum kids across ALL rows for this date
+    const totalKids = rows.reduce((sum, r) =>
+      sum + r.nursery_attendance + r.k3_attendance + r.grade_4_6_attendance + r.youth_attendance, 0);
+
+    for (const row of rows) {
+      let adjustedTotal: number;
+
+      if (row.service === "2nd Sunday Service (11:00)") {
+        // Deduct 20% of total kids from 2nd service sanctuary (kids double-counted)
+        adjustedTotal = row.sanctuary_attendance - Math.round(0.2 * totalKids);
+      } else if (row.service === "Not Applicable") {
+        // Kids-only row: adjusted = sum of all kid categories
+        adjustedTotal = row.nursery_attendance + row.k3_attendance + row.grade_4_6_attendance + row.youth_attendance;
+      } else {
+        // 1st service, Wednesday, etc.: sanctuary as-is
+        adjustedTotal = row.sanctuary_attendance;
+      }
+
+      const inPersonTotal = row.sanctuary_attendance + row.nursery_attendance + row.k3_attendance + row.grade_4_6_attendance + row.youth_attendance;
+      const totalAdults = Math.max(0, row.sanctuary_attendance - row.volunteer_classroom_attendance);
+
+      await supabase.from("attendance").update({
+        adjusted_total: adjustedTotal,
+        in_person_total: inPersonTotal,
+        total_adults: totalAdults,
+      }).eq("id", row.id);
+    }
+  };
+
   const doSave = async () => {
     const d = new Date(eventDate);
     const monthName = MONTHS[d.getMonth()];
@@ -80,55 +117,44 @@ const AttendanceEntry = () => {
     const youthNum = parseInt(youth) || 0;
     const volunteersNum = parseInt(volunteers) || 0;
     const totalK6 = nurseryNum + k3Num + grade46Num;
-    const totalAdults = sanctuaryNum - volunteersNum;
     const inPersonTotal = sanctuaryNum + totalK6 + youthNum;
-    const adjustedTotal = inPersonTotal + onlineNum;
+    const totalAdults = Math.max(0, sanctuaryNum - volunteersNum);
 
     setSaving(true);
     let error;
+    const rowData = {
+      event_date: eventDate,
+      service,
+      month: monthName,
+      year,
+      quarter,
+      sanctuary_attendance: sanctuaryNum,
+      online_attendance: onlineNum,
+      nursery_attendance: nurseryNum,
+      k3_attendance: k3Num,
+      grade_4_6_attendance: grade46Num,
+      youth_attendance: youthNum,
+      volunteer_classroom_attendance: volunteersNum,
+      total_k6_attendance: totalK6,
+      total_adults: totalAdults,
+      in_person_total: inPersonTotal,
+      adjusted_total: 0, // placeholder, recalculated below
+      notes: notes || null,
+    };
+
     if (editingEntry) {
-      const res = await supabase.from("attendance").update({
-        event_date: eventDate,
-        service,
-        month: monthName,
-        year,
-        quarter,
-        sanctuary_attendance: sanctuaryNum,
-        online_attendance: onlineNum,
-        nursery_attendance: nurseryNum,
-        k3_attendance: k3Num,
-        grade_4_6_attendance: grade46Num,
-        youth_attendance: youthNum,
-        volunteer_classroom_attendance: volunteersNum,
-        total_k6_attendance: totalK6,
-        total_adults: totalAdults,
-        in_person_total: inPersonTotal,
-        adjusted_total: adjustedTotal,
-        notes: notes || null,
-      }).eq("id", editingEntry.id);
+      const res = await supabase.from("attendance").update(rowData).eq("id", editingEntry.id);
       error = res.error;
     } else {
-      const res = await supabase.from("attendance").insert({
-        event_date: eventDate,
-        service,
-        month: monthName,
-        year,
-        quarter,
-        sanctuary_attendance: sanctuaryNum,
-        online_attendance: onlineNum,
-        nursery_attendance: nurseryNum,
-        k3_attendance: k3Num,
-        grade_4_6_attendance: grade46Num,
-        youth_attendance: youthNum,
-        volunteer_classroom_attendance: volunteersNum,
-        total_k6_attendance: totalK6,
-        total_adults: totalAdults,
-        in_person_total: inPersonTotal,
-        adjusted_total: adjustedTotal,
-        notes: notes || null,
-      });
+      const res = await supabase.from("attendance").insert(rowData);
       error = res.error;
     }
+
+    if (!error) {
+      // Recalculate adjusted totals for all rows on this date
+      await recalculateForDate(eventDate);
+    }
+
     setSaving(false);
 
     if (error) {
