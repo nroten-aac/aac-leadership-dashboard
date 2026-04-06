@@ -69,13 +69,13 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
   const chartData = useMemo(() => {
     const weeklyMap = new Map<string, {
       combined: number; online: number; notes: string[];
-      firstService: number; secondService: number; kids: number;
+      firstService: number; firstServiceOriginal: number; secondService: number; kids: number;
       nursery: number; k3: number; grade46: number; youth: number; volunteers: number;
     }>();
     filtered.forEach((r) => {
       const existing = weeklyMap.get(r.event_date) || {
         combined: 0, online: 0, notes: [],
-        firstService: 0, secondService: 0, kids: 0,
+        firstService: 0, firstServiceOriginal: 0, secondService: 0, kids: 0,
         nursery: 0, k3: 0, grade46: 0, youth: 0, volunteers: 0,
       };
       if (r.notes) existing.notes.push(r.notes);
@@ -85,6 +85,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
       const svc = r.service;
       if (svc === "1st Sunday Service (9:15)" || svc === "9:15 AM") {
         existing.firstService = r.adjusted_total;
+        existing.firstServiceOriginal = (r as any).sanctuary_attendance || r.adjusted_total;
       } else if (svc === "2nd Sunday Service (11:00)" || svc === "11:00 AM") {
         existing.secondService = r.adjusted_total;
       } else if (svc === "Not Applicable") {
