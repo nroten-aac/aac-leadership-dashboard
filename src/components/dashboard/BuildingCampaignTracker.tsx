@@ -308,9 +308,6 @@ const BuildingCampaignTracker = () => {
         </div>
       </div>
     </div>
-        </div>
-      </div>
-    </div>
   );
 };
 
