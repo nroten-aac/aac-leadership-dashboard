@@ -28,8 +28,20 @@ const GivingPieCharts = ({ monthlyGiving }: { monthlyGiving: MonthlyGiving[] }) 
   const { currentMonthData, currentMonthLabel, ytdData, ytdLabel } = useMemo(() => {
     if (!monthlyGiving.length) return { currentMonthData: [], currentMonthLabel: "", ytdData: [], ytdLabel: "" };
 
-    // Find the most recent month with data
-    const sorted = [...monthlyGiving].sort((a, b) => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonthIdx = now.getMonth();
+
+    // Exclude the current (incomplete) month
+    const completed = monthlyGiving.filter((g) => {
+      const gMonthIdx = MONTH_ORDER.indexOf(g.month);
+      return !(g.year === currentYear && gMonthIdx === currentMonthIdx);
+    });
+
+    if (!completed.length) return { currentMonthData: [], currentMonthLabel: "", ytdData: [], ytdLabel: "" };
+
+    // Find the most recent completed month
+    const sorted = [...completed].sort((a, b) => {
       if (a.year !== b.year) return b.year - a.year;
       return MONTH_ORDER.indexOf(b.month) - MONTH_ORDER.indexOf(a.month);
     });
@@ -44,9 +56,9 @@ const GivingPieCharts = ({ monthlyGiving }: { monthlyGiving: MonthlyGiving[] }) 
         monthTotals[g.fund] = (monthTotals[g.fund] || 0) + g.amount;
       });
 
-    // YTD totals by fund
+    // YTD totals by fund (excluding current incomplete month)
     const ytdTotals: Record<string, number> = {};
-    monthlyGiving
+    completed
       .filter((g) => g.year === latestYear)
       .forEach((g) => {
         ytdTotals[g.fund] = (ytdTotals[g.fund] || 0) + g.amount;
