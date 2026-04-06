@@ -30,6 +30,7 @@ const GivingPage = () => {
               <DonationsChart monthlyGiving={monthlyGiving} />
             </div>
             <GivingPieCharts monthlyGiving={monthlyGiving} />
+            <BuildingCampaignTracker />
           </>
         )}
       </main>
