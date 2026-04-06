@@ -269,8 +269,8 @@ const BuildingCampaignTracker = () => {
                     <Tooltip formatter={(val: number) => fmt(val)} />
                     <Legend />
                     <ReferenceLine y={CAMPAIGN_GOAL} stroke="hsl(0 70% 50%)" strokeDasharray="6 3" label={{ value: `Goal: ${fmtShort(CAMPAIGN_GOAL)}`, position: "right", fontSize: 11, fill: "hsl(0 70% 50%)" }} />
-                    <Area type="monotone" dataKey="totalFunds" name="Total Funds Available" stroke="hsl(140 50% 38%)" fill="url(#gradTotalFunds)" strokeWidth={2} />
-                    <Area type="monotone" dataKey="cumulativeGiving" name="Cumulative Giving" stroke="hsl(205 79% 20%)" fill="url(#gradCumGiving)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="accountFunds" name="Account Funds (MM + CDs)" stroke="hsl(140 50% 38%)" fill="url(#gradTotalFunds)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="cumulativeGiving" name="Cumulative Pledged Giving" stroke="hsl(205 79% 20%)" fill="url(#gradCumGiving)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
