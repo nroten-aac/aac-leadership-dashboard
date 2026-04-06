@@ -14,6 +14,10 @@ const captureDashboard = async (): Promise<HTMLCanvasElement | null> => {
       : "#ffffff",
     scale: 2,
     useCORS: true,
+    logging: false,
+    allowTaint: true,
+    foreignObjectRendering: false,
+    removeContainer: true,
   });
 };
 
