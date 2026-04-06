@@ -134,7 +134,7 @@ const BuildingCampaignTracker = () => {
       <h2 className="text-xl font-bold text-foreground mb-4 font-heading">Building Expansion Campaign</h2>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* LEFT: Grid */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden flex flex-col h-full">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-base">Giving Tracker</CardTitle>
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
@@ -175,10 +175,10 @@ const BuildingCampaignTracker = () => {
               </DialogContent>
             </Dialog>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-auto max-h-[500px]">
+          <CardContent className="p-0 flex-1 min-h-0">
+            <div className="overflow-auto h-full">
               <table className="w-full text-xs">
-                <thead className="bg-muted/50 sticky top-0 z-10">
+                <thead className="bg-card sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.1)]">
                   <tr>
                     <th className="text-left px-2 py-2 font-medium text-muted-foreground">Month</th>
                     <th className="text-right px-2 py-2 font-medium text-muted-foreground">Giving</th>
