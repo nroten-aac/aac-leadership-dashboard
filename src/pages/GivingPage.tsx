@@ -16,11 +16,21 @@ const GivingPage = () => {
         <DashboardHeader />
 
         {isLoading ? (
-          <Skeleton className="h-[460px] rounded-2xl mt-6" />
+          <>
+            <Skeleton className="h-[460px] rounded-2xl mt-6" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+              <Skeleton className="h-[300px] rounded-2xl" />
+              <Skeleton className="h-[300px] rounded-2xl" />
+            </div>
+          </>
         ) : (
-          <div className="mt-6">
-            <DonationsChart monthlyGiving={monthlyGiving} />
-          </div>
+          <>
+            <div className="mt-6">
+              <DonationsChart monthlyGiving={monthlyGiving} />
+            </div>
+            <GivingPieCharts monthlyGiving={monthlyGiving} />
+          </>
+        )}
         )}
       </main>
       <AIChatPanel />
