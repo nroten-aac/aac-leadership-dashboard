@@ -75,14 +75,6 @@ const BuildingCampaignTracker = () => {
 
   const gap = CAMPAIGN_GOAL - totalFundsAvailable;
 
-  // Compute cumulative for each row (for display)
-  const rowsWithCumulative = useMemo(() => {
-    let cum = 0;
-    return rows.map((r) => {
-      cum += Number(r.monthly_giving_deposits);
-      return { ...r, cumulative: cum };
-    });
-  }, [rows]);
 
   return (
     <div className="mt-8">
