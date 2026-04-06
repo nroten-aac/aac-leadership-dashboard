@@ -67,16 +67,36 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
   }, [attendance, yearFilter, quarterFilter, monthFilter, rollingCutoff]);
 
   const chartData = useMemo(() => {
-    const weeklyMap = new Map<string, { combined: number; online: number; notes: string[] }>();
+    const weeklyMap = new Map<string, {
+      combined: number; online: number; notes: string[];
+      firstService: number; secondService: number; kids: number;
+      nursery: number; k3: number; grade46: number; youth: number; volunteers: number;
+    }>();
     filtered.forEach((r) => {
-      const existing = weeklyMap.get(r.event_date) || { combined: 0, online: 0, notes: [] };
-      const notesList = existing.notes;
-      if (r.notes) notesList.push(r.notes);
-      weeklyMap.set(r.event_date, {
-        combined: existing.combined + r.adjusted_total,
-        online: existing.online + ((r as any).online_attendance || 0),
-        notes: notesList,
-      });
+      const existing = weeklyMap.get(r.event_date) || {
+        combined: 0, online: 0, notes: [],
+        firstService: 0, secondService: 0, kids: 0,
+        nursery: 0, k3: 0, grade46: 0, youth: 0, volunteers: 0,
+      };
+      if (r.notes) existing.notes.push(r.notes);
+      existing.combined += r.adjusted_total;
+      existing.online += ((r as any).online_attendance || 0);
+
+      const svc = r.service;
+      if (svc === "1st Sunday Service (9:15)" || svc === "9:15 AM") {
+        existing.firstService = r.adjusted_total;
+      } else if (svc === "2nd Sunday Service (11:00)" || svc === "11:00 AM") {
+        existing.secondService = r.adjusted_total;
+      } else if (svc === "Not Applicable") {
+        existing.kids = r.adjusted_total;
+      }
+      existing.nursery += (r as any).nursery_attendance || 0;
+      existing.k3 += (r as any).k3_attendance || 0;
+      existing.grade46 += (r as any).grade_4_6_attendance || 0;
+      existing.youth += (r as any).youth_attendance || 0;
+      existing.volunteers += (r as any).volunteer_classroom_attendance || 0;
+
+      weeklyMap.set(r.event_date, existing);
     });
     return Array.from(weeklyMap.entries())
       .sort(([a], [b]) => a.localeCompare(b))
@@ -86,6 +106,14 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
         combined: vals.combined,
         online: vals.online,
         notes: vals.notes.filter(Boolean).join("; ") || null,
+        firstService: vals.firstService,
+        secondService: vals.secondService,
+        kids: vals.kids,
+        nursery: vals.nursery,
+        k3: vals.k3,
+        grade46: vals.grade46,
+        youth: vals.youth,
+        volunteers: vals.volunteers,
       }));
   }, [filtered]);
 
