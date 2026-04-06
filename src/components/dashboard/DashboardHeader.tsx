@@ -8,17 +8,23 @@ import { toast } from "sonner";
 const captureDashboard = async (): Promise<HTMLCanvasElement | null> => {
   const el = document.getElementById("dashboard-content");
   if (!el) return null;
-  return html2canvas(el, {
-    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--background")
-      ? `hsl(${getComputedStyle(document.documentElement).getPropertyValue("--background").trim()})`
-      : "#ffffff",
-    scale: 2,
-    useCORS: true,
-    logging: false,
-    allowTaint: true,
-    foreignObjectRendering: false,
-    removeContainer: true,
-  });
+  const header = el.querySelector("[data-dashboard-header]") as HTMLElement | null;
+  if (header) header.style.display = "none";
+  try {
+    return await html2canvas(el, {
+      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--background")
+        ? `hsl(${getComputedStyle(document.documentElement).getPropertyValue("--background").trim()})`
+        : "#ffffff",
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      allowTaint: true,
+      foreignObjectRendering: false,
+      removeContainer: true,
+    });
+  } finally {
+    if (header) header.style.display = "";
+  }
 };
 
 const handleDownload = async () => {
