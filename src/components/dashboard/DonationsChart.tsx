@@ -67,14 +67,19 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
 
   const filtered = useMemo(() => {
     const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonthIdx = now.getMonth();
     const cutoff = subMonths(now, 12);
     const cutoffYear = cutoff.getFullYear();
     const cutoffMonthIdx = cutoff.getMonth();
 
     return monthlyGiving.filter((g) => {
+      // Hide current (incomplete) month
+      const gMonthIdx = MONTH_ORDER.indexOf(g.month);
+      if (g.year === currentYear && gMonthIdx === currentMonthIdx) return false;
+
       if (yearFilter.length > 0) {
         if (yearFilter.includes("rolling")) {
-          const gMonthIdx = MONTH_ORDER.indexOf(g.month);
           if (g.year < cutoffYear) return false;
           if (g.year === cutoffYear && gMonthIdx < cutoffMonthIdx) return false;
         } else {
