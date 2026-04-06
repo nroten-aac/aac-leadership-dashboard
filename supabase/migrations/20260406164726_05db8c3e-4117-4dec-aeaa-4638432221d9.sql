@@ -1,0 +1,18 @@
+
+WITH kids_totals AS (
+  SELECT event_date,
+    SUM(volunteer_classroom_attendance + nursery_attendance + k3_attendance + grade_4_6_attendance + youth_attendance) as total_kids
+  FROM attendance GROUP BY event_date
+)
+UPDATE attendance a SET 
+  adjusted_total = CASE 
+    WHEN a.service IN ('2nd Sunday Service (11:00)', '11:00 AM') 
+      THEN a.sanctuary_attendance - ROUND(0.2 * k.total_kids)::int
+    WHEN a.service = 'Not Applicable'
+      THEN a.volunteer_classroom_attendance + a.nursery_attendance + a.k3_attendance + a.grade_4_6_attendance + a.youth_attendance
+    ELSE a.sanctuary_attendance
+  END,
+  in_person_total = a.sanctuary_attendance + a.nursery_attendance + a.k3_attendance + a.grade_4_6_attendance + a.youth_attendance,
+  total_adults = GREATEST(0, a.sanctuary_attendance - a.volunteer_classroom_attendance)
+FROM kids_totals k
+WHERE a.event_date = k.event_date;
