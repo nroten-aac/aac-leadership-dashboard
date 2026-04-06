@@ -184,7 +184,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
         <p className="text-sm text-muted-foreground text-center py-16">No data for selected filters</p>
       ) : (
         <ResponsiveContainer width="100%" height={420}>
-          <ComposedChart data={dataWithTrend}>
+          <ComposedChart data={dataWithTrend} barGap={-10}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
               dataKey="label"
@@ -236,7 +236,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
               name="Online"
               fill="hsl(var(--secondary))"
               radius={[6, 6, 0, 0]}
-              barSize={dataWithTrend.length > 30 ? 8 : 14}
+              barSize={dataWithTrend.length > 30 ? 10 : 16}
             >
               <LabelList
                 dataKey="online"
@@ -250,7 +250,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
               name="In-Person"
               fill="hsl(var(--primary))"
               radius={[6, 6, 0, 0]}
-              barSize={dataWithTrend.length > 30 ? 12 : 22}
+              barSize={dataWithTrend.length > 30 ? 14 : 24}
             >
               <LabelList
                 dataKey="combined"
