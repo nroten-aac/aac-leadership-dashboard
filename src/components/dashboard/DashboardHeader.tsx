@@ -62,18 +62,28 @@ const handlePrint = async () => {
     pages.push(canvas.toDataURL("image/png"));
   }
 
+  const isSinglePage = pages.length === 1;
   const win = window.open("", "_blank");
   if (!win) return;
   win.document.write(`
     <html><head><title>Dashboard</title><style>
       * { margin: 0; padding: 0; }
-      html, body { width: 100%; }
-      img { width: 100%; height: auto; display: block; }
+      html, body { width: 100%; height: 100%; }
+      img { display: block; }
       .page-break { page-break-after: always; break-after: page; }
+      ${isSinglePage ? `
+        img { width: 100%; height: auto; max-height: 100vh; object-fit: contain; }
+      ` : `
+        img { width: 100%; height: auto; }
+      `}
       @media print {
         @page { margin: 0; size: auto; }
         body { margin: 0; }
-        img { width: 100vw; }
+        ${isSinglePage ? `
+          img { width: 100vw; max-height: 100vh; object-fit: contain; }
+        ` : `
+          img { width: 100vw; }
+        `}
       }
     </style></head><body>
       ${pages.map((src, i) =>
