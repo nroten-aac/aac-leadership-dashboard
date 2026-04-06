@@ -9,6 +9,7 @@ import DataEntry from "./pages/DataEntry";
 import AuthPage from "./pages/AuthPage";
 import AdminPanel from "./pages/AdminPanel";
 import SettingsPage from "./pages/SettingsPage";
+import GivingPage from "./pages/GivingPage";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 
