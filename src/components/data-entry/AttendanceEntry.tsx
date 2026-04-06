@@ -439,6 +439,8 @@ const AttendanceEntry = () => {
                 if (error) {
                   toast({ title: "Error", description: error.message, variant: "destructive" });
                 } else {
+                  // Recalculate remaining rows for this date
+                  await recalculateForDate(eventDate);
                   toast({ title: "Deleted", description: "Attendance entry removed." });
                   queryClient.invalidateQueries({ queryKey: ["attendance"] });
                 }
