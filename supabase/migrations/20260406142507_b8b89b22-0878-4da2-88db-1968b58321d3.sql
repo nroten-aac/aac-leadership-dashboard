@@ -1,0 +1,1 @@
+ALTER TABLE public.monthly_giving ADD COLUMN source text NOT NULL DEFAULT 'manual';

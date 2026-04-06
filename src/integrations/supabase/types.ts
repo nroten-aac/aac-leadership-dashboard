@@ -285,6 +285,7 @@ export type Database = {
           id: string
           month: string
           notes: string | null
+          source: string
           year: number
         }
         Insert: {
@@ -294,6 +295,7 @@ export type Database = {
           id?: string
           month: string
           notes?: string | null
+          source?: string
           year: number
         }
         Update: {
@@ -303,6 +305,7 @@ export type Database = {
           id?: string
           month?: string
           notes?: string | null
+          source?: string
           year?: number
         }
         Relationships: []

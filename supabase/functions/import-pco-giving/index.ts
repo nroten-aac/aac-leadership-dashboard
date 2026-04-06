@@ -163,6 +163,7 @@ serve(async (req) => {
     const records = Array.from(aggregated.values()).map(r => ({
       ...r,
       amount: Math.round(r.amount * 100) / 100,
+      source: "planning_center",
     }));
 
     // Fetch existing monthly_giving to check for duplicates

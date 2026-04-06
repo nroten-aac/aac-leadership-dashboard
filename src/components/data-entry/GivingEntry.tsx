@@ -86,14 +86,13 @@ const GivingEntry = () => {
     }
     setSaving(true);
     const { error } = await supabase.from("monthly_giving").upsert(
-      { month, year: parseInt(year), fund, amount: parseFloat(amount) },
+      { month, year: parseInt(year), fund, amount: parseFloat(amount), source: "manual" },
       { onConflict: "month,year,fund" as any }
     );
     setSaving(false);
     if (error) {
-      // If upsert fails due to no unique constraint, try insert
       const { error: insertError } = await supabase.from("monthly_giving").insert({
-        month, year: parseInt(year), fund, amount: parseFloat(amount),
+        month, year: parseInt(year), fund, amount: parseFloat(amount), source: "manual",
       });
       if (insertError) {
         toast({ title: "Error", description: insertError.message, variant: "destructive" });
@@ -204,6 +203,13 @@ const GivingEntry = () => {
           { key: "year", label: "Year" },
           { key: "fund", label: "Fund", render: (v) => FUND_LABELS[v] || v },
           { key: "amount", label: "Amount", render: (v) => `$${Number(v).toLocaleString("en-US", { minimumFractionDigits: 2 })}` },
+          { key: "source", label: "Source", render: (v) => (
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+              v === "planning_center" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" : "bg-muted text-muted-foreground"
+            }`}>
+              {v === "planning_center" ? "PCO Import" : "Manual"}
+            </span>
+          )},
           { key: "created_at", label: "Added", render: (v) => new Date(v).toLocaleDateString() },
         ]}
       />
