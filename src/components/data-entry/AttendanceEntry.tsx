@@ -78,19 +78,19 @@ const AttendanceEntry = () => {
     const totalKids = rows.reduce((sum, r) =>
       sum + r.volunteer_classroom_attendance + r.nursery_attendance + r.k3_attendance + r.grade_4_6_attendance + r.youth_attendance, 0);
 
-    const is2ndService = (s: string) => s === "2nd Sunday Service (11:00)" || s === "11:00 AM";
+    const is1stService = (s: string) => s === "1st Sunday Service (9:15)" || s === "9:15 AM";
 
     for (const row of rows) {
       let adjustedTotal: number;
 
-      if (is2ndService(row.service)) {
-        // Deduct 20% of total kids from 2nd service sanctuary (overlap adjustment)
+      if (is1stService(row.service)) {
+        // Deduct 20% of total kids from 1st service (volunteers attend 1st, serve in 2nd)
         adjustedTotal = row.sanctuary_attendance - Math.round(0.2 * totalKids);
       } else if (row.service === "Not Applicable") {
         // Kids-only row: adjusted = sum of all kid/volunteer categories
         adjustedTotal = row.volunteer_classroom_attendance + row.nursery_attendance + row.k3_attendance + row.grade_4_6_attendance + row.youth_attendance;
       } else {
-        // 1st service, Wednesday, etc.: sanctuary as-is
+        // 2nd service, Wednesday, etc.: sanctuary as-is
         adjustedTotal = row.sanctuary_attendance;
       }
 
