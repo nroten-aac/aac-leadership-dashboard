@@ -190,7 +190,7 @@ const BuildingCampaignTracker = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {rowsWithCumulative.map((row) => (
+                  {[...rowsWithCumulative].reverse().map((row) => (
                     <tr key={row.id} className="border-b border-border/30 hover:bg-muted/30">
                       <td className="px-2 py-1.5 font-medium whitespace-nowrap">{row.month.slice(0, 3)} {row.year}</td>
                       {editingId === row.id ? (
