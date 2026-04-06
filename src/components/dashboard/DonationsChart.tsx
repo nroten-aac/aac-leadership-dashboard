@@ -31,8 +31,8 @@ const FUND_LABELS: Record<string, string> = {
 const ALL_FUNDS = ["general", "building", "missions", "benevolence"];
 
 const DonationsChart = ({ monthlyGiving }: DonationsChartProps) => {
-  const [activeFunds, setActiveFunds] = useState<string[]>(["general"]);
-  const [yearFilter, setYearFilter] = useState<string[]>(["rolling"]);
+  const [activeFunds, setActiveFunds] = useState<string[]>(["general", "building", "missions", "benevolence"]);
+  const [yearFilter, setYearFilter] = useState<string[]>(() => [String(new Date().getFullYear())]);
   const [quarterFilter, setQuarterFilter] = useState<string[]>([]);
   const [monthFilter, setMonthFilter] = useState<string[]>([]);
 
