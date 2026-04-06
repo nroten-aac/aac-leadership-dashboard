@@ -204,19 +204,41 @@ const BuildingCampaignTracker = () => {
           {/* Pledges */}
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Pledges</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <Card className="bg-primary/5 border-primary/20">
                 <CardContent className="p-4 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Pledged Giving Received</p>
-                  <p className="text-lg font-bold text-primary">{fmt(cumulativeGiving)}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Total Pledged</p>
+                  {pledgeLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
+                  ) : (
+                    <p className="text-lg font-bold text-primary">
+                      {pledgeData ? fmt((pledgeData.total_pledged_cents || 0) / 100) : fmt(cumulativeGiving)}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
-              <Card className={gap > 0 ? "bg-amber-50 border-amber-200" : "bg-accent/10 border-accent/30"}>
+              <Card className="bg-accent/10 border-accent/30">
                 <CardContent className="p-4 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Gap to {fmtShort(CAMPAIGN_GOAL)} Goal</p>
-                  <p className={`text-lg font-bold ${gap > 0 ? "text-amber-700" : "text-accent-foreground"}`}>
-                    {gap > 0 ? fmt(gap) : "Goal Reached! 🎉"}
-                  </p>
+                  <p className="text-xs text-muted-foreground mb-1">Pledges Received</p>
+                  {pledgeLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
+                  ) : (
+                    <p className="text-lg font-bold text-accent-foreground">
+                      {pledgeData ? fmt((pledgeData.received_from_pledges_cents || 0) / 100) : "—"}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+              <Card className="bg-amber-50 border-amber-200">
+                <CardContent className="p-4 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Not Yet Received</p>
+                  {pledgeLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
+                  ) : (
+                    <p className="text-lg font-bold text-amber-700">
+                      {pledgeData ? fmt(Math.max(0, (pledgeData.not_yet_received_cents || 0) / 100)) : "—"}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>
