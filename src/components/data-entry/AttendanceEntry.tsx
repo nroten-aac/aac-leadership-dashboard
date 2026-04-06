@@ -393,7 +393,37 @@ const AttendanceEntry = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="bg-card rounded-2xl shadow-card p-6">
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deletingEntryId} onOpenChange={(open) => !open && setDeletingEntryId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Entry</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this attendance entry? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!deletingEntryId) return;
+                const { error } = await supabase.from("attendance").delete().eq("id", deletingEntryId);
+                setDeletingEntryId(null);
+                if (error) {
+                  toast({ title: "Error", description: error.message, variant: "destructive" });
+                } else {
+                  toast({ title: "Deleted", description: "Attendance entry removed." });
+                  queryClient.invalidateQueries({ queryKey: ["attendance"] });
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
         <h3 className="font-display font-semibold text-foreground mb-2 flex items-center gap-2">
           <Upload className="h-4 w-4" /> CSV Import
         </h3>
