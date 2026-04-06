@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Upload, AlertTriangle } from "lucide-react";
+import { Plus, Upload, AlertTriangle, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import RecentEntries from "./RecentEntries";
 import {
@@ -34,7 +34,8 @@ const AttendanceEntry = () => {
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
-
+  const [editingEntry, setEditingEntry] = useState<any>(null);
+  const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
   const [eventDate, setEventDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [service, setService] = useState("");
   const [sanctuary, setSanctuary] = useState("");
@@ -84,33 +85,59 @@ const AttendanceEntry = () => {
     const adjustedTotal = inPersonTotal + onlineNum;
 
     setSaving(true);
-    const { error } = await supabase.from("attendance").insert({
-      event_date: eventDate,
-      service,
-      month: monthName,
-      year,
-      quarter,
-      sanctuary_attendance: sanctuaryNum,
-      online_attendance: onlineNum,
-      nursery_attendance: nurseryNum,
-      k3_attendance: k3Num,
-      grade_4_6_attendance: grade46Num,
-      youth_attendance: youthNum,
-      volunteer_classroom_attendance: volunteersNum,
-      total_k6_attendance: totalK6,
-      total_adults: totalAdults,
-      in_person_total: inPersonTotal,
-      adjusted_total: adjustedTotal,
-      notes: notes || null,
-    });
+    let error;
+    if (editingEntry) {
+      const res = await supabase.from("attendance").update({
+        event_date: eventDate,
+        service,
+        month: monthName,
+        year,
+        quarter,
+        sanctuary_attendance: sanctuaryNum,
+        online_attendance: onlineNum,
+        nursery_attendance: nurseryNum,
+        k3_attendance: k3Num,
+        grade_4_6_attendance: grade46Num,
+        youth_attendance: youthNum,
+        volunteer_classroom_attendance: volunteersNum,
+        total_k6_attendance: totalK6,
+        total_adults: totalAdults,
+        in_person_total: inPersonTotal,
+        adjusted_total: adjustedTotal,
+        notes: notes || null,
+      }).eq("id", editingEntry.id);
+      error = res.error;
+    } else {
+      const res = await supabase.from("attendance").insert({
+        event_date: eventDate,
+        service,
+        month: monthName,
+        year,
+        quarter,
+        sanctuary_attendance: sanctuaryNum,
+        online_attendance: onlineNum,
+        nursery_attendance: nurseryNum,
+        k3_attendance: k3Num,
+        grade_4_6_attendance: grade46Num,
+        youth_attendance: youthNum,
+        volunteer_classroom_attendance: volunteersNum,
+        total_k6_attendance: totalK6,
+        total_adults: totalAdults,
+        in_person_total: inPersonTotal,
+        adjusted_total: adjustedTotal,
+        notes: notes || null,
+      });
+      error = res.error;
+    }
     setSaving(false);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Saved", description: `Attendance for ${monthName} ${d.getDate()}, ${year} saved.` });
+      toast({ title: editingEntry ? "Updated" : "Saved", description: `Attendance for ${monthName} ${d.getDate()}, ${year} ${editingEntry ? "updated" : "saved"}.` });
       queryClient.invalidateQueries({ queryKey: ["attendance"] });
       setSanctuary(""); setOnline("0"); setNursery("0"); setK3("0"); setGrade46("0"); setYouth("0"); setVolunteers("0"); setNotes("");
+      setEditingEntry(null);
     }
   };
 
@@ -125,7 +152,7 @@ const AttendanceEntry = () => {
       return;
     }
 
-    if (hasExactMatch) {
+    if (hasExactMatch && !editingEntry) {
       setShowDuplicateWarning(true);
       return;
     }
@@ -231,7 +258,16 @@ const AttendanceEntry = () => {
             <Label>Notes (optional)</Label>
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
           </div>
-          <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Attendance"}</Button>
+          <div className="flex items-center gap-2">
+            <Button type="submit" disabled={saving}>{saving ? "Saving..." : editingEntry ? "Update Attendance" : "Save Attendance"}</Button>
+            {editingEntry && (
+              <Button type="button" variant="outline" onClick={() => {
+                setEditingEntry(null);
+                setSanctuary(""); setOnline("0"); setNursery("0"); setK3("0"); setGrade46("0"); setYouth("0"); setVolunteers("0"); setNotes("");
+                setService("");
+              }}>Cancel Edit</Button>
+            )}
+          </div>
         </form>
       </div>
 
@@ -243,7 +279,7 @@ const AttendanceEntry = () => {
             Existing entries for {new Date(eventDate + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
           </h4>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground border-b border-border">
                   <th className="pb-2 pr-4">Service</th>
@@ -253,7 +289,9 @@ const AttendanceEntry = () => {
                   <th className="pb-2 pr-4">K-3</th>
                   <th className="pb-2 pr-4">4-6</th>
                   <th className="pb-2 pr-4">Youth</th>
-                  <th className="pb-2">Total</th>
+                  <th className="pb-2 pr-4">Vol.</th>
+                  <th className="pb-2 pr-4">Total</th>
+                  <th className="pb-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -266,7 +304,39 @@ const AttendanceEntry = () => {
                     <td className="py-2 pr-4">{entry.k3_attendance}</td>
                     <td className="py-2 pr-4">{entry.grade_4_6_attendance}</td>
                     <td className="py-2 pr-4">{entry.youth_attendance}</td>
-                    <td className="py-2">{entry.adjusted_total}</td>
+                    <td className="py-2 pr-4">{entry.volunteer_classroom_attendance}</td>
+                    <td className="py-2 pr-4">{entry.adjusted_total}</td>
+                    <td className="py-2">
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            setService(entry.service);
+                            setSanctuary(String(entry.sanctuary_attendance));
+                            setOnline(String(entry.online_attendance));
+                            setNursery(String(entry.nursery_attendance));
+                            setK3(String(entry.k3_attendance));
+                            setGrade46(String(entry.grade_4_6_attendance));
+                            setYouth(String(entry.youth_attendance));
+                            setVolunteers(String(entry.volunteer_classroom_attendance));
+                            setNotes(entry.notes || "");
+                            setEditingEntry(entry);
+                          }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          onClick={() => setDeletingEntryId(entry.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -318,6 +388,37 @@ const AttendanceEntry = () => {
               }}
             >
               Add as Duplicate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deletingEntryId} onOpenChange={(open) => !open && setDeletingEntryId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Entry</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this attendance entry? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!deletingEntryId) return;
+                const { error } = await supabase.from("attendance").delete().eq("id", deletingEntryId);
+                setDeletingEntryId(null);
+                if (error) {
+                  toast({ title: "Error", description: error.message, variant: "destructive" });
+                } else {
+                  toast({ title: "Deleted", description: "Attendance entry removed." });
+                  queryClient.invalidateQueries({ queryKey: ["attendance"] });
+                }
+              }}
+            >
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
