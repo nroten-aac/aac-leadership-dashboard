@@ -199,8 +199,9 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        message: `Synced ${upserted} monthly giving records from ${totalDonations} donations${unmappedMsg}`,
-        upserted,
+        message: `Added ${inserted} new monthly records (${skipped} already existed) from ${totalDonations} donations${unmappedMsg}`,
+        inserted,
+        skipped,
         totalDonations,
         unmappedFunds: Array.from(unmappedFunds),
         errors: errors.length > 0 ? errors : undefined,
