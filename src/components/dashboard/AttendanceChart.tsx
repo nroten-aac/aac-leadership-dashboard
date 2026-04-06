@@ -67,16 +67,36 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
   }, [attendance, yearFilter, quarterFilter, monthFilter, rollingCutoff]);
 
   const chartData = useMemo(() => {
-    const weeklyMap = new Map<string, { combined: number; online: number; notes: string[] }>();
+    const weeklyMap = new Map<string, {
+      combined: number; online: number; notes: string[];
+      firstService: number; secondService: number; kids: number;
+      nursery: number; k3: number; grade46: number; youth: number; volunteers: number;
+    }>();
     filtered.forEach((r) => {
-      const existing = weeklyMap.get(r.event_date) || { combined: 0, online: 0, notes: [] };
-      const notesList = existing.notes;
-      if (r.notes) notesList.push(r.notes);
-      weeklyMap.set(r.event_date, {
-        combined: existing.combined + r.adjusted_total,
-        online: existing.online + ((r as any).online_attendance || 0),
-        notes: notesList,
-      });
+      const existing = weeklyMap.get(r.event_date) || {
+        combined: 0, online: 0, notes: [],
+        firstService: 0, secondService: 0, kids: 0,
+        nursery: 0, k3: 0, grade46: 0, youth: 0, volunteers: 0,
+      };
+      if (r.notes) existing.notes.push(r.notes);
+      existing.combined += r.adjusted_total;
+      existing.online += ((r as any).online_attendance || 0);
+
+      const svc = r.service;
+      if (svc === "1st Sunday Service (9:15)" || svc === "9:15 AM") {
+        existing.firstService = r.adjusted_total;
+      } else if (svc === "2nd Sunday Service (11:00)" || svc === "11:00 AM") {
+        existing.secondService = r.adjusted_total;
+      } else if (svc === "Not Applicable") {
+        existing.kids = r.adjusted_total;
+      }
+      existing.nursery += (r as any).nursery_attendance || 0;
+      existing.k3 += (r as any).k3_attendance || 0;
+      existing.grade46 += (r as any).grade_4_6_attendance || 0;
+      existing.youth += (r as any).youth_attendance || 0;
+      existing.volunteers += (r as any).volunteer_classroom_attendance || 0;
+
+      weeklyMap.set(r.event_date, existing);
     });
     return Array.from(weeklyMap.entries())
       .sort(([a], [b]) => a.localeCompare(b))
@@ -86,6 +106,14 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
         combined: vals.combined,
         online: vals.online,
         notes: vals.notes.filter(Boolean).join("; ") || null,
+        firstService: vals.firstService,
+        secondService: vals.secondService,
+        kids: vals.kids,
+        nursery: vals.nursery,
+        k3: vals.k3,
+        grade46: vals.grade46,
+        youth: vals.youth,
+        volunteers: vals.volunteers,
       }));
   }, [filtered]);
 
@@ -167,24 +195,39 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
             />
             <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
             <Tooltip
-              contentStyle={{
-                background: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "12px",
-                fontSize: 13,
-                maxWidth: 280,
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const item = payload[0]?.payload;
+                if (!item) return null;
+                const dateStr = item.date ? format(parseISO(item.date), "MMM d, yyyy") : "";
+                const total = item.combined + item.online;
+                return (
+                  <div className="bg-card border border-border rounded-xl p-3 shadow-lg text-sm max-w-[300px]">
+                    <p className="font-semibold text-foreground mb-1.5">{dateStr}</p>
+                    <div className="space-y-0.5 text-muted-foreground">
+                      {item.firstService > 0 && <p>1st Service: <span className="text-foreground font-medium">{item.firstService}</span></p>}
+                      {item.secondService > 0 && <p>2nd Service: <span className="text-foreground font-medium">{item.secondService}</span></p>}
+                      {item.kids > 0 && (
+                        <div className="ml-0">
+                          <p>Children &amp; Volunteers: <span className="text-foreground font-medium">{item.kids}</span></p>
+                          <div className="ml-3 text-xs text-muted-foreground/80">
+                            {item.volunteers > 0 && <p>Volunteers: {item.volunteers}</p>}
+                            {item.nursery > 0 && <p>Nursery: {item.nursery}</p>}
+                            {item.k3 > 0 && <p>K–3: {item.k3}</p>}
+                            {item.grade46 > 0 && <p>Grades 4–6: {item.grade46}</p>}
+                            {item.youth > 0 && <p>Youth: {item.youth}</p>}
+                          </div>
+                        </div>
+                      )}
+                      {item.online > 0 && <p>Online: <span className="text-foreground font-medium">{item.online}</span></p>}
+                      <div className="border-t border-border mt-1.5 pt-1.5">
+                        <p className="font-semibold text-foreground">Total: {total}</p>
+                      </div>
+                    </div>
+                    {item.notes && <p className="mt-1.5 text-xs text-muted-foreground/70">📝 {item.notes}</p>}
+                  </div>
+                );
               }}
-              labelFormatter={(_, payload) => {
-                if (payload && payload.length > 0) {
-                  const item = payload[0]?.payload;
-                  if (!item) return "";
-                  const dateStr = item.date ? format(parseISO(item.date), "MMM d, yyyy") : "";
-                  const notes = item.notes;
-                  return notes ? `${dateStr}\n📝 ${notes}` : dateStr;
-                }
-                return "";
-              }}
-              labelStyle={{ whiteSpace: "pre-wrap" }}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar
