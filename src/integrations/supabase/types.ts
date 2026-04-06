@@ -80,6 +80,42 @@ export type Database = {
         }
         Relationships: []
       }
+      building_campaign: {
+        Row: {
+          cd_0668: number | null
+          cd_1941: number | null
+          cd_2029: number | null
+          created_at: string
+          id: string
+          money_market: number | null
+          month: string
+          monthly_giving_deposits: number
+          year: number
+        }
+        Insert: {
+          cd_0668?: number | null
+          cd_1941?: number | null
+          cd_2029?: number | null
+          created_at?: string
+          id?: string
+          money_market?: number | null
+          month: string
+          monthly_giving_deposits?: number
+          year: number
+        }
+        Update: {
+          cd_0668?: number | null
+          cd_1941?: number | null
+          cd_2029?: number | null
+          created_at?: string
+          id?: string
+          money_market?: number | null
+          month?: string
+          monthly_giving_deposits?: number
+          year?: number
+        }
+        Relationships: []
+      }
       building_fund_accounts: {
         Row: {
           account_name: string
