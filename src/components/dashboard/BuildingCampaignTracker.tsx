@@ -219,12 +219,12 @@ const BuildingCampaignTracker = () => {
               </Card>
               <Card className="bg-accent/10 border-accent/30">
                 <CardContent className="p-4 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Pledges Received</p>
+                  <p className="text-xs text-muted-foreground mb-1">Total Received</p>
                   {pledgeLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                   ) : (
                     <p className="text-lg font-bold text-accent-foreground">
-                      {pledgeData ? fmt((pledgeData.received_from_pledges_cents || 0) / 100) : "—"}
+                      {pledgeData ? fmt(((pledgeData.received_from_pledges_cents || 0) + (pledgeData.received_outside_pledges_cents || 0)) / 100) : "—"}
                     </p>
                   )}
                 </CardContent>
