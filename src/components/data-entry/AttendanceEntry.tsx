@@ -471,13 +471,20 @@ const AttendanceEntry = () => {
       <RecentEntries
         table="attendance"
         title="Recent Attendance Entries"
-        orderBy="event_date"
+        orderBy={[{ column: "event_date", ascending: false }, { column: "service", ascending: true }]}
+        yearField="year"
+        limit={15}
         columns={[
           { key: "event_date", label: "Date" },
           { key: "service", label: "Service" },
           { key: "sanctuary_attendance", label: "Sanctuary" },
+          { key: "volunteer_classroom_attendance", label: "Vol." },
+          { key: "nursery_attendance", label: "Nursery" },
+          { key: "k3_attendance", label: "K-3" },
+          { key: "grade_4_6_attendance", label: "4-6" },
+          { key: "youth_attendance", label: "Youth" },
           { key: "online_attendance", label: "Online" },
-          { key: "adjusted_total", label: "Total" },
+          { key: "adjusted_total", label: "Adj. Total" },
         ]}
       />
     </div>
