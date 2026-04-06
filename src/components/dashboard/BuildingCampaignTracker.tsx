@@ -75,57 +75,11 @@ const BuildingCampaignTracker = () => {
 
   const gap = CAMPAIGN_GOAL - totalFundsAvailable;
 
-  // Compute cumulative for each row (for display)
-  const rowsWithCumulative = useMemo(() => {
-    let cum = 0;
-    return rows.map((r) => {
-      cum += Number(r.monthly_giving_deposits);
-      return { ...r, cumulative: cum };
-    });
-  }, [rows]);
 
   return (
     <div className="mt-8">
       <h2 className="text-xl font-bold text-foreground mb-4 font-heading">Building Expansion Campaign</h2>
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* LEFT: Grid */}
-        <Card className="overflow-hidden flex flex-col max-h-[420px]">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Giving Tracker</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 flex-1 min-h-0">
-            <div className="overflow-auto h-full">
-              <table className="w-full text-xs">
-                <thead className="bg-card sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.1)]">
-                  <tr>
-                    <th className="text-left px-2 py-2 font-medium text-muted-foreground">Month</th>
-                    <th className="text-right px-2 py-2 font-medium text-muted-foreground">Giving</th>
-                    <th className="text-right px-2 py-2 font-medium text-muted-foreground">Cumulative</th>
-                    <th className="text-right px-2 py-2 font-medium text-muted-foreground">CD-0668</th>
-                    <th className="text-right px-2 py-2 font-medium text-muted-foreground">CD-1941</th>
-                    <th className="text-right px-2 py-2 font-medium text-muted-foreground">Money Mkt</th>
-                    <th className="text-right px-2 py-2 font-medium text-muted-foreground">CD-2029</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...rowsWithCumulative].reverse().map((row) => (
-                    <tr key={row.id} className="border-b border-border/30 hover:bg-muted/30">
-                      <td className="px-2 py-1.5 font-medium whitespace-nowrap">{row.month.slice(0, 3)} {row.year}</td>
-                      <td className="px-2 py-1.5 text-right">{fmt(row.monthly_giving_deposits)}</td>
-                      <td className="px-2 py-1.5 text-right font-semibold text-primary">{fmt(row.cumulative)}</td>
-                      <td className="px-2 py-1.5 text-right">{fmt(row.cd_0668)}</td>
-                      <td className="px-2 py-1.5 text-right">{fmt(row.cd_1941)}</td>
-                      <td className="px-2 py-1.5 text-right">{fmt(row.money_market)}</td>
-                      <td className="px-2 py-1.5 text-right">{fmt(row.cd_2029)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* RIGHT: Chart + Summary */}
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4">
           <Card>
             <CardHeader className="pb-2">
