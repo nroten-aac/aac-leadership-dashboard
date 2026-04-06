@@ -34,7 +34,8 @@ const AttendanceEntry = () => {
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
-
+  const [editingEntry, setEditingEntry] = useState<any>(null);
+  const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
   const [eventDate, setEventDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [service, setService] = useState("");
   const [sanctuary, setSanctuary] = useState("");
@@ -243,7 +244,7 @@ const AttendanceEntry = () => {
             Existing entries for {new Date(eventDate + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
           </h4>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground border-b border-border">
                   <th className="pb-2 pr-4">Service</th>
@@ -253,7 +254,9 @@ const AttendanceEntry = () => {
                   <th className="pb-2 pr-4">K-3</th>
                   <th className="pb-2 pr-4">4-6</th>
                   <th className="pb-2 pr-4">Youth</th>
-                  <th className="pb-2">Total</th>
+                  <th className="pb-2 pr-4">Vol.</th>
+                  <th className="pb-2 pr-4">Total</th>
+                  <th className="pb-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -266,7 +269,39 @@ const AttendanceEntry = () => {
                     <td className="py-2 pr-4">{entry.k3_attendance}</td>
                     <td className="py-2 pr-4">{entry.grade_4_6_attendance}</td>
                     <td className="py-2 pr-4">{entry.youth_attendance}</td>
-                    <td className="py-2">{entry.adjusted_total}</td>
+                    <td className="py-2 pr-4">{entry.volunteer_classroom_attendance}</td>
+                    <td className="py-2 pr-4">{entry.adjusted_total}</td>
+                    <td className="py-2">
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            setService(entry.service);
+                            setSanctuary(String(entry.sanctuary_attendance));
+                            setOnline(String(entry.online_attendance));
+                            setNursery(String(entry.nursery_attendance));
+                            setK3(String(entry.k3_attendance));
+                            setGrade46(String(entry.grade_4_6_attendance));
+                            setYouth(String(entry.youth_attendance));
+                            setVolunteers(String(entry.volunteer_classroom_attendance));
+                            setNotes(entry.notes || "");
+                            setEditingEntry(entry);
+                          }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          onClick={() => setDeletingEntryId(entry.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
