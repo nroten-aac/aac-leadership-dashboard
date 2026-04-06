@@ -217,7 +217,7 @@ const BuildingCampaignTracker = () => {
               <div className="flex flex-col gap-2">
                 {/* Total Pledged as bracket header */}
                 <div className="text-center rounded-t-lg border border-primary/20 bg-primary/5 px-3 py-2">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total Pledged</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total Campaign Giving</p>
                   {pledgeLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                   ) : (
@@ -226,30 +226,34 @@ const BuildingCampaignTracker = () => {
                     </p>
                   )}
                 </div>
-                {/* Sub-categories */}
-                <div className="grid grid-cols-2 gap-2 border-x border-b border-primary/20 rounded-b-lg p-2 bg-primary/[0.02]">
+                <div className="grid grid-cols-3 gap-2 border-x border-b border-primary/20 rounded-b-lg p-2 bg-primary/[0.02]">
                   <Card className="bg-accent/10 border-accent/30 shadow-none">
                     <CardContent className="p-3 text-center">
-                      <p className="text-[10px] text-muted-foreground mb-1">Pledges Received</p>
+                      <p className="text-[10px] text-muted-foreground mb-1">From Pledgers</p>
                       {pledgeLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
-                      ) : pledgeData ? (
-                        <>
-                          <p className="text-sm font-bold text-accent-foreground">
-                            {fmt(((pledgeData.received_from_pledges_cents || 0) + (pledgeData.received_outside_pledges_cents || 0)) / 100)}
-                          </p>
-                          <p className="text-[9px] text-muted-foreground mt-1">
-                            (Pledgers: {fmt((pledgeData.received_from_pledges_cents || 0) / 100)} | Non-Pledgers: {fmt((pledgeData.received_outside_pledges_cents || 0) / 100)})
-                          </p>
-                        </>
                       ) : (
-                        <p className="text-sm font-bold text-accent-foreground">—</p>
+                        <p className="text-sm font-bold text-accent-foreground">
+                          {pledgeData ? fmt((pledgeData.received_from_pledges_cents || 0) / 100) : "—"}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-accent/10 border-accent/30 shadow-none">
+                    <CardContent className="p-3 text-center">
+                      <p className="text-[10px] text-muted-foreground mb-1">From Non-Pledgers</p>
+                      {pledgeLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
+                      ) : (
+                        <p className="text-sm font-bold text-accent-foreground">
+                          {pledgeData ? fmt((pledgeData.received_outside_pledges_cents || 0) / 100) : "—"}
+                        </p>
                       )}
                     </CardContent>
                   </Card>
                   <Card className="bg-destructive/5 border-destructive/20 shadow-none">
                     <CardContent className="p-3 text-center">
-                      <p className="text-[10px] text-muted-foreground mb-1">Not Yet Received</p>
+                      <p className="text-[10px] text-muted-foreground mb-1">Pledges Not Yet Received</p>
                       {pledgeLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                       ) : (
