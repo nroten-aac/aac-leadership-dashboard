@@ -1,6 +1,7 @@
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DonationsChart from "@/components/dashboard/DonationsChart";
+import GivingPieCharts from "@/components/dashboard/GivingPieCharts";
 import AIChatPanel from "@/components/dashboard/AIChatPanel";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { Skeleton } from "@/components/ui/skeleton";
