@@ -104,7 +104,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
       .map(([date, vals]) => ({
         date,
         label: format(parseISO(date), "M/d/yy"),
-        combined: vals.combined,
+        combined: vals.combined - vals.online,
         online: vals.online,
         notes: vals.notes.filter(Boolean).join("; ") || null,
         firstService: vals.firstService,
@@ -232,32 +232,32 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar
-              dataKey="online"
-              name="Online"
-              stackId="attendance"
-              fill="hsl(var(--secondary))"
-              radius={[0, 0, 0, 0]}
-              barSize={dataWithTrend.length > 30 ? 12 : 22}
-            >
-              <LabelList
-                dataKey="online"
-                position="center"
-                style={{ fontSize: dataWithTrend.length > 30 ? 7 : 10, fill: "white", fontWeight: 700 }}
-                formatter={(value: number) => (value > 0 ? value : "")}
-              />
-            </Bar>
-            <Bar
               dataKey="combined"
               name="In-Person"
               stackId="attendance"
               fill="hsl(var(--primary))"
-              radius={[6, 6, 0, 0]}
+              radius={[0, 0, 0, 0]}
+              barSize={dataWithTrend.length > 30 ? 12 : 22}
             >
               <LabelList
                 dataKey="combined"
                 position="top"
                 style={{ fontSize: dataWithTrend.length > 30 ? 9 : 12, fill: "hsl(var(--foreground))", fontWeight: 700 }}
                 formatter={(value: number) => value}
+              />
+            </Bar>
+            <Bar
+              dataKey="online"
+              name="Online"
+              stackId="attendance"
+              fill="hsl(var(--secondary))"
+              radius={[6, 6, 0, 0]}
+            >
+              <LabelList
+                dataKey="online"
+                position="center"
+                style={{ fontSize: dataWithTrend.length > 30 ? 7 : 10, fill: "white", fontWeight: 700 }}
+                formatter={(value: number) => (value > 0 ? value : "")}
               />
             </Bar>
             <Line
