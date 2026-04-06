@@ -101,7 +101,7 @@ const GivingPieCharts = ({ monthlyGiving }: { monthlyGiving: MonthlyGiving[] }) 
                   background: "hsl(var(--card))",
                   border: "1px solid hsl(var(--border))",
                   borderRadius: "12px",
-                  fontSize: 13,
+                  fontSize: 14,
                 }}
                 formatter={(value: number) => `$${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
               />
@@ -109,8 +109,8 @@ const GivingPieCharts = ({ monthlyGiving }: { monthlyGiving: MonthlyGiving[] }) 
           </ResponsiveContainer>
           <div className="flex flex-col gap-2">
             {data.map((entry) => (
-              <div key={entry.name} className="flex items-center gap-2 text-xs">
-                <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
+              <div key={entry.name} className="flex items-center gap-2 text-sm">
+                <div className="w-3.5 h-3.5 rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
                 <div>
                   <span className="text-foreground font-medium">{entry.name}</span>
                   <span className="text-muted-foreground ml-1.5">
