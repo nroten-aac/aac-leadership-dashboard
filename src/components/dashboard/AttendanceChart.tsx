@@ -52,7 +52,6 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
 
   const filtered = useMemo(() => {
     return attendance.filter((a) => {
-      // Year filter
       if (yearFilter.length > 0) {
         if (yearFilter.includes("rolling")) {
           if (a.event_date < rollingCutoff) return false;
@@ -66,7 +65,17 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
     });
   }, [attendance, yearFilter, quarterFilter, monthFilter, rollingCutoff]);
 
-  const chartData = useMemo(() => {
+  const isComparisonMode = useMemo(() => {
+    return yearFilter.length >= 2 && !yearFilter.includes("rolling");
+  }, [yearFilter]);
+
+  const selectedYears = useMemo(() => {
+    return yearFilter.filter((y) => y !== "rolling").map(Number).sort();
+  }, [yearFilter]);
+
+  // Weekly chart data (linear mode)
+  const weeklyChartData = useMemo(() => {
+    if (isComparisonMode) return [];
     const weeklyMap = new Map<string, {
       combined: number; online: number; notes: string[];
       firstService: number; firstServiceOriginal: number; secondService: number; kids: number;
@@ -117,13 +126,63 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
         youth: vals.youth,
         volunteers: vals.volunteers,
       }));
-  }, [filtered]);
+  }, [filtered, isComparisonMode]);
+
+  // Comparison mode: aggregate weekly → monthly averages, grouped by month
+  const comparisonChartData = useMemo(() => {
+    if (!isComparisonMode) return [];
+    // First aggregate per week per date
+    const weeklyMap = new Map<string, { combined: number; online: number; year: number; month: string }>();
+    filtered.forEach((r) => {
+      const existing = weeklyMap.get(r.event_date) || { combined: 0, online: 0, year: r.year, month: r.month };
+      existing.combined += r.adjusted_total;
+      existing.online += ((r as any).online_attendance || 0);
+      weeklyMap.set(r.event_date, existing);
+    });
+    // Group by month+year → compute average
+    const monthlyMap = new Map<string, { total: number; online: number; count: number }>();
+    weeklyMap.forEach((val) => {
+      const key = `${val.year}-${val.month}`;
+      const existing = monthlyMap.get(key) || { total: 0, online: 0, count: 0 };
+      existing.total += val.combined;
+      existing.online += val.online;
+      existing.count += 1;
+      monthlyMap.set(key, existing);
+    });
+    // Build chart rows keyed by month index
+    const rows = new Map<number, Record<string, any>>();
+    for (const yr of selectedYears) {
+      MONTH_ORDER.forEach((month, monthIdx) => {
+        const key = `${yr}-${month}`;
+        const data = monthlyMap.get(key);
+        if (!rows.has(monthIdx)) {
+          const row: Record<string, any> = { month: month.slice(0, 3), _sort: monthIdx };
+          rows.set(monthIdx, row);
+        }
+        const row = rows.get(monthIdx)!;
+        const ipKey = `In-Person '${String(yr).slice(2)}`;
+        const olKey = `Online '${String(yr).slice(2)}`;
+        if (!(ipKey in row)) row[ipKey] = 0;
+        if (!(olKey in row)) row[olKey] = 0;
+        if (data) {
+          row[ipKey] = Math.round(data.total / data.count);
+          row[olKey] = Math.round(data.online / data.count);
+        }
+      });
+    }
+    return Array.from(rows.values()).sort((a, b) => a._sort - b._sort);
+  }, [filtered, isComparisonMode, selectedYears]);
+
+  const chartData = isComparisonMode ? comparisonChartData : weeklyChartData;
 
   const dataWithTrend = useMemo(() => {
+    if (isComparisonMode) {
+      return chartData.map((d) => ({ ...d, trend: null as number | null }));
+    }
     const n = chartData.length;
     if (n === 0) return [];
     const nonZero = chartData
-      .map((d, i) => ({ i, total: d.combined + d.online }))
+      .map((d, i) => ({ i, total: (d.combined || 0) + (d.online || 0) }))
       .filter((d) => d.total > 0);
     if (nonZero.length < 2) {
       return chartData.map((d) => ({ ...d, trend: null as number | null }));
@@ -138,18 +197,29 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
     const intercept = (sumY - slope * sumX) / nz;
     return chartData.map((d, i) => ({
       ...d,
-      trend: (d.combined + d.online) > 0 ? Math.round(slope * i + intercept) : null,
+      trend: ((d.combined || 0) + (d.online || 0)) > 0 ? Math.round(slope * i + intercept) : null,
     }));
-  }, [chartData]);
+  }, [chartData, isComparisonMode]);
 
   const { trendPct, isUp } = useMemo(() => {
-    const recent = chartData.slice(-4);
-    const older = chartData.slice(-8, -4);
+    if (isComparisonMode) return { trendPct: 0, isUp: true };
+    const recent = weeklyChartData.slice(-4);
+    const older = weeklyChartData.slice(-8, -4);
     const recentAvg = recent.reduce((s, d) => s + d.combined, 0) / (recent.length || 1);
     const olderAvg = older.reduce((s, d) => s + d.combined, 0) / (older.length || 1);
     const pct = olderAvg > 0 ? Math.round(((recentAvg - olderAvg) / olderAvg) * 100) : 0;
     return { trendPct: pct, isUp: pct >= 0 };
-  }, [chartData]);
+  }, [weeklyChartData, isComparisonMode]);
+
+  const comparisonBarKeys = useMemo(() => {
+    if (!isComparisonMode) return [];
+    const keys: { key: string; type: "ip" | "online"; year: number }[] = [];
+    for (const yr of selectedYears) {
+      keys.push({ key: `In-Person '${String(yr).slice(2)}`, type: "ip", year: yr });
+      keys.push({ key: `Online '${String(yr).slice(2)}`, type: "online", year: yr });
+    }
+    return keys;
+  }, [isComparisonMode, selectedYears]);
 
   const yearOptions = [
     { value: "rolling", label: "Rolling Year" },
@@ -162,113 +232,155 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
     <div className="bg-card rounded-2xl shadow-card p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div>
-          <h3 className="font-display font-semibold text-foreground">Weekly Attendance</h3>
+          <h3 className="font-display font-semibold text-foreground">
+            Weekly Attendance{isComparisonMode ? " (Monthly Avg)" : ""}
+          </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Combined adjusted total (both services)
+            {isComparisonMode ? "Average weekly attendance per month" : "Combined adjusted total (both services)"}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <MultiSelectFilter label="Years" options={yearOptions} selected={yearFilter} onChange={(v) => { setYearFilter(v); if (!v.includes("rolling")) { /* keep quarter/month */ } }} width="w-[130px]" />
+          <MultiSelectFilter label="Years" options={yearOptions} selected={yearFilter} onChange={(v) => { setYearFilter(v); }} width="w-[130px]" />
           <MultiSelectFilter label="Qtrs" options={quarterOptions} selected={quarterFilter} onChange={setQuarterFilter} width="w-[110px]" />
           <MultiSelectFilter label="Months" options={monthOptions} selected={monthFilter} onChange={setMonthFilter} width="w-[120px]" />
-          <div
-            className={`flex items-center gap-1 text-sm font-semibold px-2.5 py-1 rounded-lg ${
-              isUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
-            }`}
-          >
-            {isUp ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-            {Math.abs(trendPct)}%
-          </div>
+          {!isComparisonMode && (
+            <div
+              className={`flex items-center gap-1 text-sm font-semibold px-2.5 py-1 rounded-lg ${
+                isUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
+              }`}
+            >
+              {isUp ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+              {Math.abs(trendPct)}%
+            </div>
+          )}
         </div>
       </div>
       {dataWithTrend.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-16">No data for selected filters</p>
       ) : (
         <ResponsiveContainer width="100%" height={420}>
-          <ComposedChart data={dataWithTrend} barGap={-10}>
+          <ComposedChart data={dataWithTrend} barGap={isComparisonMode ? 2 : -10}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
-              dataKey="label"
+              dataKey={isComparisonMode ? "month" : "label"}
               tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-              interval={Math.max(0, Math.floor(dataWithTrend.length / 20))}
-              angle={-45}
-              textAnchor="end"
-              height={55}
+              interval={isComparisonMode ? 0 : Math.max(0, Math.floor(dataWithTrend.length / 20))}
+              angle={isComparisonMode ? 0 : -45}
+              textAnchor={isComparisonMode ? "middle" : "end"}
+              height={isComparisonMode ? 30 : 55}
             />
             <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-            <Tooltip
-              content={({ active, payload }) => {
-                if (!active || !payload?.length) return null;
-                const item = payload[0]?.payload;
-                if (!item) return null;
-                const dateStr = item.date ? format(parseISO(item.date), "MMM d, yyyy") : "";
-                const total = item.combined + item.online;
-                return (
-                  <div className="bg-card border border-border rounded-xl p-3 shadow-lg text-sm max-w-[300px]">
-                    <p className="font-semibold text-foreground mb-1.5">{dateStr}</p>
-                    <div className="space-y-0.5 text-muted-foreground">
-                      {item.firstService > 0 && <p>1st Service: <span className="text-foreground font-medium">{item.firstServiceOriginal !== item.firstService ? <>{item.firstServiceOriginal} <span className="text-muted-foreground">({item.firstService} adj.)</span></> : item.firstService}</span></p>}
-                      {item.secondService > 0 && <p>2nd Service: <span className="text-foreground font-medium">{item.secondService}</span></p>}
-                      {item.kids > 0 && (
-                        <div className="ml-0">
-                          <p>Children &amp; Volunteers: <span className="text-foreground font-medium">{item.kids}</span></p>
-                          <div className="ml-3 text-xs text-muted-foreground/80">
-                            {item.volunteers > 0 && <p>Volunteers: {item.volunteers}</p>}
-                            {item.nursery > 0 && <p>Nursery: {item.nursery}</p>}
-                            {item.k3 > 0 && <p>K–3: {item.k3}</p>}
-                            {item.grade46 > 0 && <p>Grades 4–6: {item.grade46}</p>}
-                            {item.youth > 0 && <p>Youth: {item.youth}</p>}
+            {isComparisonMode ? (
+              <Tooltip
+                contentStyle={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "12px",
+                  fontSize: 13,
+                }}
+                formatter={(value: number, name: string) => [value, name]}
+              />
+            ) : (
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const item = payload[0]?.payload;
+                  if (!item) return null;
+                  const dateStr = item.date ? format(parseISO(item.date), "MMM d, yyyy") : "";
+                  const total = item.combined + item.online;
+                  return (
+                    <div className="bg-card border border-border rounded-xl p-3 shadow-lg text-sm max-w-[300px]">
+                      <p className="font-semibold text-foreground mb-1.5">{dateStr}</p>
+                      <div className="space-y-0.5 text-muted-foreground">
+                        {item.firstService > 0 && <p>1st Service: <span className="text-foreground font-medium">{item.firstServiceOriginal !== item.firstService ? <>{item.firstServiceOriginal} <span className="text-muted-foreground">({item.firstService} adj.)</span></> : item.firstService}</span></p>}
+                        {item.secondService > 0 && <p>2nd Service: <span className="text-foreground font-medium">{item.secondService}</span></p>}
+                        {item.kids > 0 && (
+                          <div className="ml-0">
+                            <p>Children &amp; Volunteers: <span className="text-foreground font-medium">{item.kids}</span></p>
+                            <div className="ml-3 text-xs text-muted-foreground/80">
+                              {item.volunteers > 0 && <p>Volunteers: {item.volunteers}</p>}
+                              {item.nursery > 0 && <p>Nursery: {item.nursery}</p>}
+                              {item.k3 > 0 && <p>K–3: {item.k3}</p>}
+                              {item.grade46 > 0 && <p>Grades 4–6: {item.grade46}</p>}
+                              {item.youth > 0 && <p>Youth: {item.youth}</p>}
+                            </div>
                           </div>
+                        )}
+                        {item.online > 0 && <p>Online: <span className="text-foreground font-medium">{item.online}</span></p>}
+                        <div className="border-t border-border mt-1.5 pt-1.5">
+                          <p className="font-semibold text-foreground">Total: {total}</p>
                         </div>
-                      )}
-                      {item.online > 0 && <p>Online: <span className="text-foreground font-medium">{item.online}</span></p>}
-                      <div className="border-t border-border mt-1.5 pt-1.5">
-                        <p className="font-semibold text-foreground">Total: {total}</p>
                       </div>
+                      {item.notes && <p className="mt-1.5 text-xs text-muted-foreground/70">📝 {item.notes}</p>}
                     </div>
-                    {item.notes && <p className="mt-1.5 text-xs text-muted-foreground/70">📝 {item.notes}</p>}
-                  </div>
-                );
-              }}
-            />
+                  );
+                }}
+              />
+            )}
             <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar
-              dataKey="combined"
-              name="In-Person"
-              fill="hsl(var(--primary))"
-              radius={[6, 6, 0, 0]}
-              barSize={dataWithTrend.length > 30 ? 14 : 24}
-            >
-              <LabelList
-                dataKey="combined"
-                position="top"
-                style={{ fontSize: dataWithTrend.length > 30 ? 9 : 12, fill: "hsl(var(--foreground))", fontWeight: 700 }}
-                formatter={(value: number) => value}
-              />
-            </Bar>
-            <Bar
-              dataKey="online"
-              name="Online"
-              fill="hsl(var(--secondary))"
-              radius={[6, 6, 0, 0]}
-              barSize={dataWithTrend.length > 30 ? 10 : 16}
-            >
-              <LabelList
-                dataKey="online"
-                position="top"
-                style={{ fontSize: dataWithTrend.length > 30 ? 7 : 10, fill: "white", fontWeight: 700 }}
-                formatter={(value: number) => (value > 0 ? value : "")}
-              />
-            </Bar>
-            <Line
-              type="monotone"
-              dataKey="trend"
-              name="Trend"
-              stroke="hsl(var(--accent))"
-              strokeWidth={2.5}
-              strokeDasharray="6 3"
-              dot={false}
-            />
+            {isComparisonMode ? (
+              comparisonBarKeys.map(({ key, type, year }, idx) => (
+                <Bar
+                  key={key}
+                  dataKey={key}
+                  fill={type === "ip" ? "hsl(var(--primary))" : "hsl(var(--secondary))"}
+                  fillOpacity={year === selectedYears[selectedYears.length - 1] ? 1 : 0.45}
+                  radius={[4, 4, 0, 0]}
+                  barSize={type === "online" ? 10 : 16}
+                >
+                  <LabelList
+                    dataKey={key}
+                    position="top"
+                    style={{
+                      fontSize: 9,
+                      fill: type === "online" ? "white" : "hsl(var(--foreground))",
+                      fontWeight: 700,
+                    }}
+                    formatter={(value: number) => (value > 0 ? value : "")}
+                  />
+                </Bar>
+              ))
+            ) : (
+              <>
+                <Bar
+                  dataKey="combined"
+                  name="In-Person"
+                  fill="hsl(var(--primary))"
+                  radius={[6, 6, 0, 0]}
+                  barSize={dataWithTrend.length > 30 ? 14 : 24}
+                >
+                  <LabelList
+                    dataKey="combined"
+                    position="top"
+                    style={{ fontSize: dataWithTrend.length > 30 ? 9 : 12, fill: "hsl(var(--foreground))", fontWeight: 700 }}
+                    formatter={(value: number) => value}
+                  />
+                </Bar>
+                <Bar
+                  dataKey="online"
+                  name="Online"
+                  fill="hsl(var(--secondary))"
+                  radius={[6, 6, 0, 0]}
+                  barSize={dataWithTrend.length > 30 ? 10 : 16}
+                >
+                  <LabelList
+                    dataKey="online"
+                    position="top"
+                    style={{ fontSize: dataWithTrend.length > 30 ? 7 : 10, fill: "white", fontWeight: 700 }}
+                    formatter={(value: number) => (value > 0 ? value : "")}
+                  />
+                </Bar>
+                <Line
+                  type="monotone"
+                  dataKey="trend"
+                  name="Trend"
+                  stroke="hsl(var(--accent))"
+                  strokeWidth={2.5}
+                  strokeDasharray="6 3"
+                  dot={false}
+                />
+              </>
+            )}
           </ComposedChart>
         </ResponsiveContainer>
       )}
