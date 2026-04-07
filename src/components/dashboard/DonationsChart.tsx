@@ -354,3 +354,11 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
                 connectNulls={false}
               />
             )}
+          </ComposedChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+};
+
+export default DonationsChart;
