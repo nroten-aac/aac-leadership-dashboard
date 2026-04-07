@@ -92,36 +92,96 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
     });
   }, [monthlyGiving, yearFilter, quarterFilter, monthFilter]);
 
+  // Detect comparison mode: multiple specific years selected (not rolling)
+  const isComparisonMode = useMemo(() => {
+    return yearFilter.length >= 2 && !yearFilter.includes("rolling");
+  }, [yearFilter]);
+
+  const selectedYears = useMemo(() => {
+    return yearFilter.filter((y) => y !== "rolling").map(Number).sort();
+  }, [yearFilter]);
+
   const chartData = useMemo(() => {
-    const map = new Map<string, Record<string, any>>();
-    filtered.forEach((g) => {
-      const key = `${g.month.slice(0, 3)} ${String(g.year).slice(2)}`;
-      const sortKey = `${g.year}-${String(MONTH_ORDER.indexOf(g.month)).padStart(2, "0")}`;
-      if (!map.has(sortKey)) {
-        map.set(sortKey, { month: key, _sort: sortKey });
-        for (const fund of ALL_FUNDS) {
-          map.get(sortKey)![FUND_LABELS[fund]] = 0;
+    if (isComparisonMode) {
+      // Comparison mode: months on X-axis, separate bars per year
+      const map = new Map<number, Record<string, any>>();
+      filtered.forEach((g) => {
+        const monthIdx = MONTH_ORDER.indexOf(g.month);
+        if (!map.has(monthIdx)) {
+          const entry: Record<string, any> = { month: g.month.slice(0, 3), _sort: monthIdx };
+          map.set(monthIdx, entry);
         }
-      }
-      const label = FUND_LABELS[g.fund];
-      if (label) {
-        map.get(sortKey)![label] = (map.get(sortKey)![label] || 0) + g.amount;
-      }
-    });
-    return Array.from(map.values()).sort((a, b) => a._sort.localeCompare(b._sort));
-  }, [filtered]);
+        const row = map.get(monthIdx)!;
+        for (const fund of ALL_FUNDS) {
+          for (const yr of selectedYears) {
+            const key = `${FUND_LABELS[fund]} '${String(yr).slice(2)}`;
+            if (!(key in row)) row[key] = 0;
+          }
+        }
+        const label = FUND_LABELS[g.fund];
+        if (label) {
+          const key = `${label} '${String(g.year).slice(2)}`;
+          row[key] = (row[key] || 0) + g.amount;
+        }
+      });
+      return Array.from(map.values()).sort((a, b) => a._sort - b._sort);
+    } else {
+      // Linear mode: original behavior
+      const map = new Map<string, Record<string, any>>();
+      filtered.forEach((g) => {
+        const key = `${g.month.slice(0, 3)} ${String(g.year).slice(2)}`;
+        const sortKey = `${g.year}-${String(MONTH_ORDER.indexOf(g.month)).padStart(2, "0")}`;
+        if (!map.has(sortKey)) {
+          map.set(sortKey, { month: key, _sort: sortKey });
+          for (const fund of ALL_FUNDS) {
+            map.get(sortKey)![FUND_LABELS[fund]] = 0;
+          }
+        }
+        const label = FUND_LABELS[g.fund];
+        if (label) {
+          map.get(sortKey)![label] = (map.get(sortKey)![label] || 0) + g.amount;
+        }
+      });
+      return Array.from(map.values()).sort((a, b) => a._sort.localeCompare(b._sort));
+    }
+  }, [filtered, isComparisonMode, selectedYears]);
+
+  // Build dynamic keys for comparison mode
+  const comparisonBarKeys = useMemo(() => {
+    if (!isComparisonMode) return [];
+    const keys: { key: string; fund: string; year: number; color: string }[] = [];
+    for (const fund of ALL_FUNDS) {
+      if (!activeFunds.includes(fund)) continue;
+      selectedYears.forEach((yr, yIdx) => {
+        const key = `${FUND_LABELS[fund]} '${String(yr).slice(2)}`;
+        // Lighten color for older years
+        const opacity = yIdx === selectedYears.length - 1 ? 1 : 0.5 + (yIdx * 0.2);
+        keys.push({ key, fund, year: yr, color: FUND_COLORS[fund] });
+      });
+    }
+    return keys;
+  }, [isComparisonMode, activeFunds, selectedYears]);
 
   const dataWithTrend = useMemo(() => {
     const withTotals = chartData.map((d) => {
       let total = 0;
-      for (const fund of activeFunds) {
-        total += (d[FUND_LABELS[fund]] as number) || 0;
+      if (isComparisonMode) {
+        for (const { key } of comparisonBarKeys) {
+          total += (d[key] as number) || 0;
+        }
+      } else {
+        for (const fund of activeFunds) {
+          total += (d[FUND_LABELS[fund]] as number) || 0;
+        }
       }
       return { ...d, _total: total };
     });
 
     const n = withTotals.length;
     if (n < 2) return withTotals.map((d) => ({ ...d, trend: null as number | null }));
+
+    // No trendline in comparison mode
+    if (isComparisonMode) return withTotals.map((d) => ({ ...d, trend: null as number | null }));
 
     const nonZero = withTotals.map((d, i) => ({ i, total: d._total })).filter((d) => d.total > 0);
     if (nonZero.length < 2) return withTotals.map((d) => ({ ...d, trend: null as number | null }));
@@ -139,12 +199,18 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
       ...d,
       trend: d._total > 0 ? Math.round(slope * i + intercept) : null,
     }));
-  }, [chartData, activeFunds]);
+  }, [chartData, activeFunds, isComparisonMode, comparisonBarKeys]);
 
   const totalGiving = chartData.reduce((s, d) => {
     let sum = s;
-    for (const fund of activeFunds) {
-      sum += (d[FUND_LABELS[fund]] as number) || 0;
+    if (isComparisonMode) {
+      for (const { key } of comparisonBarKeys) {
+        sum += (d[key] as number) || 0;
+      }
+    } else {
+      for (const fund of activeFunds) {
+        sum += (d[FUND_LABELS[fund]] as number) || 0;
+      }
     }
     return sum;
   }, 0);
@@ -231,38 +297,63 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
               }
             />
             <Legend wrapperStyle={{ fontSize: 14 }} />
-            {ALL_FUNDS.map((fund) =>
-              activeFunds.includes(fund) ? (
-                <Bar
-                  key={fund}
-                  dataKey={FUND_LABELS[fund]}
-                  fill={FUND_COLORS[fund]}
-                  radius={[4, 4, 0, 0]}
-                  barSize={dataWithTrend.length > 18 ? 18 : dataWithTrend.length > 6 ? 28 : 44}
-                >
-                  <LabelList
-                    dataKey={FUND_LABELS[fund]}
-                    position="top"
-                    style={{
-                      fontSize: dataWithTrend.length > 18 ? 9 : 11,
-                      fill: "hsl(var(--foreground))",
-                      fontWeight: 700,
-                    }}
-                    formatter={(value: number) => (value > 0 ? `$${value.toLocaleString()}` : "")}
-                  />
-                </Bar>
-              ) : null
+            {isComparisonMode
+              ? comparisonBarKeys.map(({ key, color }, idx) => (
+                  <Bar
+                    key={key}
+                    dataKey={key}
+                    fill={color}
+                    radius={[4, 4, 0, 0]}
+                    fillOpacity={selectedYears.length > 1 && idx % selectedYears.length !== selectedYears.length - 1 ? 0.45 : 1}
+                    barSize={dataWithTrend.length > 10 ? 14 : 24}
+                  >
+                    <LabelList
+                      dataKey={key}
+                      position="top"
+                      style={{
+                        fontSize: 9,
+                        fill: "hsl(var(--foreground))",
+                        fontWeight: 700,
+                      }}
+                      formatter={(value: number) => (value > 0 ? `$${value.toLocaleString()}` : "")}
+                    />
+                  </Bar>
+                ))
+              : ALL_FUNDS.map((fund) =>
+                  activeFunds.includes(fund) ? (
+                    <Bar
+                      key={fund}
+                      dataKey={FUND_LABELS[fund]}
+                      fill={FUND_COLORS[fund]}
+                      radius={[4, 4, 0, 0]}
+                      barSize={dataWithTrend.length > 18 ? 18 : dataWithTrend.length > 6 ? 28 : 44}
+                    >
+                      <LabelList
+                        dataKey={FUND_LABELS[fund]}
+                        position="top"
+                        style={{
+                          fontSize: dataWithTrend.length > 18 ? 9 : 11,
+                          fill: "hsl(var(--foreground))",
+                          fontWeight: 700,
+                        }}
+                        formatter={(value: number) => (value > 0 ? `$${value.toLocaleString()}` : "")}
+                      />
+                    </Bar>
+                  ) : null
+                )
+            }
+            {!isComparisonMode && (
+              <Line
+                type="monotone"
+                dataKey="trend"
+                name="Trend"
+                stroke="hsl(var(--accent))"
+                strokeWidth={2.5}
+                strokeDasharray="6 3"
+                dot={false}
+                connectNulls={false}
+              />
             )}
-            <Line
-              type="monotone"
-              dataKey="trend"
-              name="Trend"
-              stroke="hsl(var(--accent))"
-              strokeWidth={2.5}
-              strokeDasharray="6 3"
-              dot={false}
-              connectNulls={false}
-            />
           </ComposedChart>
         </ResponsiveContainer>
       )}
