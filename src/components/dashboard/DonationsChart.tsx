@@ -146,17 +146,42 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
     }
   }, [filtered, isComparisonMode, selectedYears]);
 
+  // Build dynamic keys for comparison mode
+  const comparisonBarKeys = useMemo(() => {
+    if (!isComparisonMode) return [];
+    const keys: { key: string; fund: string; year: number; color: string }[] = [];
+    for (const fund of ALL_FUNDS) {
+      if (!activeFunds.includes(fund)) continue;
+      selectedYears.forEach((yr, yIdx) => {
+        const key = `${FUND_LABELS[fund]} '${String(yr).slice(2)}`;
+        // Lighten color for older years
+        const opacity = yIdx === selectedYears.length - 1 ? 1 : 0.5 + (yIdx * 0.2);
+        keys.push({ key, fund, year: yr, color: FUND_COLORS[fund] });
+      });
+    }
+    return keys;
+  }, [isComparisonMode, activeFunds, selectedYears]);
+
   const dataWithTrend = useMemo(() => {
     const withTotals = chartData.map((d) => {
       let total = 0;
-      for (const fund of activeFunds) {
-        total += (d[FUND_LABELS[fund]] as number) || 0;
+      if (isComparisonMode) {
+        for (const { key } of comparisonBarKeys) {
+          total += (d[key] as number) || 0;
+        }
+      } else {
+        for (const fund of activeFunds) {
+          total += (d[FUND_LABELS[fund]] as number) || 0;
+        }
       }
       return { ...d, _total: total };
     });
 
     const n = withTotals.length;
     if (n < 2) return withTotals.map((d) => ({ ...d, trend: null as number | null }));
+
+    // No trendline in comparison mode
+    if (isComparisonMode) return withTotals.map((d) => ({ ...d, trend: null as number | null }));
 
     const nonZero = withTotals.map((d, i) => ({ i, total: d._total })).filter((d) => d.total > 0);
     if (nonZero.length < 2) return withTotals.map((d) => ({ ...d, trend: null as number | null }));
@@ -174,12 +199,18 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
       ...d,
       trend: d._total > 0 ? Math.round(slope * i + intercept) : null,
     }));
-  }, [chartData, activeFunds]);
+  }, [chartData, activeFunds, isComparisonMode, comparisonBarKeys]);
 
   const totalGiving = chartData.reduce((s, d) => {
     let sum = s;
-    for (const fund of activeFunds) {
-      sum += (d[FUND_LABELS[fund]] as number) || 0;
+    if (isComparisonMode) {
+      for (const { key } of comparisonBarKeys) {
+        sum += (d[key] as number) || 0;
+      }
+    } else {
+      for (const fund of activeFunds) {
+        sum += (d[FUND_LABELS[fund]] as number) || 0;
+      }
     }
     return sum;
   }, 0);
