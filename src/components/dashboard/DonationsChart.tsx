@@ -92,24 +92,59 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
     });
   }, [monthlyGiving, yearFilter, quarterFilter, monthFilter]);
 
+  // Detect comparison mode: multiple specific years selected (not rolling)
+  const isComparisonMode = useMemo(() => {
+    return yearFilter.length >= 2 && !yearFilter.includes("rolling");
+  }, [yearFilter]);
+
+  const selectedYears = useMemo(() => {
+    return yearFilter.filter((y) => y !== "rolling").map(Number).sort();
+  }, [yearFilter]);
+
   const chartData = useMemo(() => {
-    const map = new Map<string, Record<string, any>>();
-    filtered.forEach((g) => {
-      const key = `${g.month.slice(0, 3)} ${String(g.year).slice(2)}`;
-      const sortKey = `${g.year}-${String(MONTH_ORDER.indexOf(g.month)).padStart(2, "0")}`;
-      if (!map.has(sortKey)) {
-        map.set(sortKey, { month: key, _sort: sortKey });
-        for (const fund of ALL_FUNDS) {
-          map.get(sortKey)![FUND_LABELS[fund]] = 0;
+    if (isComparisonMode) {
+      // Comparison mode: months on X-axis, separate bars per year
+      const map = new Map<number, Record<string, any>>();
+      filtered.forEach((g) => {
+        const monthIdx = MONTH_ORDER.indexOf(g.month);
+        if (!map.has(monthIdx)) {
+          const entry: Record<string, any> = { month: g.month.slice(0, 3), _sort: monthIdx };
+          map.set(monthIdx, entry);
         }
-      }
-      const label = FUND_LABELS[g.fund];
-      if (label) {
-        map.get(sortKey)![label] = (map.get(sortKey)![label] || 0) + g.amount;
-      }
-    });
-    return Array.from(map.values()).sort((a, b) => a._sort.localeCompare(b._sort));
-  }, [filtered]);
+        const row = map.get(monthIdx)!;
+        for (const fund of ALL_FUNDS) {
+          for (const yr of selectedYears) {
+            const key = `${FUND_LABELS[fund]} '${String(yr).slice(2)}`;
+            if (!(key in row)) row[key] = 0;
+          }
+        }
+        const label = FUND_LABELS[g.fund];
+        if (label) {
+          const key = `${label} '${String(g.year).slice(2)}`;
+          row[key] = (row[key] || 0) + g.amount;
+        }
+      });
+      return Array.from(map.values()).sort((a, b) => a._sort - b._sort);
+    } else {
+      // Linear mode: original behavior
+      const map = new Map<string, Record<string, any>>();
+      filtered.forEach((g) => {
+        const key = `${g.month.slice(0, 3)} ${String(g.year).slice(2)}`;
+        const sortKey = `${g.year}-${String(MONTH_ORDER.indexOf(g.month)).padStart(2, "0")}`;
+        if (!map.has(sortKey)) {
+          map.set(sortKey, { month: key, _sort: sortKey });
+          for (const fund of ALL_FUNDS) {
+            map.get(sortKey)![FUND_LABELS[fund]] = 0;
+          }
+        }
+        const label = FUND_LABELS[g.fund];
+        if (label) {
+          map.get(sortKey)![label] = (map.get(sortKey)![label] || 0) + g.amount;
+        }
+      });
+      return Array.from(map.values()).sort((a, b) => a._sort.localeCompare(b._sort));
+    }
+  }, [filtered, isComparisonMode, selectedYears]);
 
   const dataWithTrend = useMemo(() => {
     const withTotals = chartData.map((d) => {
