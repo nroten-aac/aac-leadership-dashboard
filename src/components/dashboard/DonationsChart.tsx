@@ -297,43 +297,60 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
               }
             />
             <Legend wrapperStyle={{ fontSize: 14 }} />
-            {ALL_FUNDS.map((fund) =>
-              activeFunds.includes(fund) ? (
-                <Bar
-                  key={fund}
-                  dataKey={FUND_LABELS[fund]}
-                  fill={FUND_COLORS[fund]}
-                  radius={[4, 4, 0, 0]}
-                  barSize={dataWithTrend.length > 18 ? 18 : dataWithTrend.length > 6 ? 28 : 44}
-                >
-                  <LabelList
-                    dataKey={FUND_LABELS[fund]}
-                    position="top"
-                    style={{
-                      fontSize: dataWithTrend.length > 18 ? 9 : 11,
-                      fill: "hsl(var(--foreground))",
-                      fontWeight: 700,
-                    }}
-                    formatter={(value: number) => (value > 0 ? `$${value.toLocaleString()}` : "")}
-                  />
-                </Bar>
-              ) : null
+            {isComparisonMode
+              ? comparisonBarKeys.map(({ key, color }, idx) => (
+                  <Bar
+                    key={key}
+                    dataKey={key}
+                    fill={color}
+                    radius={[4, 4, 0, 0]}
+                    fillOpacity={selectedYears.length > 1 && idx % selectedYears.length !== selectedYears.length - 1 ? 0.45 : 1}
+                    barSize={dataWithTrend.length > 10 ? 14 : 24}
+                  >
+                    <LabelList
+                      dataKey={key}
+                      position="top"
+                      style={{
+                        fontSize: 9,
+                        fill: "hsl(var(--foreground))",
+                        fontWeight: 700,
+                      }}
+                      formatter={(value: number) => (value > 0 ? `$${value.toLocaleString()}` : "")}
+                    />
+                  </Bar>
+                ))
+              : ALL_FUNDS.map((fund) =>
+                  activeFunds.includes(fund) ? (
+                    <Bar
+                      key={fund}
+                      dataKey={FUND_LABELS[fund]}
+                      fill={FUND_COLORS[fund]}
+                      radius={[4, 4, 0, 0]}
+                      barSize={dataWithTrend.length > 18 ? 18 : dataWithTrend.length > 6 ? 28 : 44}
+                    >
+                      <LabelList
+                        dataKey={FUND_LABELS[fund]}
+                        position="top"
+                        style={{
+                          fontSize: dataWithTrend.length > 18 ? 9 : 11,
+                          fill: "hsl(var(--foreground))",
+                          fontWeight: 700,
+                        }}
+                        formatter={(value: number) => (value > 0 ? `$${value.toLocaleString()}` : "")}
+                      />
+                    </Bar>
+                  ) : null
+                )
+            }
+            {!isComparisonMode && (
+              <Line
+                type="monotone"
+                dataKey="trend"
+                name="Trend"
+                stroke="hsl(var(--accent))"
+                strokeWidth={2.5}
+                strokeDasharray="6 3"
+                dot={false}
+                connectNulls={false}
+              />
             )}
-            <Line
-              type="monotone"
-              dataKey="trend"
-              name="Trend"
-              stroke="hsl(var(--accent))"
-              strokeWidth={2.5}
-              strokeDasharray="6 3"
-              dot={false}
-              connectNulls={false}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
-      )}
-    </div>
-  );
-};
-
-export default DonationsChart;
