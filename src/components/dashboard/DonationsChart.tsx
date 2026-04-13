@@ -65,18 +65,17 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
     return "Q4";
   };
 
+  const currentYear = new Date().getFullYear();
+  const currentMonthIdx = new Date().getMonth();
+
   const filtered = useMemo(() => {
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonthIdx = now.getMonth();
     const cutoff = subMonths(now, 12);
     const cutoffYear = cutoff.getFullYear();
     const cutoffMonthIdx = cutoff.getMonth();
 
     return monthlyGiving.filter((g) => {
-      // Hide current (incomplete) month
       const gMonthIdx = MONTH_ORDER.indexOf(g.month);
-      if (g.year === currentYear && gMonthIdx === currentMonthIdx) return false;
 
       if (yearFilter.length > 0) {
         if (yearFilter.includes("rolling")) {
