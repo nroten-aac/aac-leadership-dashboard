@@ -11,10 +11,18 @@ const PC_PEOPLE_BASE = "https://api.planningcenteronline.com/people/v2";
 const PC_SERVICES_BASE = "https://api.planningcenteronline.com/services/v2";
 
 const DISCIPLESHIP_LISTS = [
+const DISCIPLESHIP_LISTS = [
   "Life Groups",
   "AAC Bible Studies",
   "Discipleship Groups",
   "PT Mentorship",
+];
+
+const MEMBERSHIP_LISTS = [
+  "Member Adults",
+  "Member Children",
+  "Regular Attender Adults",
+  "Regular Attender Children",
 ];
 
 async function pcFetch(url: string, appId: string, secret: string) {
