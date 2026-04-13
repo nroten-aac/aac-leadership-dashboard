@@ -38,13 +38,21 @@ type MemberWithGroups = {
 
 const CATEGORY_FILTERS = [
   { value: "members", label: "Members & Dependants" },
+  { value: "member_adults", label: "Member Adults" },
+  { value: "member_children", label: "Member Children" },
   { value: "regular", label: "Regular Attenders" },
+  { value: "regular_adults", label: "Regular Attender Adults" },
+  { value: "regular_children", label: "Regular Attender Children" },
   { value: "all", label: "All People" },
 ];
 
 const MEMBERSHIP_LIST_MAP: Record<string, string[]> = {
   members: ["Member Adults", "Member Children"],
+  member_adults: ["Member Adults"],
+  member_children: ["Member Children"],
   regular: ["Regular Attender Adults", "Regular Attender Children"],
+  regular_adults: ["Regular Attender Adults"],
+  regular_children: ["Regular Attender Children"],
 };
 
 const CONNECTION_LEVELS = [
