@@ -65,18 +65,17 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
     return "Q4";
   };
 
+  const currentYear = new Date().getFullYear();
+  const currentMonthIdx = new Date().getMonth();
+
   const filtered = useMemo(() => {
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonthIdx = now.getMonth();
     const cutoff = subMonths(now, 12);
     const cutoffYear = cutoff.getFullYear();
     const cutoffMonthIdx = cutoff.getMonth();
 
     return monthlyGiving.filter((g) => {
-      // Hide current (incomplete) month
       const gMonthIdx = MONTH_ORDER.indexOf(g.month);
-      if (g.year === currentYear && gMonthIdx === currentMonthIdx) return false;
 
       if (yearFilter.length > 0) {
         if (yearFilter.includes("rolling")) {
@@ -131,8 +130,9 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
       filtered.forEach((g) => {
         const key = `${g.month.slice(0, 3)} ${String(g.year).slice(2)}`;
         const sortKey = `${g.year}-${String(MONTH_ORDER.indexOf(g.month)).padStart(2, "0")}`;
+        const isCurrentMonth = g.year === currentYear && MONTH_ORDER.indexOf(g.month) === currentMonthIdx;
         if (!map.has(sortKey)) {
-          map.set(sortKey, { month: key, _sort: sortKey });
+          map.set(sortKey, { month: key, _sort: sortKey, _isCurrentMonth: isCurrentMonth });
           for (const fund of ALL_FUNDS) {
             map.get(sortKey)![FUND_LABELS[fund]] = 0;
           }
@@ -174,7 +174,9 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
           total += (d[FUND_LABELS[fund]] as number) || 0;
         }
       }
-      return { ...d, _total: total };
+      // Mark if this data point is the current incomplete month
+      const isIncomplete = d._isCurrentMonth === true;
+      return { ...d, _total: total, _isIncomplete: isIncomplete };
     });
 
     const n = withTotals.length;
@@ -183,7 +185,10 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
     // No trendline in comparison mode
     if (isComparisonMode) return withTotals.map((d) => ({ ...d, trend: null as number | null }));
 
-    const nonZero = withTotals.map((d, i) => ({ i, total: d._total })).filter((d) => d.total > 0);
+    // Exclude incomplete (current) month from regression
+    const nonZero = withTotals
+      .map((d, i) => ({ i, total: d._total, isIncomplete: d._isIncomplete }))
+      .filter((d) => d.total > 0 && !d.isIncomplete);
     if (nonZero.length < 2) return withTotals.map((d) => ({ ...d, trend: null as number | null }));
 
     const nz = nonZero.length;
@@ -197,7 +202,8 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
 
     return withTotals.map((d, i) => ({
       ...d,
-      trend: d._total > 0 ? Math.round(slope * i + intercept) : null,
+      // Show trendline for completed months only
+      trend: d._total > 0 && !d._isIncomplete ? Math.round(slope * i + intercept) : null,
     }));
   }, [chartData, activeFunds, isComparisonMode, comparisonBarKeys]);
 
