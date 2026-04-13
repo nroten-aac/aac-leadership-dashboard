@@ -142,6 +142,9 @@ serve(async (req) => {
         inactive: "inactive",
         pending: "visitor",
       };
+      const avatarUrl = attrs.avatar || null;
+      // PCO default avatar contains "no_photo" - skip those
+      const hasRealAvatar = avatarUrl && !avatarUrl.includes("no_photo") && !avatarUrl.includes("missing");
       return {
         pco_id: p.id,
         first_name: attrs.first_name || "Unknown",
@@ -160,6 +163,7 @@ serve(async (req) => {
           ? attrs.created_at.split("T")[0]
           : new Date().toISOString().split("T")[0],
         notes: `Imported from Planning Center (ID: ${p.id})`,
+        photo_url: hasRealAvatar ? avatarUrl : null,
         household_id: p._household_id || null,
         household_name: p._household_name || null,
       };
