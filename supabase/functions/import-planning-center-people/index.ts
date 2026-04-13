@@ -11,10 +11,18 @@ const PC_PEOPLE_BASE = "https://api.planningcenteronline.com/people/v2";
 const PC_SERVICES_BASE = "https://api.planningcenteronline.com/services/v2";
 
 const DISCIPLESHIP_LISTS = [
+const DISCIPLESHIP_LISTS = [
   "Life Groups",
   "AAC Bible Studies",
   "Discipleship Groups",
   "PT Mentorship",
+];
+
+const MEMBERSHIP_LISTS = [
+  "Member Adults",
+  "Member Children",
+  "Regular Attender Adults",
+  "Regular Attender Children",
 ];
 
 async function pcFetch(url: string, appId: string, secret: string) {
@@ -184,6 +192,28 @@ serve(async (req) => {
         const memberId = pcoToMemberId.get(p.id);
         if (memberId) {
           groupRows.push({ member_id: memberId, group_name: listName, group_type: "discipleship" });
+        }
+      }
+    }
+
+    // ---- Step 3b: Fetch membership category lists ----
+    console.log("Fetching membership category lists...");
+    for (const listName of MEMBERSHIP_LISTS) {
+      const list = allLists.find(
+        (l: any) => l.attributes.name?.toLowerCase() === listName.toLowerCase()
+      );
+      if (!list) {
+        console.log(`Membership list "${listName}" not found`);
+        continue;
+      }
+
+      const people = await fetchAllPages(`/lists/${list.id}/people?per_page=100`, PC_APP_ID, PC_SECRET);
+      console.log(`List "${listName}": ${people.length} people`);
+
+      for (const p of people) {
+        const memberId = pcoToMemberId.get(p.id);
+        if (memberId) {
+          groupRows.push({ member_id: memberId, group_name: listName, group_type: "membership" });
         }
       }
     }
