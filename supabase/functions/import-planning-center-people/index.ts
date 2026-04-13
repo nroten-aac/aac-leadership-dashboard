@@ -11,7 +11,6 @@ const PC_PEOPLE_BASE = "https://api.planningcenteronline.com/people/v2";
 const PC_SERVICES_BASE = "https://api.planningcenteronline.com/services/v2";
 
 const DISCIPLESHIP_LISTS = [
-const DISCIPLESHIP_LISTS = [
   "Life Groups",
   "AAC Bible Studies",
   "Discipleship Groups",
@@ -259,12 +258,18 @@ serve(async (req) => {
       errors.push(`Volunteer teams: ${e instanceof Error ? e.message : "Unknown error"}`);
     }
 
+    const uniqueGroupRows = Array.from(
+      new Map(
+        groupRows.map((row) => [`${row.member_id}:${row.group_type}:${row.group_name}`, row])
+      ).values()
+    );
+
     // ---- Step 5: Clear and re-insert member_groups ----
-    console.log(`Inserting ${groupRows.length} group memberships...`);
+    console.log(`Inserting ${uniqueGroupRows.length} group memberships...`);
     await serviceClient.from("member_groups").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
-    for (let i = 0; i < groupRows.length; i += 100) {
-      const batch = groupRows.slice(i, i + 100);
+    for (let i = 0; i < uniqueGroupRows.length; i += 100) {
+      const batch = uniqueGroupRows.slice(i, i + 100);
       const { error } = await serviceClient.from("member_groups").upsert(batch, {
         onConflict: "member_id,group_name,group_type",
       });
@@ -275,10 +280,10 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        message: `Imported ${imported} of ${members.length} people, ${groupRows.length} group memberships`,
+        message: `Imported ${imported} of ${members.length} people, ${uniqueGroupRows.length} group memberships`,
         imported,
         total: members.length,
-        groups: groupRows.length,
+        groups: uniqueGroupRows.length,
         errors: errors.length > 0 ? errors : undefined,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
