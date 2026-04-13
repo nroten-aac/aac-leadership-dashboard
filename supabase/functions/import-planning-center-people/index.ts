@@ -91,10 +91,24 @@ serve(async (req) => {
 
     const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
 
-    // ---- Step 1: Fetch all people with emails, phones & households ----
+    // ---- Step 1a: Fetch all households and build person->household map ----
+    console.log("Fetching all households from PCO...");
+    const personToHousehold = new Map<string, { id: string; name: string }>();
+    const allHouseholds = await fetchAllPages("/households?per_page=100&include=people", PC_APP_ID, PC_SECRET);
+    console.log(`Fetched ${allHouseholds.length} households`);
+    for (const hh of allHouseholds) {
+      const hhName = hh.attributes?.name || "Unnamed";
+      const hhId = hh.id;
+      const peoplRel = hh.relationships?.people?.data || [];
+      for (const p of peoplRel) {
+        personToHousehold.set(p.id, { id: hhId, name: hhName });
+      }
+    }
+
+    // ---- Step 1b: Fetch all people with emails & phones ----
     console.log("Fetching all people from PCO...");
     const allPeople: any[] = [];
-    let nextUrl: string | null = `${PC_PEOPLE_BASE}/people?per_page=100&include=emails,phone_numbers,households`;
+    let nextUrl: string | null = `${PC_PEOPLE_BASE}/people?per_page=100&include=emails,phone_numbers`;
 
     while (nextUrl) {
       const data = await pcFetch(nextUrl, PC_APP_ID, PC_SECRET);
@@ -107,20 +121,18 @@ serve(async (req) => {
         person._phones = included
           .filter((i: any) => i.type === "PhoneNumber" && i.relationships?.person?.data?.id === pid)
           .map((p: any) => p.attributes.number);
-        // Extract household info
-        const householdRel = person.relationships?.households?.data;
-        if (householdRel && householdRel.length > 0) {
-          const hhId = householdRel[0].id;
-          const hhIncluded = included.find((i: any) => i.type === "Household" && i.id === hhId);
-          person._household_id = hhId;
-          person._household_name = hhIncluded?.attributes?.name || null;
+        // Attach household from pre-fetched map
+        const hh = personToHousehold.get(pid);
+        if (hh) {
+          person._household_id = hh.id;
+          person._household_name = hh.name;
         }
       }
       allPeople.push(...(data.data || []));
       nextUrl = data.links?.next || null;
     }
 
-    console.log(`Fetched ${allPeople.length} people`);
+    console.log(`Fetched ${allPeople.length} people, ${personToHousehold.size} in households`);
 
     // ---- Step 2: Upsert members ----
     const members = allPeople.map((p) => {
