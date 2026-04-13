@@ -199,16 +199,17 @@ const MembersPage = () => {
   );
 
   const stats = useMemo(() => {
-    const count = (list: string) => members.filter((m) => m.groups.some((g) => g.group_name === list)).length;
+    const source = categoryFiltered;
+    const count = (list: string) => source.filter((m) => m.groups.some((g) => g.group_name === list)).length;
     return {
       memberAdults: count("Member Adults"),
       memberChildren: count("Member Children"),
-      volunteering: members.filter((m) => m.groups.some((g) => g.group_type === "volunteer")).length,
-      inDiscipleship: members.filter((m) => m.groups.some((g) => g.group_type === "discipleship")).length,
-      total: members.length,
-      households: new Set(members.filter((m) => m.household_id).map((m) => m.household_id)).size,
+      volunteering: source.filter((m) => m.groups.some((g) => g.group_type === "volunteer")).length,
+      inDiscipleship: source.filter((m) => m.groups.some((g) => g.group_type === "discipleship")).length,
+      total: source.length,
+      households: new Set(source.filter((m) => m.household_id).map((m) => m.household_id)).size,
     };
-  }, [members]);
+  }, [categoryFiltered]);
 
   const handleSync = async () => {
     setImporting(true);
