@@ -12,10 +12,10 @@ const DashboardSidebar = () => {
 
   const allNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/", tabId: "dashboard" },
+    { icon: DollarSign, label: "Giving", path: "/giving", tabId: "giving" },
     { icon: ClipboardEdit, label: "Data Entry", path: "/data-entry", tabId: "data-entry" },
     { icon: Users, label: "Members", path: "/members", tabId: "members" },
     { icon: Calendar, label: "Attendance", path: "/attendance", tabId: "attendance" },
-    { icon: DollarSign, label: "Giving", path: "/giving", tabId: "giving" },
     { icon: BookOpen, label: "Discipleship", path: "/discipleship", tabId: "discipleship" },
   ];
 
