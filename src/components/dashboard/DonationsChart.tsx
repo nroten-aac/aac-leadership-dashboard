@@ -173,7 +173,9 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
           total += (d[FUND_LABELS[fund]] as number) || 0;
         }
       }
-      return { ...d, _total: total };
+      // Mark if this data point is the current incomplete month
+      const isIncomplete = d._isCurrentMonth === true;
+      return { ...d, _total: total, _isIncomplete: isIncomplete };
     });
 
     const n = withTotals.length;
@@ -182,7 +184,10 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
     // No trendline in comparison mode
     if (isComparisonMode) return withTotals.map((d) => ({ ...d, trend: null as number | null }));
 
-    const nonZero = withTotals.map((d, i) => ({ i, total: d._total })).filter((d) => d.total > 0);
+    // Exclude incomplete (current) month from regression
+    const nonZero = withTotals
+      .map((d, i) => ({ i, total: d._total, isIncomplete: d._isIncomplete }))
+      .filter((d) => d.total > 0 && !d.isIncomplete);
     if (nonZero.length < 2) return withTotals.map((d) => ({ ...d, trend: null as number | null }));
 
     const nz = nonZero.length;
@@ -196,7 +201,8 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
 
     return withTotals.map((d, i) => ({
       ...d,
-      trend: d._total > 0 ? Math.round(slope * i + intercept) : null,
+      // Show trendline for completed months only
+      trend: d._total > 0 && !d._isIncomplete ? Math.round(slope * i + intercept) : null,
     }));
   }, [chartData, activeFunds, isComparisonMode, comparisonBarKeys]);
 
