@@ -91,10 +91,10 @@ serve(async (req) => {
 
     const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
 
-    // ---- Step 1: Fetch all people with emails & phones ----
+    // ---- Step 1: Fetch all people with emails, phones & households ----
     console.log("Fetching all people from PCO...");
     const allPeople: any[] = [];
-    let nextUrl: string | null = `${PC_PEOPLE_BASE}/people?per_page=100&include=emails,phone_numbers`;
+    let nextUrl: string | null = `${PC_PEOPLE_BASE}/people?per_page=100&include=emails,phone_numbers,households`;
 
     while (nextUrl) {
       const data = await pcFetch(nextUrl, PC_APP_ID, PC_SECRET);
@@ -107,6 +107,14 @@ serve(async (req) => {
         person._phones = included
           .filter((i: any) => i.type === "PhoneNumber" && i.relationships?.person?.data?.id === pid)
           .map((p: any) => p.attributes.number);
+        // Extract household info
+        const householdRel = person.relationships?.households?.data;
+        if (householdRel && householdRel.length > 0) {
+          const hhId = householdRel[0].id;
+          const hhIncluded = included.find((i: any) => i.type === "Household" && i.id === hhId);
+          person._household_id = hhId;
+          person._household_name = hhIncluded?.attributes?.name || null;
+        }
       }
       allPeople.push(...(data.data || []));
       nextUrl = data.links?.next || null;
@@ -140,6 +148,8 @@ serve(async (req) => {
           ? attrs.created_at.split("T")[0]
           : new Date().toISOString().split("T")[0],
         notes: `Imported from Planning Center (ID: ${p.id})`,
+        household_id: p._household_id || null,
+        household_name: p._household_name || null,
       };
     });
 
@@ -235,10 +245,7 @@ serve(async (req) => {
             false
           );
 
-          // Get unique person IDs from included data
-          const included = teamPeople;
           const seenPcoIds = new Set<string>();
-
           for (const assignment of teamPeople) {
             const personRel = assignment.relationships?.person?.data;
             if (personRel?.id && !seenPcoIds.has(personRel.id)) {

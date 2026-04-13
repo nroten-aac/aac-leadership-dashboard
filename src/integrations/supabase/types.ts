@@ -302,6 +302,8 @@ export type Database = {
           email: string | null
           first_name: string
           gender: string | null
+          household_id: string | null
+          household_name: string | null
           id: string
           last_name: string
           membership_date: string
@@ -319,6 +321,8 @@ export type Database = {
           email?: string | null
           first_name: string
           gender?: string | null
+          household_id?: string | null
+          household_name?: string | null
           id?: string
           last_name: string
           membership_date?: string
@@ -336,6 +340,8 @@ export type Database = {
           email?: string | null
           first_name?: string
           gender?: string | null
+          household_id?: string | null
+          household_name?: string | null
           id?: string
           last_name?: string
           membership_date?: string
