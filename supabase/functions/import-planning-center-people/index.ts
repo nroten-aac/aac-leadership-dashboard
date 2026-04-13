@@ -121,7 +121,12 @@ serve(async (req) => {
         last_name: attrs.last_name || "Unknown",
         email: p._emails?.[0] || null,
         phone: p._phones?.[0] || null,
-        gender: attrs.gender || null,
+        gender: (() => {
+          const g = (attrs.gender || "").toLowerCase();
+          if (g === "m" || g === "male") return "male";
+          if (g === "f" || g === "female") return "female";
+          return g || null;
+        })(),
         date_of_birth: attrs.birthdate || null,
         membership_status: statusMap[attrs.status?.toLowerCase()] || "active",
         membership_date: attrs.created_at
