@@ -8,9 +8,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import {
   Users, Search, RefreshCw, BookOpen, Heart, Mail, Phone,
-  MapPin, Calendar, User, Home, ChevronDown, ChevronRight
+  MapPin, Calendar, User, Home, ChevronDown, ChevronRight, Info
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -45,6 +47,13 @@ const MEMBERSHIP_LIST_MAP: Record<string, string[]> = {
   regular: ["Regular Attender Adults", "Regular Attender Children"],
 };
 
+const CONNECTION_LEVELS = [
+  { key: "well", label: "Well Connected", score: 4, color: "#10b981", hslVar: "emerald" },
+  { key: "connected", label: "Connected", score: 3, color: "hsl(205, 58%, 47%)", hslVar: "sky" },
+  { key: "partial", label: "Partial", score: 2, color: "hsl(49, 86%, 46%)", hslVar: "gold" },
+  { key: "needs", label: "Needs Connection", score: -1, color: "hsl(0, 72%, 51%)", hslVar: "destructive" },
+] as const;
+
 const Avatar = ({ member, size = "md" }: { member: MemberWithGroups; size?: "sm" | "md" | "lg" }) => {
   const sizeClasses = { sm: "h-8 w-8 text-[10px]", md: "h-11 w-11 text-sm", lg: "h-20 w-20 text-2xl" };
   const initials = `${member.first_name?.[0] || ""}${member.last_name?.[0] || ""}`.toUpperCase();
@@ -68,9 +77,11 @@ const Avatar = ({ member, size = "md" }: { member: MemberWithGroups; size?: "sm"
 const MembersPage = () => {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("members");
+  const [connectionFilter, setConnectionFilter] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [expandedHouseholds, setExpandedHouseholds] = useState<Set<string>>(new Set());
+  const [showScoreInfo, setShowScoreInfo] = useState(false);
 
   const { data: members = [], isLoading, refetch } = useQuery({
     queryKey: ["members-with-groups"],
@@ -97,7 +108,36 @@ const MembersPage = () => {
     },
   });
 
-  const filtered = useMemo(() => {
+  const getVolunteerGroups = (m: MemberWithGroups) => m.groups.filter((g) => g.group_type === "volunteer");
+  const getDiscipleshipGroups = (m: MemberWithGroups) => m.groups.filter((g) => g.group_type === "discipleship");
+
+  const getConnectionScore = (m: MemberWithGroups) => {
+    let score = 0;
+    if (getVolunteerGroups(m).length > 0) score++;
+    if (getDiscipleshipGroups(m).length > 0) score++;
+    if (m.email) score++;
+    if (m.phone) score++;
+    return score;
+  };
+
+  const getConnectionLevel = (score: number) => {
+    if (score >= 4) return CONNECTION_LEVELS[0];
+    if (score >= 3) return CONNECTION_LEVELS[1];
+    if (score >= 2) return CONNECTION_LEVELS[2];
+    return CONNECTION_LEVELS[3];
+  };
+
+  const getMembershipCategory = (m: MemberWithGroups) => {
+    const cats = m.groups.filter((g) => g.group_type === "membership").map((g) => g.group_name);
+    if (cats.includes("Member Adults")) return "Member";
+    if (cats.includes("Member Children")) return "Child";
+    if (cats.includes("Regular Attender Adults")) return "Regular";
+    if (cats.includes("Regular Attender Children")) return "Reg. Child";
+    return "Other";
+  };
+
+  // Category-filtered members (before connection filter)
+  const categoryFiltered = useMemo(() => {
     return members.filter((m) => {
       const matchesSearch =
         !search ||
@@ -106,14 +146,37 @@ const MembersPage = () => {
         (m.household_name || "").toLowerCase().includes(search.toLowerCase());
       if (categoryFilter !== "all") {
         const requiredLists = MEMBERSHIP_LIST_MAP[categoryFilter] || [];
-        const membershipGroups = m.groups
-          .filter((g) => g.group_type === "membership")
-          .map((g) => g.group_name);
+        const membershipGroups = m.groups.filter((g) => g.group_type === "membership").map((g) => g.group_name);
         if (!requiredLists.some((l) => membershipGroups.includes(l))) return false;
       }
       return matchesSearch;
     });
   }, [members, search, categoryFilter]);
+
+  // Donut chart data computed from category-filtered members
+  const connectionBreakdown = useMemo(() => {
+    const counts = { well: 0, connected: 0, partial: 0, needs: 0 };
+    for (const m of categoryFiltered) {
+      const s = getConnectionScore(m);
+      if (s >= 4) counts.well++;
+      else if (s >= 3) counts.connected++;
+      else if (s >= 2) counts.partial++;
+      else counts.needs++;
+    }
+    return CONNECTION_LEVELS.map((l) => ({
+      ...l,
+      value: counts[l.key as keyof typeof counts],
+    }));
+  }, [categoryFiltered]);
+
+  // Final filtered list (after connection filter applied)
+  const filtered = useMemo(() => {
+    if (!connectionFilter) return categoryFiltered;
+    return categoryFiltered.filter((m) => {
+      const level = getConnectionLevel(getConnectionScore(m));
+      return level.key === connectionFilter;
+    });
+  }, [categoryFiltered, connectionFilter]);
 
   const householdGroups = useMemo(() => {
     const hMap = new Map<string, { name: string; members: MemberWithGroups[] }>();
@@ -140,8 +203,6 @@ const MembersPage = () => {
     return {
       memberAdults: count("Member Adults"),
       memberChildren: count("Member Children"),
-      regularAdults: count("Regular Attender Adults"),
-      regularChildren: count("Regular Attender Children"),
       volunteering: members.filter((m) => m.groups.some((g) => g.group_type === "volunteer")).length,
       inDiscipleship: members.filter((m) => m.groups.some((g) => g.group_type === "discipleship")).length,
       total: members.length,
@@ -167,34 +228,6 @@ const MembersPage = () => {
     }
   };
 
-  const getVolunteerGroups = (m: MemberWithGroups) => m.groups.filter((g) => g.group_type === "volunteer");
-  const getDiscipleshipGroups = (m: MemberWithGroups) => m.groups.filter((g) => g.group_type === "discipleship");
-
-  const getMembershipCategory = (m: MemberWithGroups) => {
-    const cats = m.groups.filter((g) => g.group_type === "membership").map((g) => g.group_name);
-    if (cats.includes("Member Adults")) return "Member";
-    if (cats.includes("Member Children")) return "Child";
-    if (cats.includes("Regular Attender Adults")) return "Regular";
-    if (cats.includes("Regular Attender Children")) return "Reg. Child";
-    return "Other";
-  };
-
-  const getConnectionScore = (m: MemberWithGroups) => {
-    let score = 0;
-    if (getVolunteerGroups(m).length > 0) score++;
-    if (getDiscipleshipGroups(m).length > 0) score++;
-    if (m.email) score++;
-    if (m.phone) score++;
-    return score;
-  };
-
-  const getConnectionLabel = (score: number) => {
-    if (score >= 4) return { label: "Well Connected", bg: "bg-emerald-500", text: "text-emerald-700" };
-    if (score >= 3) return { label: "Connected", bg: "bg-sky", text: "text-sky" };
-    if (score >= 2) return { label: "Partial", bg: "bg-gold", text: "text-gold" };
-    return { label: "Needs Connection", bg: "bg-destructive", text: "text-destructive" };
-  };
-
   const toggleHousehold = (id: string) => {
     setExpandedHouseholds((prev) => {
       const next = new Set(prev);
@@ -208,9 +241,17 @@ const MembersPage = () => {
     return members.filter((m) => m.household_id === selectedMember.household_id && m.id !== selectedMember.id);
   }, [selectedMember, members]);
 
+  const handleDonutClick = (entry: any) => {
+    if (connectionFilter === entry.key) {
+      setConnectionFilter(null); // toggle off
+    } else {
+      setConnectionFilter(entry.key);
+    }
+  };
+
   const renderMemberRow = (m: MemberWithGroups) => {
     const isSelected = selectedMemberId === m.id;
-    const conn = getConnectionLabel(getConnectionScore(m));
+    const conn = getConnectionLevel(getConnectionScore(m));
     return (
       <button
         key={m.id}
@@ -228,7 +269,7 @@ const MembersPage = () => {
             <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 font-normal border-border/50">
               {getMembershipCategory(m)}
             </Badge>
-            <div className={`h-1.5 w-1.5 rounded-full ${conn.bg}`} />
+            <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: conn.color }} />
           </div>
         </div>
         {(getVolunteerGroups(m).length > 0 || getDiscipleshipGroups(m).length > 0) && (
@@ -241,12 +282,16 @@ const MembersPage = () => {
     );
   };
 
+  const activeLevel = connectionFilter
+    ? CONNECTION_LEVELS.find((l) => l.key === connectionFilter)
+    : null;
+
   return (
     <div className="min-h-screen bg-background flex">
       <DashboardSidebar />
       <main className="flex-1 ml-[72px] flex flex-col h-screen overflow-hidden">
         {/* Header */}
-        <div className="px-6 pt-5 pb-3 space-y-4 shrink-0">
+        <div className="px-6 pt-5 pb-3 space-y-3 shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-display font-bold text-foreground">Church Family</h1>
@@ -260,30 +305,93 @@ const MembersPage = () => {
             </Button>
           </div>
 
-          {/* Stats ribbon - branded */}
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
-            {[
-              { label: "Adults", value: stats.memberAdults, icon: Users, bg: "bg-prussian/10", iconColor: "text-prussian" },
-              { label: "Children", value: stats.memberChildren, icon: User, bg: "bg-gold/15", iconColor: "text-gold" },
-              { label: "Reg. Adults", value: stats.regularAdults, icon: Users, bg: "bg-sky/10", iconColor: "text-sky" },
-              { label: "Reg. Children", value: stats.regularChildren, icon: User, bg: "bg-sky/10", iconColor: "text-sky" },
-              { label: "Volunteers", value: stats.volunteering, icon: Heart, bg: "bg-emerald-500/10", iconColor: "text-emerald-600" },
-              { label: "In Groups", value: stats.inDiscipleship, icon: BookOpen, bg: "bg-secondary/10", iconColor: "text-secondary" },
-              { label: "Households", value: stats.households, icon: Home, bg: "bg-gold/15", iconColor: "text-gold" },
-              { label: "Total", value: stats.total, icon: Users, bg: "bg-prussian/10", iconColor: "text-prussian" },
-            ].map((s) => (
-              <Card key={s.label} className="border-none shadow-sm rounded-xl">
-                <CardContent className="p-2.5 flex items-center gap-2">
-                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${s.bg}`}>
-                    <s.icon className={`h-3.5 w-3.5 ${s.iconColor}`} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-base font-bold text-foreground leading-tight">{s.value}</p>
-                    <p className="text-[9px] text-muted-foreground truncate">{s.label}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          {/* Stats row with donut chart */}
+          <div className="flex items-start gap-4">
+            {/* Donut chart card */}
+            <Card className="border-none shadow-sm rounded-2xl shrink-0">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="relative h-[120px] w-[120px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={connectionBreakdown}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={35}
+                        outerRadius={55}
+                        paddingAngle={3}
+                        dataKey="value"
+                        cursor="pointer"
+                        onClick={handleDonutClick}
+                        stroke="none"
+                      >
+                        {connectionBreakdown.map((entry) => (
+                          <Cell
+                            key={entry.key}
+                            fill={entry.color}
+                            opacity={connectionFilter && connectionFilter !== entry.key ? 0.25 : 1}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value: number, name: string) => [value, name]}
+                        contentStyle={{ borderRadius: "0.75rem", fontSize: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {/* Center label */}
+                  <button
+                    onClick={() => setShowScoreInfo(true)}
+                    className="absolute inset-0 flex flex-col items-center justify-center hover:opacity-70 transition-opacity"
+                  >
+                    <span className="text-lg font-bold text-foreground">{categoryFiltered.length}</span>
+                    <Info className="h-3 w-3 text-muted-foreground mt-0.5" />
+                  </button>
+                </div>
+                {/* Legend */}
+                <div className="space-y-1.5">
+                  {connectionBreakdown.map((entry) => (
+                    <button
+                      key={entry.key}
+                      onClick={() => handleDonutClick(entry)}
+                      className={`flex items-center gap-2 text-left w-full px-2 py-1 rounded-lg transition-all ${
+                        connectionFilter === entry.key
+                          ? "bg-muted ring-1 ring-border"
+                          : "hover:bg-muted/50"
+                      }`}
+                    >
+                      <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                      <span className="text-xs text-foreground font-medium">{entry.label}</span>
+                      <span className="text-xs text-muted-foreground ml-auto font-bold">{entry.value}</span>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick stats */}
+            <div className="grid grid-cols-3 gap-2 flex-1">
+              {[
+                { label: "Member Adults", value: stats.memberAdults, icon: Users, bg: "bg-prussian/10", iconColor: "text-prussian" },
+                { label: "Member Children", value: stats.memberChildren, icon: User, bg: "bg-gold/15", iconColor: "text-gold" },
+                { label: "Households", value: stats.households, icon: Home, bg: "bg-gold/15", iconColor: "text-gold" },
+                { label: "Volunteering", value: stats.volunteering, icon: Heart, bg: "bg-emerald-500/10", iconColor: "text-emerald-600" },
+                { label: "In Groups", value: stats.inDiscipleship, icon: BookOpen, bg: "bg-secondary/10", iconColor: "text-secondary" },
+                { label: "Total People", value: stats.total, icon: Users, bg: "bg-prussian/10", iconColor: "text-prussian" },
+              ].map((s) => (
+                <Card key={s.label} className="border-none shadow-sm rounded-xl">
+                  <CardContent className="p-2.5 flex items-center gap-2">
+                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${s.bg}`}>
+                      <s.icon className={`h-3.5 w-3.5 ${s.iconColor}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-base font-bold text-foreground leading-tight">{s.value}</p>
+                      <p className="text-[9px] text-muted-foreground truncate">{s.label}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -314,6 +422,17 @@ const MembersPage = () => {
                 </Select>
                 <span className="text-[10px] text-muted-foreground whitespace-nowrap">{filtered.length}</span>
               </div>
+              {/* Active connection filter indicator */}
+              {activeLevel && (
+                <button
+                  onClick={() => setConnectionFilter(null)}
+                  className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg bg-muted w-full text-left hover:bg-muted/80 transition-colors"
+                >
+                  <div className="h-2 w-2 rounded-full" style={{ backgroundColor: activeLevel.color }} />
+                  <span className="font-medium text-foreground">Filtering: {activeLevel.label}</span>
+                  <span className="text-muted-foreground ml-auto text-[10px]">✕ Clear</span>
+                </button>
+              )}
             </div>
 
             <ScrollArea className="flex-1">
@@ -396,14 +515,12 @@ const MembersPage = () => {
                               {getMembershipCategory(selectedMember)}
                             </Badge>
                             {(() => {
-                              const conn = getConnectionLabel(getConnectionScore(selectedMember));
+                              const conn = getConnectionLevel(getConnectionScore(selectedMember));
                               return (
-                                <Badge className={`text-xs border-0 ${
-                                  getConnectionScore(selectedMember) >= 4 ? "bg-emerald-500" :
-                                  getConnectionScore(selectedMember) >= 3 ? "bg-sky" :
-                                  getConnectionScore(selectedMember) >= 2 ? "bg-gold text-ivory-black" :
-                                  "bg-destructive"
-                                } text-white`}>
+                                <Badge
+                                  className="text-xs border-0 text-white"
+                                  style={{ backgroundColor: conn.color }}
+                                >
                                   {conn.label}
                                 </Badge>
                               );
@@ -417,7 +534,10 @@ const MembersPage = () => {
                           )}
                         </div>
                         {/* Connection score ring */}
-                        <div className="shrink-0 text-center">
+                        <button
+                          onClick={() => setShowScoreInfo(true)}
+                          className="shrink-0 text-center group"
+                        >
                           <div className="relative h-16 w-16">
                             <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
                               <path
@@ -435,12 +555,14 @@ const MembersPage = () => {
                                 strokeDasharray={`${(getConnectionScore(selectedMember) / 4) * 100}, 100`}
                               />
                             </svg>
-                            <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-white">
+                            <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-white group-hover:opacity-80 transition-opacity">
                               {getConnectionScore(selectedMember)}/4
                             </span>
                           </div>
-                          <p className="text-[10px] text-white/60 mt-0.5">Connection</p>
-                        </div>
+                          <p className="text-[10px] text-white/60 mt-0.5 flex items-center gap-0.5 justify-center">
+                            Connection <Info className="h-2.5 w-2.5" />
+                          </p>
+                        </button>
                       </div>
                     </div>
                   </CardContent>
@@ -605,6 +727,54 @@ const MembersPage = () => {
             )}
           </div>
         </div>
+
+        {/* Score explanation dialog */}
+        <Dialog open={showScoreInfo} onOpenChange={setShowScoreInfo}>
+          <DialogContent className="max-w-md rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="font-display text-lg">Connection Score</DialogTitle>
+              <DialogDescription>
+                How we measure engagement with the life of the church
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 mt-2">
+              <p className="text-sm text-muted-foreground">
+                Each person earns up to <span className="font-bold text-foreground">4 points</span> based
+                on how connected they are:
+              </p>
+              <div className="space-y-3">
+                {[
+                  { icon: Mail, label: "Email on file", desc: "We can reach them digitally", color: "text-secondary", bg: "bg-secondary/10" },
+                  { icon: Phone, label: "Phone number on file", desc: "We can reach them personally", color: "text-emerald-600", bg: "bg-emerald-500/10" },
+                  { icon: Heart, label: "Serving on a volunteer team", desc: "They're actively giving back", color: "text-emerald-600", bg: "bg-emerald-500/10" },
+                  { icon: BookOpen, label: "In a discipleship group", desc: "They're growing spiritually", color: "text-secondary", bg: "bg-secondary/10" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-start gap-3">
+                    <div className={`h-8 w-8 rounded-lg ${item.bg} flex items-center justify-center shrink-0 mt-0.5`}>
+                      <item.icon className={`h-4 w-4 ${item.color}`} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">+1 — {item.label}</p>
+                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-border/50 pt-3 space-y-2">
+                <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Score Levels</p>
+                {CONNECTION_LEVELS.map((l) => (
+                  <div key={l.key} className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: l.color }} />
+                    <span className="text-sm font-medium text-foreground">{l.label}</span>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {l.key === "well" ? "4/4" : l.key === "connected" ? "3/4" : l.key === "partial" ? "2/4" : "0–1/4"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
