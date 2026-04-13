@@ -130,8 +130,9 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
       filtered.forEach((g) => {
         const key = `${g.month.slice(0, 3)} ${String(g.year).slice(2)}`;
         const sortKey = `${g.year}-${String(MONTH_ORDER.indexOf(g.month)).padStart(2, "0")}`;
+        const isCurrentMonth = g.year === currentYear && MONTH_ORDER.indexOf(g.month) === currentMonthIdx;
         if (!map.has(sortKey)) {
-          map.set(sortKey, { month: key, _sort: sortKey });
+          map.set(sortKey, { month: key, _sort: sortKey, _isCurrentMonth: isCurrentMonth });
           for (const fund of ALL_FUNDS) {
             map.get(sortKey)![FUND_LABELS[fund]] = 0;
           }
