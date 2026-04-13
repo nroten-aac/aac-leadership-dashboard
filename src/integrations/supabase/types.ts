@@ -262,6 +262,38 @@ export type Database = {
         }
         Relationships: []
       }
+      member_groups: {
+        Row: {
+          created_at: string
+          group_name: string
+          group_type: string
+          id: string
+          member_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_name: string
+          group_type?: string
+          id?: string
+          member_id: string
+        }
+        Update: {
+          created_at?: string
+          group_name?: string
+          group_type?: string
+          id?: string
+          member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_groups_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           address: string | null
@@ -275,6 +307,7 @@ export type Database = {
           membership_date: string
           membership_status: string
           notes: string | null
+          pco_id: string | null
           phone: string | null
           photo_url: string | null
           updated_at: string
@@ -291,6 +324,7 @@ export type Database = {
           membership_date?: string
           membership_status?: string
           notes?: string | null
+          pco_id?: string | null
           phone?: string | null
           photo_url?: string | null
           updated_at?: string
@@ -307,6 +341,7 @@ export type Database = {
           membership_date?: string
           membership_status?: string
           notes?: string | null
+          pco_id?: string | null
           phone?: string | null
           photo_url?: string | null
           updated_at?: string
