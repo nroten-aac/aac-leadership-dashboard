@@ -7,6 +7,7 @@ import AttendanceEntry from "@/components/data-entry/AttendanceEntry";
 import MembersEntry from "@/components/data-entry/MembersEntry";
 import BuildingEntry from "@/components/data-entry/BuildingEntry";
 import PlanningCenterImport from "@/components/data-entry/PlanningCenterImport";
+import PlanningCenterAttendanceImport from "@/components/data-entry/PlanningCenterAttendanceImport";
 import DataDownload from "@/components/data-entry/DataDownload";
 
 const DataEntry = () => {
@@ -32,6 +33,9 @@ const DataEntry = () => {
           </TabsContent>
           <TabsContent value="attendance">
             <AttendanceEntry />
+            <div className="mt-6">
+              <PlanningCenterAttendanceImport />
+            </div>
           </TabsContent>
           <TabsContent value="members">
             <MembersEntry />
