@@ -218,6 +218,7 @@ const MembersPage = () => {
   const [importing, setImporting] = useState(false);
   const [stageNote, setStageNote] = useState("");
   const [savingStage, setSavingStage] = useState(false);
+  const [showHousehold, setShowHousehold] = useState(true);
 
   // Members + groups
   const { data: members = [], isLoading, refetch } = useQuery({
