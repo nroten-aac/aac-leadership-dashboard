@@ -117,6 +117,7 @@ type ShepherdMember = {
   email: string | null;
   phone: string | null;
   photo_url: string | null;
+  household_id: string | null;
   household_name: string | null;
   discipleship_stage: StageKey;
   stage_updated_at: string;
@@ -180,12 +181,35 @@ const StageBadge = ({ stage }: { stage: StageKey }) => {
   );
 };
 
+// ----- Membership type definitions ----------------------------------------
+
+type MembershipKey =
+  | "Member Adults"
+  | "Member Children"
+  | "Regular Attender Adults"
+  | "Regular Attender Children";
+
+const MEMBERSHIP_TYPES: Array<{ key: MembershipKey; label: string }> = [
+  { key: "Member Adults", label: "Member Adults" },
+  { key: "Member Children", label: "Member Children" },
+  { key: "Regular Attender Adults", label: "Regular Adults" },
+  { key: "Regular Attender Children", label: "Regular Children" },
+];
+
+const DEFAULT_MEMBERSHIP_FILTER: MembershipKey[] = [
+  "Member Adults",
+  "Member Children",
+];
+
 // ----- Page ----------------------------------------------------------------
 
 const MembersPage = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<StageKey | null>(null);
+  const [membershipFilter, setMembershipFilter] = useState<MembershipKey[]>(
+    DEFAULT_MEMBERSHIP_FILTER
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [stageNote, setStageNote] = useState("");
@@ -198,7 +222,7 @@ const MembersPage = () => {
       const { data: membersData, error } = await supabase
         .from("members")
         .select(
-          "id, first_name, last_name, email, phone, photo_url, household_name, discipleship_stage, stage_updated_at"
+          "id, first_name, last_name, email, phone, photo_url, household_id, household_name, discipleship_stage, stage_updated_at"
         )
         .order("last_name", { ascending: true });
       if (error) throw error;
