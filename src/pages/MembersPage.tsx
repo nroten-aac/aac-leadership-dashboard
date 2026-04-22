@@ -24,7 +24,15 @@ import {
   Users as UsersIcon,
   Clock,
   ChevronRight,
+  Home,
+  Filter,
 } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -109,6 +117,7 @@ type ShepherdMember = {
   email: string | null;
   phone: string | null;
   photo_url: string | null;
+  household_id: string | null;
   household_name: string | null;
   discipleship_stage: StageKey;
   stage_updated_at: string;
@@ -172,12 +181,35 @@ const StageBadge = ({ stage }: { stage: StageKey }) => {
   );
 };
 
+// ----- Membership type definitions ----------------------------------------
+
+type MembershipKey =
+  | "Member Adults"
+  | "Member Children"
+  | "Regular Attender Adults"
+  | "Regular Attender Children";
+
+const MEMBERSHIP_TYPES: Array<{ key: MembershipKey; label: string }> = [
+  { key: "Member Adults", label: "Member Adults" },
+  { key: "Member Children", label: "Member Children" },
+  { key: "Regular Attender Adults", label: "Regular Adults" },
+  { key: "Regular Attender Children", label: "Regular Children" },
+];
+
+const DEFAULT_MEMBERSHIP_FILTER: MembershipKey[] = [
+  "Member Adults",
+  "Member Children",
+];
+
 // ----- Page ----------------------------------------------------------------
 
 const MembersPage = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<StageKey | null>(null);
+  const [membershipFilter, setMembershipFilter] = useState<MembershipKey[]>(
+    DEFAULT_MEMBERSHIP_FILTER
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [stageNote, setStageNote] = useState("");
@@ -190,7 +222,7 @@ const MembersPage = () => {
       const { data: membersData, error } = await supabase
         .from("members")
         .select(
-          "id, first_name, last_name, email, phone, photo_url, household_name, discipleship_stage, stage_updated_at"
+          "id, first_name, last_name, email, phone, photo_url, household_id, household_name, discipleship_stage, stage_updated_at"
         )
         .order("last_name", { ascending: true });
       if (error) throw error;
@@ -214,18 +246,16 @@ const MembersPage = () => {
     },
   });
 
-  // Restrict to Member Adults + Member Children
+  // Restrict to selected membership types (defaults to Members & Dependants)
   const churchFamily = useMemo(() => {
+    if (membershipFilter.length === 0) return [];
     return members.filter((m) => {
       const memberLists = m.groups
         .filter((g) => g.group_type === "membership")
         .map((g) => g.group_name);
-      return (
-        memberLists.includes("Member Adults") ||
-        memberLists.includes("Member Children")
-      );
+      return membershipFilter.some((t) => memberLists.includes(t));
     });
-  }, [members]);
+  }, [members, membershipFilter]);
 
   // Stage history (last 30 days for "movement" stat)
   const { data: recentHistory = [] } = useQuery({
@@ -291,6 +321,21 @@ const MembersPage = () => {
     () => members.find((m) => m.id === selectedId) || null,
     [members, selectedId]
   );
+
+  // Other members of the selected person's household
+  const householdMembers = useMemo(() => {
+    if (!selected) return [];
+    const key = selected.household_id || selected.household_name;
+    if (!key) return [];
+    return members.filter(
+      (m) =>
+        m.id !== selected.id &&
+        ((selected.household_id && m.household_id === selected.household_id) ||
+          (!selected.household_id &&
+            m.household_name &&
+            m.household_name === selected.household_name))
+    );
+  }, [members, selected]);
 
   // Movement stat: stage changes affecting church-family members in last 30 days
   const familyIds = useMemo(() => new Set(churchFamily.map((m) => m.id)), [churchFamily]);
@@ -491,6 +536,67 @@ const MembersPage = () => {
                 className="pl-9 rounded-xl"
               />
             </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl gap-2 h-9"
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  Membership
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
+                    {membershipFilter.length}
+                  </Badge>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-60 p-3 space-y-2">
+                <p className="text-xs font-semibold text-foreground mb-2">
+                  Membership type
+                </p>
+                {MEMBERSHIP_TYPES.map((t) => {
+                  const checked = membershipFilter.includes(t.key);
+                  return (
+                    <label
+                      key={t.key}
+                      className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded-lg px-2 py-1.5"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          setMembershipFilter((prev) =>
+                            v
+                              ? [...prev, t.key]
+                              : prev.filter((k) => k !== t.key)
+                          );
+                        }}
+                      />
+                      <span className="text-foreground">{t.label}</span>
+                    </label>
+                  );
+                })}
+                <div className="flex items-center justify-between pt-2 border-t border-border/40">
+                  <button
+                    onClick={() =>
+                      setMembershipFilter(
+                        MEMBERSHIP_TYPES.map((t) => t.key)
+                      )
+                    }
+                    className="text-[11px] text-prussian hover:underline"
+                  >
+                    Select all
+                  </button>
+                  <button
+                    onClick={() =>
+                      setMembershipFilter(DEFAULT_MEMBERSHIP_FILTER)
+                    }
+                    className="text-[11px] text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
             {stageFilter && (
               <button
                 onClick={() => setStageFilter(null)}
@@ -589,6 +695,43 @@ const MembersPage = () => {
                   </span>{" "}
                   · {STAGE_BY_KEY[selected.discipleship_stage].description}
                 </div>
+
+                {/* Household bar */}
+                {selected.household_name && (
+                  <div className="rounded-xl border border-border/40 bg-card p-3 space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                      <Home className="h-3.5 w-3.5 text-prussian" />
+                      Household · {selected.household_name}
+                    </div>
+                    {householdMembers.length === 0 ? (
+                      <p className="text-[11px] text-muted-foreground italic">
+                        No other household members on file.
+                      </p>
+                    ) : (
+                      <ul className="space-y-1">
+                        {householdMembers.map((hm) => (
+                          <li key={hm.id}>
+                            <button
+                              onClick={() => {
+                                setSelectedId(hm.id);
+                                setStageNote("");
+                              }}
+                              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/60 transition-colors text-left"
+                            >
+                              <Avatar member={hm} size="sm" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-foreground truncate">
+                                  {hm.first_name} {hm.last_name}
+                                </p>
+                              </div>
+                              <StageBadge stage={hm.discipleship_stage} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
 
                 {/* Quick actions */}
                 {nextStage && (
