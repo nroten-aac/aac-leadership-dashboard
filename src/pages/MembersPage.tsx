@@ -28,7 +28,9 @@ import {
   Filter,
   Eye,
   EyeOff,
+  Flag,
 } from "lucide-react";
+import { STAGE_ICONS } from "@/components/icons/StageIcons";
 import {
   Popover,
   PopoverContent,
