@@ -521,6 +521,67 @@ const MembersPage = () => {
                 className="pl-9 rounded-xl"
               />
             </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl gap-2 h-9"
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  Membership
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
+                    {membershipFilter.length}
+                  </Badge>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-60 p-3 space-y-2">
+                <p className="text-xs font-semibold text-foreground mb-2">
+                  Membership type
+                </p>
+                {MEMBERSHIP_TYPES.map((t) => {
+                  const checked = membershipFilter.includes(t.key);
+                  return (
+                    <label
+                      key={t.key}
+                      className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded-lg px-2 py-1.5"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          setMembershipFilter((prev) =>
+                            v
+                              ? [...prev, t.key]
+                              : prev.filter((k) => k !== t.key)
+                          );
+                        }}
+                      />
+                      <span className="text-foreground">{t.label}</span>
+                    </label>
+                  );
+                })}
+                <div className="flex items-center justify-between pt-2 border-t border-border/40">
+                  <button
+                    onClick={() =>
+                      setMembershipFilter(
+                        MEMBERSHIP_TYPES.map((t) => t.key)
+                      )
+                    }
+                    className="text-[11px] text-prussian hover:underline"
+                  >
+                    Select all
+                  </button>
+                  <button
+                    onClick={() =>
+                      setMembershipFilter(DEFAULT_MEMBERSHIP_FILTER)
+                    }
+                    className="text-[11px] text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
             {stageFilter && (
               <button
                 onClick={() => setStageFilter(null)}
