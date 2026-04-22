@@ -188,6 +188,44 @@ export type Database = {
         }
         Relationships: []
       }
+      discipleship_stage_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          member_id: string
+          new_stage: string
+          notes: string | null
+          previous_stage: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          member_id: string
+          new_stage: string
+          notes?: string | null
+          previous_stage?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          member_id?: string
+          new_stage?: string
+          notes?: string | null
+          previous_stage?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discipleship_stage_history_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       donations: {
         Row: {
           amount: number
@@ -299,6 +337,7 @@ export type Database = {
           address: string | null
           created_at: string
           date_of_birth: string | null
+          discipleship_stage: string
           email: string | null
           first_name: string
           gender: string | null
@@ -312,12 +351,14 @@ export type Database = {
           pco_id: string | null
           phone: string | null
           photo_url: string | null
+          stage_updated_at: string
           updated_at: string
         }
         Insert: {
           address?: string | null
           created_at?: string
           date_of_birth?: string | null
+          discipleship_stage?: string
           email?: string | null
           first_name: string
           gender?: string | null
@@ -331,12 +372,14 @@ export type Database = {
           pco_id?: string | null
           phone?: string | null
           photo_url?: string | null
+          stage_updated_at?: string
           updated_at?: string
         }
         Update: {
           address?: string | null
           created_at?: string
           date_of_birth?: string | null
+          discipleship_stage?: string
           email?: string | null
           first_name?: string
           gender?: string | null
@@ -350,6 +393,7 @@ export type Database = {
           pco_id?: string | null
           phone?: string | null
           photo_url?: string | null
+          stage_updated_at?: string
           updated_at?: string
         }
         Relationships: []
