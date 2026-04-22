@@ -1,70 +1,146 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import {
-  Users, Search, RefreshCw, BookOpen, Heart, Mail, Phone,
-  MapPin, Calendar, User, Home, ChevronDown, ChevronRight, Info
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import {
+  Search,
+  RefreshCw,
+  ArrowRight,
+  Sparkles,
+  TrendingUp,
+  Users as UsersIcon,
+  Clock,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
+
+// ----- Stage definitions ---------------------------------------------------
+
+type StageKey = "connecting" | "belonging" | "maturing" | "ministering" | "multiplying";
+
+const STAGES: Array<{
+  key: StageKey;
+  label: string;
+  description: string;
+  color: string;
+  bg: string;
+  ring: string;
+  text: string;
+  dot: string;
+}> = [
+  {
+    key: "connecting",
+    label: "Connecting",
+    description: "In orbit — attending but not yet committed to Christ",
+    color: "hsl(215, 16%, 47%)",
+    bg: "bg-slate-100",
+    ring: "ring-slate-300",
+    text: "text-slate-700",
+    dot: "bg-slate-400",
+  },
+  {
+    key: "belonging",
+    label: "Belonging",
+    description: "Came to faith, baptized, joined the church family",
+    color: "hsl(205, 58%, 47%)",
+    bg: "bg-sky-100",
+    ring: "ring-sky-300",
+    text: "text-sky-800",
+    dot: "bg-sky-500",
+  },
+  {
+    key: "maturing",
+    label: "Maturing",
+    description: "Growing through Scripture, small group, prayer",
+    color: "hsl(152, 60%, 36%)",
+    bg: "bg-emerald-100",
+    ring: "ring-emerald-300",
+    text: "text-emerald-800",
+    dot: "bg-emerald-500",
+  },
+  {
+    key: "ministering",
+    label: "Ministering",
+    description: "Using spiritual gifts in ministry within the church",
+    color: "hsl(25, 90%, 50%)",
+    bg: "bg-orange-100",
+    ring: "ring-orange-300",
+    text: "text-orange-800",
+    dot: "bg-orange-500",
+  },
+  {
+    key: "multiplying",
+    label: "Multiplying",
+    description: "On mission, discipling others, reproducing disciples",
+    color: "hsl(43, 74%, 49%)",
+    bg: "bg-amber-100",
+    ring: "ring-amber-300",
+    text: "text-amber-900",
+    dot: "bg-amber-500",
+  },
+];
+
+const STAGE_BY_KEY = Object.fromEntries(STAGES.map((s) => [s.key, s])) as Record<
+  StageKey,
+  (typeof STAGES)[number]
+>;
+
+// ----- Types ---------------------------------------------------------------
 
 type MemberGroup = { group_name: string; group_type: string };
-type MemberWithGroups = {
+type ShepherdMember = {
   id: string;
   first_name: string;
   last_name: string;
   email: string | null;
   phone: string | null;
-  gender: string | null;
-  date_of_birth: string | null;
-  membership_status: string;
-  membership_date: string;
-  address: string | null;
-  notes: string | null;
   photo_url: string | null;
-  pco_id: string | null;
-  household_id: string | null;
   household_name: string | null;
+  discipleship_stage: StageKey;
+  stage_updated_at: string;
   groups: MemberGroup[];
 };
 
-const CATEGORY_FILTERS = [
-  { value: "members", label: "Members & Dependants" },
-  { value: "member_adults", label: "Member Adults" },
-  { value: "member_children", label: "Member Children" },
-  { value: "regular", label: "Regular Attenders" },
-  { value: "regular_adults", label: "Regular Attender Adults" },
-  { value: "regular_children", label: "Regular Attender Children" },
-  { value: "all", label: "All People" },
-];
-
-const MEMBERSHIP_LIST_MAP: Record<string, string[]> = {
-  members: ["Member Adults", "Member Children"],
-  member_adults: ["Member Adults"],
-  member_children: ["Member Children"],
-  regular: ["Regular Attender Adults", "Regular Attender Children"],
-  regular_adults: ["Regular Attender Adults"],
-  regular_children: ["Regular Attender Children"],
+type StageHistoryRow = {
+  id: string;
+  member_id: string;
+  previous_stage: StageKey | null;
+  new_stage: StageKey;
+  notes: string | null;
+  changed_at: string;
 };
 
-const CONNECTION_LEVELS = [
-  { key: "well", label: "Well Connected", score: 4, color: "#10b981", hslVar: "emerald" },
-  { key: "connected", label: "Connected", score: 3, color: "hsl(205, 58%, 47%)", hslVar: "sky" },
-  { key: "partial", label: "Partial", score: 2, color: "hsl(49, 86%, 46%)", hslVar: "gold" },
-  { key: "needs", label: "Needs Connection", score: -1, color: "hsl(0, 72%, 51%)", hslVar: "destructive" },
-] as const;
+// ----- Helpers -------------------------------------------------------------
 
-const Avatar = ({ member, size = "md" }: { member: MemberWithGroups; size?: "sm" | "md" | "lg" }) => {
-  const sizeClasses = { sm: "h-8 w-8 text-[10px]", md: "h-11 w-11 text-sm", lg: "h-20 w-20 text-2xl" };
-  const initials = `${member.first_name?.[0] || ""}${member.last_name?.[0] || ""}`.toUpperCase();
+const Avatar = ({
+  member,
+  size = "md",
+}: {
+  member: ShepherdMember;
+  size?: "sm" | "md" | "lg";
+}) => {
+  const sizeClasses = {
+    sm: "h-8 w-8 text-[10px]",
+    md: "h-12 w-12 text-sm",
+    lg: "h-20 w-20 text-2xl",
+  };
+  const initials = `${member.first_name?.[0] || ""}${
+    member.last_name?.[0] || ""
+  }`.toUpperCase();
 
   if (member.photo_url) {
     return (
@@ -76,31 +152,52 @@ const Avatar = ({ member, size = "md" }: { member: MemberWithGroups; size?: "sm"
     );
   }
   return (
-    <div className={`${sizeClasses[size]} rounded-full bg-prussian/10 flex items-center justify-center shrink-0 ring-2 ring-white shadow-sm`}>
+    <div
+      className={`${sizeClasses[size]} rounded-full bg-prussian/10 flex items-center justify-center shrink-0 ring-2 ring-white shadow-sm`}
+    >
       <span className="font-semibold text-prussian">{initials}</span>
     </div>
   );
 };
 
-const MembersPage = () => {
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("members");
-  const [connectionFilter, setConnectionFilter] = useState<string | null>(null);
-  const [importing, setImporting] = useState(false);
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
-  const [expandedHouseholds, setExpandedHouseholds] = useState<Set<string>>(new Set());
-  const [showScoreInfo, setShowScoreInfo] = useState(false);
+const StageBadge = ({ stage }: { stage: StageKey }) => {
+  const s = STAGE_BY_KEY[stage];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${s.bg} ${s.text} ring-1 ${s.ring}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+      {s.label}
+    </span>
+  );
+};
 
+// ----- Page ----------------------------------------------------------------
+
+const MembersPage = () => {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [stageFilter, setStageFilter] = useState<StageKey | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [stageNote, setStageNote] = useState("");
+  const [savingStage, setSavingStage] = useState(false);
+
+  // Members + groups
   const { data: members = [], isLoading, refetch } = useQuery({
-    queryKey: ["members-with-groups"],
+    queryKey: ["shepherding-members"],
     queryFn: async () => {
       const { data: membersData, error } = await supabase
         .from("members")
-        .select("*")
+        .select(
+          "id, first_name, last_name, email, phone, photo_url, household_name, discipleship_stage, stage_updated_at"
+        )
         .order("last_name", { ascending: true });
       if (error) throw error;
 
-      const { data: groupsData } = await supabase.from("member_groups").select("*");
+      const { data: groupsData } = await supabase
+        .from("member_groups")
+        .select("member_id, group_name, group_type");
 
       const groupsByMember = new Map<string, MemberGroup[]>();
       for (const g of groupsData || []) {
@@ -111,122 +208,111 @@ const MembersPage = () => {
 
       return (membersData || []).map((m: any) => ({
         ...m,
+        discipleship_stage: (m.discipleship_stage || "connecting") as StageKey,
         groups: groupsByMember.get(m.id) || [],
-      })) as MemberWithGroups[];
+      })) as ShepherdMember[];
     },
   });
 
-  const getVolunteerGroups = (m: MemberWithGroups) => m.groups.filter((g) => g.group_type === "volunteer");
-  const getDiscipleshipGroups = (m: MemberWithGroups) => m.groups.filter((g) => g.group_type === "discipleship");
-
-  const getConnectionScore = (m: MemberWithGroups) => {
-    let score = 0;
-    if (getVolunteerGroups(m).length > 0) score++;
-    if (getDiscipleshipGroups(m).length > 0) score++;
-    if (m.email) score++;
-    if (m.phone) score++;
-    return score;
-  };
-
-  const getConnectionLevel = (score: number) => {
-    if (score >= 4) return CONNECTION_LEVELS[0];
-    if (score >= 3) return CONNECTION_LEVELS[1];
-    if (score >= 2) return CONNECTION_LEVELS[2];
-    return CONNECTION_LEVELS[3];
-  };
-
-  const getMembershipCategory = (m: MemberWithGroups) => {
-    const cats = m.groups.filter((g) => g.group_type === "membership").map((g) => g.group_name);
-    if (cats.includes("Member Adults")) return "Member";
-    if (cats.includes("Member Children")) return "Child";
-    if (cats.includes("Regular Attender Adults")) return "Regular";
-    if (cats.includes("Regular Attender Children")) return "Reg. Child";
-    return "Other";
-  };
-
-  // Category-filtered members (before connection filter)
-  const categoryFiltered = useMemo(() => {
+  // Restrict to Member Adults + Member Children
+  const churchFamily = useMemo(() => {
     return members.filter((m) => {
-      const matchesSearch =
-        !search ||
-        `${m.first_name} ${m.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
-        (m.email || "").toLowerCase().includes(search.toLowerCase()) ||
-        (m.household_name || "").toLowerCase().includes(search.toLowerCase());
-      if (categoryFilter !== "all") {
-        const requiredLists = MEMBERSHIP_LIST_MAP[categoryFilter] || [];
-        const membershipGroups = m.groups.filter((g) => g.group_type === "membership").map((g) => g.group_name);
-        if (!requiredLists.some((l) => membershipGroups.includes(l))) return false;
-      }
-      return matchesSearch;
+      const memberLists = m.groups
+        .filter((g) => g.group_type === "membership")
+        .map((g) => g.group_name);
+      return (
+        memberLists.includes("Member Adults") ||
+        memberLists.includes("Member Children")
+      );
     });
-  }, [members, search, categoryFilter]);
+  }, [members]);
 
-  // Donut chart data computed from category-filtered members
-  const connectionBreakdown = useMemo(() => {
-    const counts = { well: 0, connected: 0, partial: 0, needs: 0 };
-    for (const m of categoryFiltered) {
-      const s = getConnectionScore(m);
-      if (s >= 4) counts.well++;
-      else if (s >= 3) counts.connected++;
-      else if (s >= 2) counts.partial++;
-      else counts.needs++;
-    }
-    return CONNECTION_LEVELS.map((l) => ({
-      ...l,
-      value: counts[l.key as keyof typeof counts],
-    }));
-  }, [categoryFiltered]);
+  // Stage history (last 30 days for "movement" stat)
+  const { data: recentHistory = [] } = useQuery({
+    queryKey: ["stage-history-recent"],
+    queryFn: async () => {
+      const since = new Date();
+      since.setDate(since.getDate() - 30);
+      const { data, error } = await supabase
+        .from("discipleship_stage_history")
+        .select("*")
+        .gte("changed_at", since.toISOString())
+        .order("changed_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as StageHistoryRow[];
+    },
+  });
 
-  // Final filtered list (after connection filter applied)
+  // History for selected member
+  const { data: selectedHistory = [] } = useQuery({
+    queryKey: ["stage-history", selectedId],
+    enabled: !!selectedId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discipleship_stage_history")
+        .select("*")
+        .eq("member_id", selectedId!)
+        .order("changed_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as StageHistoryRow[];
+    },
+  });
+
+  // Stage counts (within church family)
+  const stageCounts = useMemo(() => {
+    const counts: Record<StageKey, number> = {
+      connecting: 0,
+      belonging: 0,
+      maturing: 0,
+      ministering: 0,
+      multiplying: 0,
+    };
+    for (const m of churchFamily) counts[m.discipleship_stage]++;
+    return counts;
+  }, [churchFamily]);
+
+  const total = churchFamily.length;
+
+  // Filter list
   const filtered = useMemo(() => {
-    if (!connectionFilter) return categoryFiltered;
-    return categoryFiltered.filter((m) => {
-      const level = getConnectionLevel(getConnectionScore(m));
-      return level.key === connectionFilter;
+    return churchFamily.filter((m) => {
+      if (stageFilter && m.discipleship_stage !== stageFilter) return false;
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
+        (m.email || "").toLowerCase().includes(q) ||
+        (m.household_name || "").toLowerCase().includes(q)
+      );
     });
-  }, [categoryFiltered, connectionFilter]);
+  }, [churchFamily, search, stageFilter]);
 
-  const householdGroups = useMemo(() => {
-    const hMap = new Map<string, { name: string; members: MemberWithGroups[] }>();
-    const noHousehold: MemberWithGroups[] = [];
-    for (const m of filtered) {
-      if (m.household_id) {
-        const existing = hMap.get(m.household_id);
-        if (existing) existing.members.push(m);
-        else hMap.set(m.household_id, { name: m.household_name || "Unnamed Household", members: [m] });
-      } else {
-        noHousehold.push(m);
-      }
-    }
-    return { households: Array.from(hMap.entries()).sort((a, b) => a[1].name.localeCompare(b[1].name)), individuals: noHousehold };
-  }, [filtered]);
-
-  const selectedMember = useMemo(
-    () => members.find((m) => m.id === selectedMemberId) || null,
-    [members, selectedMemberId]
+  const selected = useMemo(
+    () => members.find((m) => m.id === selectedId) || null,
+    [members, selectedId]
   );
 
-  const stats = useMemo(() => {
-    const source = categoryFiltered;
-    const count = (list: string) => source.filter((m) => m.groups.some((g) => g.group_name === list)).length;
-    return {
-      memberAdults: count("Member Adults"),
-      memberChildren: count("Member Children"),
-      volunteering: source.filter((m) => m.groups.some((g) => g.group_type === "volunteer")).length,
-      inDiscipleship: source.filter((m) => m.groups.some((g) => g.group_type === "discipleship")).length,
-      total: source.length,
-      households: new Set(source.filter((m) => m.household_id).map((m) => m.household_id)).size,
-    };
-  }, [categoryFiltered]);
+  // Movement stat: stage changes affecting church-family members in last 30 days
+  const familyIds = useMemo(() => new Set(churchFamily.map((m) => m.id)), [churchFamily]);
+  const movementCount = useMemo(
+    () => recentHistory.filter((h) => familyIds.has(h.member_id)).length,
+    [recentHistory, familyIds]
+  );
 
   const handleSync = async () => {
     setImporting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast.error("Not authenticated"); return; }
-      const { data, error } = await supabase.functions.invoke("import-planning-center-people", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Not authenticated");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke(
+        "import-planning-center-people",
+        { headers: { Authorization: `Bearer ${session.access_token}` } }
+      );
       if (error) throw error;
       toast.success(data.message || "Import complete");
       refetch();
@@ -237,62 +323,65 @@ const MembersPage = () => {
     }
   };
 
-  const toggleHousehold = (id: string) => {
-    setExpandedHouseholds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
+  const updateStage = async (newStage: StageKey) => {
+    if (!selected) return;
+    if (newStage === selected.discipleship_stage && !stageNote.trim()) {
+      toast.info("Pick a different stage or add a note.");
+      return;
+    }
+    setSavingStage(true);
+    try {
+      const { error } = await supabase
+        .from("members")
+        .update({ discipleship_stage: newStage })
+        .eq("id", selected.id);
+      if (error) throw error;
 
-  const householdMembers = useMemo(() => {
-    if (!selectedMember?.household_id) return [];
-    return members.filter((m) => m.household_id === selectedMember.household_id && m.id !== selectedMember.id);
-  }, [selectedMember, members]);
+      // If a note was provided, append it to the most recent history row
+      // (the trigger inserts a row automatically on stage change)
+      if (stageNote.trim() && newStage !== selected.discipleship_stage) {
+        const { data: latest } = await supabase
+          .from("discipleship_stage_history")
+          .select("id")
+          .eq("member_id", selected.id)
+          .order("changed_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (latest?.id) {
+          await supabase
+            .from("discipleship_stage_history")
+            .update({ notes: stageNote.trim() })
+            .eq("id", latest.id);
+        }
+      }
 
-  const handleDonutClick = (entry: any) => {
-    if (connectionFilter === entry.key) {
-      setConnectionFilter(null); // toggle off
-    } else {
-      setConnectionFilter(entry.key);
+      // Stage didn't change but a note was entered → manually log a note-only entry
+      if (stageNote.trim() && newStage === selected.discipleship_stage) {
+        await supabase.from("discipleship_stage_history").insert({
+          member_id: selected.id,
+          previous_stage: selected.discipleship_stage,
+          new_stage: newStage,
+          notes: stageNote.trim(),
+        });
+      }
+
+      toast.success(`${selected.first_name} moved to ${STAGE_BY_KEY[newStage].label}`);
+      setStageNote("");
+      queryClient.invalidateQueries({ queryKey: ["shepherding-members"] });
+      queryClient.invalidateQueries({ queryKey: ["stage-history", selected.id] });
+      queryClient.invalidateQueries({ queryKey: ["stage-history-recent"] });
+    } catch (e: any) {
+      toast.error(e.message || "Failed to update stage");
+    } finally {
+      setSavingStage(false);
     }
   };
 
-  const renderMemberRow = (m: MemberWithGroups) => {
-    const isSelected = selectedMemberId === m.id;
-    const conn = getConnectionLevel(getConnectionScore(m));
-    return (
-      <button
-        key={m.id}
-        onClick={() => setSelectedMemberId(m.id)}
-        className={`w-full flex items-center gap-2.5 px-2.5 py-2 text-left rounded-xl transition-all duration-150 ${
-          isSelected ? "bg-prussian/10 ring-1 ring-prussian/20" : "hover:bg-muted/60"
-        }`}
-      >
-        <Avatar member={m} size="sm" />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">
-            {m.first_name} {m.last_name}
-          </p>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 font-normal border-border/50">
-              {getMembershipCategory(m)}
-            </Badge>
-            <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: conn.color }} />
-          </div>
-        </div>
-        {(getVolunteerGroups(m).length > 0 || getDiscipleshipGroups(m).length > 0) && (
-          <div className="flex gap-0.5 shrink-0">
-            {getVolunteerGroups(m).length > 0 && <Heart className="h-3 w-3 text-emerald-500" />}
-            {getDiscipleshipGroups(m).length > 0 && <BookOpen className="h-3 w-3 text-secondary" />}
-          </div>
-        )}
-      </button>
-    );
-  };
-
-  const activeLevel = connectionFilter
-    ? CONNECTION_LEVELS.find((l) => l.key === connectionFilter)
+  const currentStageIdx = selected
+    ? STAGES.findIndex((s) => s.key === selected.discipleship_stage)
+    : -1;
+  const nextStage = currentStageIdx >= 0 && currentStageIdx < STAGES.length - 1
+    ? STAGES[currentStageIdx + 1]
     : null;
 
   return (
@@ -300,491 +389,316 @@ const MembersPage = () => {
       <DashboardSidebar />
       <main className="flex-1 ml-[72px] flex flex-col h-screen overflow-hidden">
         {/* Header */}
-        <div className="px-6 pt-5 pb-3 space-y-3 shrink-0">
+        <div className="px-6 pt-5 pb-4 space-y-4 shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-display font-bold text-foreground">Church Family</h1>
+              <h1 className="text-2xl font-display font-bold text-foreground">
+                Shepherding
+              </h1>
               <p className="text-sm text-muted-foreground">
-                {stats.total} people · {stats.households} households
+                Discipleship pipeline · {total} people in the church family
               </p>
             </div>
-            <Button onClick={handleSync} disabled={importing} className="gap-2 rounded-xl bg-prussian hover:bg-prussian/90 text-primary-foreground">
+            <Button
+              onClick={handleSync}
+              disabled={importing}
+              className="gap-2 rounded-xl bg-prussian hover:bg-prussian/90 text-primary-foreground"
+            >
               <RefreshCw className={`h-4 w-4 ${importing ? "animate-spin" : ""}`} />
               {importing ? "Syncing..." : "Sync from PCO"}
             </Button>
           </div>
 
-          {/* Stats row with donut chart */}
-          <div className="flex items-start gap-4">
-            {/* Donut chart card */}
-            <Card className="border-none shadow-sm rounded-2xl shrink-0">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="relative h-[120px] w-[120px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={connectionBreakdown}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={35}
-                        outerRadius={55}
-                        paddingAngle={3}
-                        dataKey="value"
-                        cursor="pointer"
-                        onClick={handleDonutClick}
-                        stroke="none"
-                      >
-                        {connectionBreakdown.map((entry) => (
-                          <Cell
-                            key={entry.key}
-                            fill={entry.color}
-                            opacity={connectionFilter && connectionFilter !== entry.key ? 0.25 : 1}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value: number, name: string) => [value, name]}
-                        contentStyle={{ borderRadius: "0.75rem", fontSize: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  {/* Center label */}
-                  <button
-                    onClick={() => setShowScoreInfo(true)}
-                    className="absolute inset-0 flex flex-col items-center justify-center hover:opacity-70 transition-opacity"
-                  >
-                    <span className="text-lg font-bold text-foreground">{categoryFiltered.length}</span>
-                    <Info className="h-3 w-3 text-muted-foreground mt-0.5" />
-                  </button>
+          {/* Pipeline funnel */}
+          <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-display font-semibold text-foreground">
+                  Pipeline Flow
+                </h2>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <UsersIcon className="h-3.5 w-3.5" />
+                    {total} total
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <TrendingUp className="h-3.5 w-3.5" />
+                    {movementCount} stage changes (30d)
+                  </div>
                 </div>
-                {/* Legend */}
-                <div className="space-y-1.5">
-                  {connectionBreakdown.map((entry) => (
-                    <button
-                      key={entry.key}
-                      onClick={() => handleDonutClick(entry)}
-                      className={`flex items-center gap-2 text-left w-full px-2 py-1 rounded-lg transition-all ${
-                        connectionFilter === entry.key
-                          ? "bg-muted ring-1 ring-border"
-                          : "hover:bg-muted/50"
-                      }`}
-                    >
-                      <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
-                      <span className="text-xs text-foreground font-medium">{entry.label}</span>
-                      <span className="text-xs text-muted-foreground ml-auto font-bold">{entry.value}</span>
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+              </div>
 
-            {/* Quick stats */}
-            <div className="grid grid-cols-3 gap-2 flex-1">
-              {[
-                { label: "Member Adults", value: stats.memberAdults, icon: Users, bg: "bg-prussian/10", iconColor: "text-prussian" },
-                { label: "Member Children", value: stats.memberChildren, icon: User, bg: "bg-gold/15", iconColor: "text-gold" },
-                { label: "Households", value: stats.households, icon: Home, bg: "bg-gold/15", iconColor: "text-gold" },
-                { label: "Volunteering", value: stats.volunteering, icon: Heart, bg: "bg-emerald-500/10", iconColor: "text-emerald-600" },
-                { label: "In Groups", value: stats.inDiscipleship, icon: BookOpen, bg: "bg-secondary/10", iconColor: "text-secondary" },
-                { label: "Total People", value: stats.total, icon: Users, bg: "bg-prussian/10", iconColor: "text-prussian" },
-              ].map((s) => (
-                <Card key={s.label} className="border-none shadow-sm rounded-xl">
-                  <CardContent className="p-2.5 flex items-center gap-2">
-                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${s.bg}`}>
-                      <s.icon className={`h-3.5 w-3.5 ${s.iconColor}`} />
+              <div className="flex items-stretch gap-2">
+                {STAGES.map((s, i) => {
+                  const count = stageCounts[s.key];
+                  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                  const isActive = stageFilter === s.key;
+                  return (
+                    <div key={s.key} className="flex items-stretch flex-1 min-w-0">
+                      <button
+                        onClick={() =>
+                          setStageFilter(isActive ? null : s.key)
+                        }
+                        className={`group relative flex-1 min-w-0 rounded-2xl px-3 py-3 text-left transition-all ${
+                          s.bg
+                        } ${
+                          isActive
+                            ? `ring-2 ${s.ring} shadow-md scale-[1.02]`
+                            : "hover:shadow-sm hover:scale-[1.01]"
+                        } ${stageFilter && !isActive ? "opacity-60" : ""}`}
+                        title={s.description}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`h-2 w-2 rounded-full ${s.dot}`} />
+                          <span
+                            className={`text-[11px] font-semibold uppercase tracking-wide ${s.text}`}
+                          >
+                            {s.label}
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className={`text-2xl font-bold ${s.text}`}>
+                            {count}
+                          </span>
+                          <span className={`text-[11px] ${s.text} opacity-70`}>
+                            {pct}%
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-foreground/60 mt-1 line-clamp-2 leading-tight">
+                          {s.description}
+                        </p>
+                      </button>
+                      {i < STAGES.length - 1 && (
+                        <div className="flex items-center px-1 text-muted-foreground/40">
+                          <ChevronRight className="h-4 w-4" />
+                        </div>
+                      )}
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-base font-bold text-foreground leading-tight">{s.value}</p>
-                      <p className="text-[9px] text-muted-foreground truncate">{s.label}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Search bar */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, email, household..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 rounded-xl"
+              />
             </div>
+            {stageFilter && (
+              <button
+                onClick={() => setStageFilter(null)}
+                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+              >
+                Clear stage filter
+              </button>
+            )}
+            <span className="text-xs text-muted-foreground ml-auto">
+              Showing {filtered.length} of {total}
+            </span>
           </div>
         </div>
 
-        {/* Main content */}
-        <div className="flex-1 flex gap-0 overflow-hidden px-6 pb-4">
-          {/* LEFT: Contact list */}
-          <div className="w-[340px] shrink-0 flex flex-col border border-border/50 rounded-2xl bg-card mr-4 overflow-hidden shadow-sm">
-            <div className="p-3 space-y-2 border-b border-border/50">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Search name, email, household..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 h-8 text-sm rounded-lg"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="h-7 text-xs rounded-lg flex-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORY_FILTERS.map((f) => (
-                      <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <span className="text-[10px] text-muted-foreground whitespace-nowrap">{filtered.length}</span>
-              </div>
-              {/* Active connection filter indicator */}
-              {activeLevel && (
-                <button
-                  onClick={() => setConnectionFilter(null)}
-                  className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg bg-muted w-full text-left hover:bg-muted/80 transition-colors"
-                >
-                  <div className="h-2 w-2 rounded-full" style={{ backgroundColor: activeLevel.color }} />
-                  <span className="font-medium text-foreground">Filtering: {activeLevel.label}</span>
-                  <span className="text-muted-foreground ml-auto text-[10px]">✕ Clear</span>
-                </button>
-              )}
+        {/* People grid */}
+        <ScrollArea className="flex-1 px-6 pb-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
+              Loading church family...
             </div>
-
-            <ScrollArea className="flex-1">
-              <div className="p-2 space-y-0.5">
-                {isLoading ? (
-                  <p className="text-center py-8 text-sm text-muted-foreground">Loading...</p>
-                ) : filtered.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Users className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      {members.length === 0 ? 'Click "Sync from PCO" to import' : "No results"}
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    {householdGroups.households.map(([hhId, hh]) => {
-                      const isExpanded = expandedHouseholds.has(hhId);
-                      return (
-                        <div key={hhId} className="mb-0.5">
-                          <button
-                            onClick={() => toggleHousehold(hhId)}
-                            className="w-full flex items-center gap-2 px-2 py-1.5 text-left rounded-lg hover:bg-muted/40 transition-colors"
-                          >
-                            {isExpanded ? (
-                              <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
-                            ) : (
-                              <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                            )}
-                            <Home className="h-3 w-3 text-gold shrink-0" />
-                            <span className="text-xs font-medium text-foreground truncate">{hh.name}</span>
-                            <span className="text-[10px] text-muted-foreground ml-auto shrink-0">{hh.members.length}</span>
-                          </button>
-                          {isExpanded && (
-                            <div className="ml-4 space-y-0.5">
-                              {hh.members.map(renderMemberRow)}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                    {householdGroups.individuals.length > 0 && (
-                      <div className="mt-2 pt-2 border-t border-border/50">
-                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground px-2 mb-1 font-medium">
-                          No Household
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground text-sm gap-2">
+              <Sparkles className="h-6 w-6 opacity-50" />
+              No people match your filters.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {filtered.map((m) => {
+                const stage = STAGE_BY_KEY[m.discipleship_stage];
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => {
+                      setSelectedId(m.id);
+                      setStageNote("");
+                    }}
+                    className="text-left bg-card rounded-2xl border border-border/40 hover:border-prussian/30 hover:shadow-md transition-all p-4 flex items-start gap-3"
+                  >
+                    <Avatar member={m} size="md" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground truncate">
+                        {m.first_name} {m.last_name}
+                      </p>
+                      {m.household_name && (
+                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                          {m.household_name}
                         </p>
-                        {householdGroups.individuals.map(renderMemberRow)}
+                      )}
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <StageBadge stage={m.discipleship_stage} />
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </ScrollArea>
-          </div>
-
-          {/* RIGHT: Detail panel */}
-          <div className="flex-1 overflow-auto">
-            {!selectedMember ? (
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="h-20 w-20 mx-auto rounded-2xl bg-prussian/5 flex items-center justify-center mb-4">
-                    <User className="h-10 w-10 text-prussian/20" />
-                  </div>
-                  <p className="text-muted-foreground text-sm font-display">Select a person to see their connection profile</p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Person header */}
-                <Card className="border-none shadow-md rounded-2xl overflow-hidden">
-                  <CardContent className="p-0">
-                    <div className="bg-gradient-to-br from-prussian via-prussian/90 to-secondary p-6">
-                      <div className="flex items-start gap-5">
-                        <Avatar member={selectedMember} size="lg" />
-                        <div className="flex-1 min-w-0">
-                          <h2 className="text-xl font-display font-bold text-white">
-                            {selectedMember.first_name} {selectedMember.last_name}
-                          </h2>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <Badge className="text-xs font-normal bg-white/20 text-white border-0 hover:bg-white/30">
-                              {getMembershipCategory(selectedMember)}
-                            </Badge>
-                            {(() => {
-                              const conn = getConnectionLevel(getConnectionScore(selectedMember));
-                              return (
-                                <Badge
-                                  className="text-xs border-0 text-white"
-                                  style={{ backgroundColor: conn.color }}
-                                >
-                                  {conn.label}
-                                </Badge>
-                              );
-                            })()}
-                          </div>
-                          {selectedMember.household_name && (
-                            <p className="text-sm text-white/70 mt-1.5 flex items-center gap-1.5">
-                              <Home className="h-3.5 w-3.5" />
-                              {selectedMember.household_name}
-                            </p>
-                          )}
-                        </div>
-                        {/* Connection score ring */}
-                        <button
-                          onClick={() => setShowScoreInfo(true)}
-                          className="shrink-0 text-center group"
-                        >
-                          <div className="relative h-16 w-16">
-                            <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
-                              <path
-                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                fill="none"
-                                stroke="rgba(255,255,255,0.2)"
-                                strokeWidth="3"
-                              />
-                              <path
-                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                fill="none"
-                                stroke="hsl(var(--gold))"
-                                strokeWidth="3"
-                                strokeLinecap="round"
-                                strokeDasharray={`${(getConnectionScore(selectedMember) / 4) * 100}, 100`}
-                              />
-                            </svg>
-                            <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-white group-hover:opacity-80 transition-opacity">
-                              {getConnectionScore(selectedMember)}/4
-                            </span>
-                          </div>
-                          <p className="text-[10px] text-white/60 mt-0.5 flex items-center gap-0.5 justify-center">
-                            Connection <Info className="h-2.5 w-2.5" />
-                          </p>
-                        </button>
+                      <div className="flex items-center gap-1 mt-2 text-[10px] text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        Updated{" "}
+                        {formatDistanceToNow(new Date(m.stage_updated_at), {
+                          addSuffix: true,
+                        })}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </ScrollArea>
+      </main>
 
-                {/* Info grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Contact info */}
-                  <Card className="border-none shadow-sm rounded-2xl">
-                    <CardContent className="p-5">
-                      <h4 className="text-xs font-display font-semibold uppercase text-muted-foreground mb-3 tracking-wide">
-                        Contact Information
-                      </h4>
-                      <div className="space-y-3">
-                        {selectedMember.email ? (
-                          <a href={`mailto:${selectedMember.email}`} className="flex items-center gap-2.5 text-sm text-foreground hover:text-prussian transition-colors">
-                            <div className="h-8 w-8 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
-                              <Mail className="h-4 w-4 text-secondary" />
-                            </div>
-                            <span className="truncate">{selectedMember.email}</span>
-                          </a>
-                        ) : (
-                          <div className="flex items-center gap-2.5 text-sm text-muted-foreground/50">
-                            <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                              <Mail className="h-4 w-4" />
-                            </div>
-                            <span className="italic">No email on file</span>
-                          </div>
-                        )}
-                        {selectedMember.phone ? (
-                          <a href={`tel:${selectedMember.phone}`} className="flex items-center gap-2.5 text-sm text-foreground hover:text-prussian transition-colors">
-                            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                              <Phone className="h-4 w-4 text-emerald-600" />
-                            </div>
-                            <span>{selectedMember.phone}</span>
-                          </a>
-                        ) : (
-                          <div className="flex items-center gap-2.5 text-sm text-muted-foreground/50">
-                            <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                              <Phone className="h-4 w-4" />
-                            </div>
-                            <span className="italic">No phone on file</span>
-                          </div>
-                        )}
-                        {selectedMember.address && (
-                          <div className="flex items-center gap-2.5 text-sm text-foreground">
-                            <div className="h-8 w-8 rounded-lg bg-gold/15 flex items-center justify-center shrink-0">
-                              <MapPin className="h-4 w-4 text-gold" />
-                            </div>
-                            <span>{selectedMember.address}</span>
-                          </div>
-                        )}
-                        {selectedMember.date_of_birth && (
-                          <div className="flex items-center gap-2.5 text-sm text-foreground">
-                            <div className="h-8 w-8 rounded-lg bg-prussian/10 flex items-center justify-center shrink-0">
-                              <Calendar className="h-4 w-4 text-prussian" />
-                            </div>
-                            <span>
-                              {new Date(selectedMember.date_of_birth).toLocaleDateString("en-US", {
-                                month: "long", day: "numeric", year: "numeric",
+      {/* Detail sheet */}
+      <Sheet open={!!selectedId} onOpenChange={(o) => !o && setSelectedId(null)}>
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+          {selected && (
+            <>
+              <SheetHeader>
+                <div className="flex items-center gap-4">
+                  <Avatar member={selected} size="lg" />
+                  <div className="min-w-0">
+                    <SheetTitle className="text-xl font-display">
+                      {selected.first_name} {selected.last_name}
+                    </SheetTitle>
+                    <SheetDescription className="text-xs">
+                      {selected.household_name || "—"}
+                    </SheetDescription>
+                    <div className="mt-2">
+                      <StageBadge stage={selected.discipleship_stage} />
+                    </div>
+                  </div>
+                </div>
+              </SheetHeader>
+
+              <div className="mt-6 space-y-5">
+                {/* Stage timing */}
+                <div className="bg-muted/40 rounded-xl p-3 text-xs text-muted-foreground">
+                  In this stage{" "}
+                  <span className="font-medium text-foreground">
+                    {formatDistanceToNow(new Date(selected.stage_updated_at))}
+                  </span>{" "}
+                  · {STAGE_BY_KEY[selected.discipleship_stage].description}
+                </div>
+
+                {/* Quick actions */}
+                {nextStage && (
+                  <Button
+                    onClick={() => updateStage(nextStage.key)}
+                    disabled={savingStage}
+                    className="w-full gap-2 rounded-xl bg-gold hover:bg-gold/90 text-prussian font-semibold"
+                  >
+                    Move to {nextStage.label}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                )}
+
+                {/* Reassign to any stage */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-foreground">
+                    Reassign stage
+                  </label>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {STAGES.map((s) => {
+                      const active = s.key === selected.discipleship_stage;
+                      return (
+                        <button
+                          key={s.key}
+                          onClick={() => updateStage(s.key)}
+                          disabled={savingStage}
+                          className={`px-2 py-2 rounded-xl text-[10px] font-medium transition-all ${
+                            s.bg
+                          } ${s.text} ${
+                            active
+                              ? `ring-2 ${s.ring} shadow-sm`
+                              : "hover:shadow-sm opacity-70 hover:opacity-100"
+                          }`}
+                          title={s.description}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${s.dot} mx-auto mb-1`} />
+                          {s.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Note */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-foreground">
+                    Pastoral note (saved with stage change)
+                  </label>
+                  <Textarea
+                    value={stageNote}
+                    onChange={(e) => setStageNote(e.target.value)}
+                    placeholder="What prompted this update? Conversations, milestones, prayer requests..."
+                    rows={3}
+                    className="rounded-xl text-sm"
+                  />
+                </div>
+
+                {/* Contact */}
+                {(selected.email || selected.phone) && (
+                  <div className="text-xs text-muted-foreground space-y-1 border-t border-border/40 pt-4">
+                    {selected.email && <div>{selected.email}</div>}
+                    {selected.phone && <div>{selected.phone}</div>}
+                  </div>
+                )}
+
+                {/* History */}
+                <div className="space-y-2 border-t border-border/40 pt-4">
+                  <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                    Stage history
+                  </h3>
+                  {selectedHistory.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic">
+                      No stage changes recorded yet.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {selectedHistory.map((h) => (
+                        <li
+                          key={h.id}
+                          className="text-xs bg-muted/30 rounded-lg p-2.5 space-y-1"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            {h.previous_stage && (
+                              <>
+                                <StageBadge stage={h.previous_stage} />
+                                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                              </>
+                            )}
+                            <StageBadge stage={h.new_stage} />
+                            <span className="ml-auto text-muted-foreground text-[10px]">
+                              {formatDistanceToNow(new Date(h.changed_at), {
+                                addSuffix: true,
                               })}
                             </span>
                           </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Household */}
-                  <Card className="border-none shadow-sm rounded-2xl">
-                    <CardContent className="p-5">
-                      <h4 className="text-xs font-display font-semibold uppercase text-muted-foreground mb-3 tracking-wide">
-                        Household
-                      </h4>
-                      {selectedMember.household_name ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="h-8 w-8 rounded-lg bg-gold/15 flex items-center justify-center">
-                              <Home className="h-4 w-4 text-gold" />
-                            </div>
-                            <span className="text-sm font-medium">{selectedMember.household_name}</span>
-                          </div>
-                          {householdMembers.map((hm) => (
-                            <button
-                              key={hm.id}
-                              onClick={() => setSelectedMemberId(hm.id)}
-                              className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
-                            >
-                              <Avatar member={hm} size="sm" />
-                              <div className="min-w-0">
-                                <p className="text-sm text-foreground truncate">{hm.first_name} {hm.last_name}</p>
-                                <p className="text-[10px] text-muted-foreground">{getMembershipCategory(hm)}</p>
-                              </div>
-                            </button>
-                          ))}
-                          {householdMembers.length === 0 && (
-                            <p className="text-sm text-muted-foreground italic">Only member in household</p>
+                          {h.notes && (
+                            <p className="text-foreground/80 leading-snug">
+                              {h.notes}
+                            </p>
                           )}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground italic">No household assigned</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Volunteering & Discipleship */}
-                <div className="grid grid-cols-2 gap-4">
-                  <Card className="border-none shadow-sm rounded-2xl">
-                    <CardContent className="p-5">
-                      <h4 className="text-xs font-display font-semibold uppercase text-muted-foreground mb-3 tracking-wide flex items-center gap-1.5">
-                        <Heart className="h-3.5 w-3.5 text-emerald-500" /> Serving Teams
-                      </h4>
-                      {getVolunteerGroups(selectedMember).length > 0 ? (
-                        <div className="space-y-2">
-                          {getVolunteerGroups(selectedMember).map((g) => (
-                            <div key={g.group_name} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                              <div className="h-8 w-8 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
-                                <Heart className="h-4 w-4 text-emerald-600" />
-                              </div>
-                              <span className="text-sm font-medium text-foreground">{g.group_name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="p-4 rounded-xl bg-muted/30 text-center border border-dashed border-border/50">
-                          <Heart className="h-8 w-8 mx-auto text-muted-foreground/20 mb-1.5" />
-                          <p className="text-sm text-muted-foreground">Not serving on a team</p>
-                          <p className="text-[11px] text-muted-foreground/60 mt-0.5">Opportunity to invite!</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-none shadow-sm rounded-2xl">
-                    <CardContent className="p-5">
-                      <h4 className="text-xs font-display font-semibold uppercase text-muted-foreground mb-3 tracking-wide flex items-center gap-1.5">
-                        <BookOpen className="h-3.5 w-3.5 text-secondary" /> Discipleship Groups
-                      </h4>
-                      {getDiscipleshipGroups(selectedMember).length > 0 ? (
-                        <div className="space-y-2">
-                          {getDiscipleshipGroups(selectedMember).map((g) => (
-                            <div key={g.group_name} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-secondary/5 border border-secondary/10">
-                              <div className="h-8 w-8 rounded-lg bg-secondary/15 flex items-center justify-center shrink-0">
-                                <BookOpen className="h-4 w-4 text-secondary" />
-                              </div>
-                              <span className="text-sm font-medium text-foreground">{g.group_name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="p-4 rounded-xl bg-muted/30 text-center border border-dashed border-border/50">
-                          <BookOpen className="h-8 w-8 mx-auto text-muted-foreground/20 mb-1.5" />
-                          <p className="text-sm text-muted-foreground">Not in a group</p>
-                          <p className="text-[11px] text-muted-foreground/60 mt-0.5">Great candidate to connect!</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Score explanation dialog */}
-        <Dialog open={showScoreInfo} onOpenChange={setShowScoreInfo}>
-          <DialogContent className="max-w-md rounded-2xl">
-            <DialogHeader>
-              <DialogTitle className="font-display text-lg">Connection Score</DialogTitle>
-              <DialogDescription>
-                How we measure engagement with the life of the church
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 mt-2">
-              <p className="text-sm text-muted-foreground">
-                Each person earns up to <span className="font-bold text-foreground">4 points</span> based
-                on how connected they are:
-              </p>
-              <div className="space-y-3">
-                {[
-                  { icon: Mail, label: "Email on file", desc: "We can reach them digitally", color: "text-secondary", bg: "bg-secondary/10" },
-                  { icon: Phone, label: "Phone number on file", desc: "We can reach them personally", color: "text-emerald-600", bg: "bg-emerald-500/10" },
-                  { icon: Heart, label: "Serving on a volunteer team", desc: "They're actively giving back", color: "text-emerald-600", bg: "bg-emerald-500/10" },
-                  { icon: BookOpen, label: "In a discipleship group", desc: "They're growing spiritually", color: "text-secondary", bg: "bg-secondary/10" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-start gap-3">
-                    <div className={`h-8 w-8 rounded-lg ${item.bg} flex items-center justify-center shrink-0 mt-0.5`}>
-                      <item.icon className={`h-4 w-4 ${item.color}`} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">+1 — {item.label}</p>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t border-border/50 pt-3 space-y-2">
-                <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Score Levels</p>
-                {CONNECTION_LEVELS.map((l) => (
-                  <div key={l.key} className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: l.color }} />
-                    <span className="text-sm font-medium text-foreground">{l.label}</span>
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      {l.key === "well" ? "4/4" : l.key === "connected" ? "3/4" : l.key === "partial" ? "2/4" : "0–1/4"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </main>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
