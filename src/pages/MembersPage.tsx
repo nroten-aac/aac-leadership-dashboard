@@ -26,6 +26,8 @@ import {
   ChevronRight,
   Home,
   Filter,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   Popover,
@@ -187,13 +189,15 @@ type MembershipKey =
   | "Member Adults"
   | "Member Children"
   | "Regular Attender Adults"
-  | "Regular Attender Children";
+  | "Regular Attender Children"
+  | "Visitors";
 
 const MEMBERSHIP_TYPES: Array<{ key: MembershipKey; label: string }> = [
   { key: "Member Adults", label: "Member Adults" },
   { key: "Member Children", label: "Member Children" },
   { key: "Regular Attender Adults", label: "Regular Adults" },
   { key: "Regular Attender Children", label: "Regular Children" },
+  { key: "Visitors", label: "Visitors" },
 ];
 
 const DEFAULT_MEMBERSHIP_FILTER: MembershipKey[] = [
@@ -214,6 +218,7 @@ const MembersPage = () => {
   const [importing, setImporting] = useState(false);
   const [stageNote, setStageNote] = useState("");
   const [savingStage, setSavingStage] = useState(false);
+  const [showHousehold, setShowHousehold] = useState(true);
 
   // Members + groups
   const { data: members = [], isLoading, refetch } = useQuery({
@@ -697,13 +702,32 @@ const MembersPage = () => {
                 </div>
 
                 {/* Household bar */}
-                {selected.household_name && (
+                {(selected.household_name || selected.household_id || householdMembers.length > 0) && (
                   <div className="rounded-xl border border-border/40 bg-card p-3 space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                      <Home className="h-3.5 w-3.5 text-prussian" />
-                      Household · {selected.household_name}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-foreground min-w-0">
+                        <Home className="h-3.5 w-3.5 text-prussian shrink-0" />
+                        <span className="truncate">
+                          Household{selected.household_name ? ` · ${selected.household_name}` : ""}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setShowHousehold((v) => !v)}
+                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                        title={showHousehold ? "Hide household" : "Show household"}
+                      >
+                        {showHousehold ? (
+                          <>
+                            <EyeOff className="h-3 w-3" /> Hide
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="h-3 w-3" /> Show ({householdMembers.length})
+                          </>
+                        )}
+                      </button>
                     </div>
-                    {householdMembers.length === 0 ? (
+                    {showHousehold && (householdMembers.length === 0 ? (
                       <p className="text-[11px] text-muted-foreground italic">
                         No other household members on file.
                       </p>
@@ -729,7 +753,7 @@ const MembersPage = () => {
                           </li>
                         ))}
                       </ul>
-                    )}
+                    ))}
                   </div>
                 )}
 

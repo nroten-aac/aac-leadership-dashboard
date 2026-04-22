@@ -1,4 +1,5 @@
-import { LayoutDashboard, Users, Calendar, DollarSign, BookOpen, Settings, LogOut, ClipboardEdit, Shield, CandyCane } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, DollarSign, BookOpen, Settings, LogOut, ClipboardEdit, Shield } from "lucide-react";
+import SheepIcon from "@/components/icons/SheepIcon";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/usePermissions";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -13,7 +14,7 @@ const DashboardSidebar = () => {
   const allNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/", tabId: "dashboard" },
     { icon: DollarSign, label: "Giving", path: "/giving", tabId: "giving" },
-    { icon: CandyCane, label: "Shepherding", path: "/members", tabId: "members" },
+    { icon: SheepIcon, label: "Shepherding", path: "/members", tabId: "members" },
     { icon: ClipboardEdit, label: "Data Entry", path: "/data-entry", tabId: "data-entry" },
     { icon: Calendar, label: "Attendance", path: "/attendance", tabId: "attendance" },
     { icon: BookOpen, label: "Discipleship", path: "/discipleship", tabId: "discipleship" },
