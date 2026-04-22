@@ -27,15 +27,18 @@ const baseProps = {
 export const ConnectingIcon = ({ title, ...props }: IconProps) => (
   <svg {...baseProps} {...props}>
     {title && <title>{title}</title>}
-    {/* outer orbit */}
-    <ellipse cx="24" cy="24" rx="18" ry="9" opacity="0.35" strokeDasharray="2 3" />
-    {/* hand reaching */}
-    <path d="M14 30v-5a2 2 0 0 1 4 0v3" />
-    <path d="M18 28v-7a2 2 0 0 1 4 0v6" />
-    <path d="M22 27v-5a2 2 0 0 1 4 0v6" />
-    <path d="M26 28v-3a2 2 0 0 1 4 0v6c0 3-2 5-5 5h-3c-2 0-4-1-5-3l-3-5" />
-    {/* spark / star they're reaching toward */}
-    <path d="M34 14l1.2 2.8L38 18l-2.8 1.2L34 22l-1.2-2.8L30 18l2.8-1.2z" fill="currentColor" stroke="none" opacity="0.85" />
+    {/* soft halo behind the cross */}
+    <circle cx="24" cy="24" r="17" opacity="0.25" strokeDasharray="2 3" />
+    {/* cross — vertical beam */}
+    <path
+      d="M21 8h6v10h10v6H27v16h-6V24H11v-6h10z"
+      fill="currentColor"
+      fillOpacity="0.35"
+      strokeLinejoin="round"
+    />
+    {/* highlight along the cross for depth */}
+    <path d="M24 9v30" opacity="0.9" />
+    <path d="M12 21h24" opacity="0.9" />
   </svg>
 );
 
@@ -56,14 +59,29 @@ export const BelongingIcon = ({ title, ...props }: IconProps) => (
 export const MaturingIcon = ({ title, ...props }: IconProps) => (
   <svg {...baseProps} {...props}>
     {title && <title>{title}</title>}
-    {/* open book */}
-    <path d="M6 34c4-2 9-2 12 0V18c-3-2-8-2-12 0z" fill="currentColor" fillOpacity="0.15" />
-    <path d="M30 34c3-2 8-2 12 0V18c-4-2-9-2-12 0z" fill="currentColor" fillOpacity="0.15" />
-    <path d="M18 18c3-2 9-2 12 0v16c-3-2-9-2-12 0z" fill="currentColor" fillOpacity="0.06" />
-    {/* sapling growing up out of the book */}
-    <path d="M24 18V8" />
-    <path d="M24 12c-3 0-5-2-5-4 3 0 5 2 5 4z" fill="currentColor" fillOpacity="0.5" />
-    <path d="M24 14c3 0 5-2 5-4-3 0-5 2-5 4z" fill="currentColor" fillOpacity="0.5" />
+    {/* book spine shadow */}
+    <path d="M24 16v26" opacity="0.5" />
+    {/* left page — curved like an open book */}
+    <path
+      d="M24 16c-4-3-10-4-16-3v23c6-1 12 0 16 3z"
+      fill="currentColor"
+      fillOpacity="0.18"
+    />
+    {/* right page */}
+    <path
+      d="M24 16c4-3 10-4 16-3v23c-6-1-12 0-16 3z"
+      fill="currentColor"
+      fillOpacity="0.18"
+    />
+    {/* page lines (text) */}
+    <path d="M11 22c3-0.5 6-0.5 9 0" opacity="0.55" strokeWidth="1.3" />
+    <path d="M11 27c3-0.5 6-0.5 9 0" opacity="0.45" strokeWidth="1.3" />
+    <path d="M11 32c3-0.5 6-0.5 9 0" opacity="0.35" strokeWidth="1.3" />
+    <path d="M28 22c3-0.5 6-0.5 9 0" opacity="0.55" strokeWidth="1.3" />
+    <path d="M28 27c3-0.5 6-0.5 9 0" opacity="0.45" strokeWidth="1.3" />
+    <path d="M28 32c3-0.5 6-0.5 9 0" opacity="0.35" strokeWidth="1.3" />
+    {/* bookmark ribbon */}
+    <path d="M24 16v6l2-1.5L28 22v-6" fill="currentColor" fillOpacity="0.6" />
   </svg>
 );
 
@@ -91,20 +109,34 @@ export const MultiplyingIcon = ({ title, ...props }: IconProps) => (
       fill="currentColor"
       fillOpacity="0.4"
     />
-    {/* arrows to two side flames (sending) */}
-    <path d="M16 28l-6 4M32 28l6 4" opacity="0.7" />
-    <path d="M10 32l3-1M10 32l1-3" opacity="0.7" />
-    <path d="M38 32l-3-1M38 32l-1-3" opacity="0.7" />
-    {/* two smaller side flames */}
+    {/* small spark trails from center to side flames */}
+    <path d="M17 26c-2 1-4 2-5 4" opacity="0.55" strokeDasharray="1.5 2" />
+    <path d="M31 26c2 1 4 2 5 4" opacity="0.55" strokeDasharray="1.5 2" />
+    {/* left flame — tall, flickering */}
     <path
-      d="M8 42c1-2 3-3 3-6a3 3 0 0 0-6 0c0 3 2 4 3 6z"
+      d="M9 44c3 0 6-2 6-6 0-3-2-4-3-7-1 2-2 3-3 5-0.5-1-1-2-2-2-1 2-2 4-2 6 0 3 2 4 4 4z"
       fill="currentColor"
-      fillOpacity="0.7"
+      fillOpacity="0.75"
     />
+    {/* left inner highlight */}
     <path
-      d="M40 42c1-2 3-3 3-6a3 3 0 0 0-6 0c0 3 2 4 3 6z"
+      d="M10 42c1.5 0 3-1 3-3 0-1.5-1-2-1.5-3.5-0.5 1-1.5 2-1.5 3.5 0 1 0 2.5 0 3z"
       fill="currentColor"
-      fillOpacity="0.7"
+      fillOpacity="0.4"
+      stroke="none"
+    />
+    {/* right flame — tall, flickering */}
+    <path
+      d="M39 44c-3 0-6-2-6-6 0-3 2-4 3-7 1 2 2 3 3 5 0.5-1 1-2 2-2 1 2 2 4 2 6 0 3-2 4-4 4z"
+      fill="currentColor"
+      fillOpacity="0.75"
+    />
+    {/* right inner highlight */}
+    <path
+      d="M38 42c-1.5 0-3-1-3-3 0-1.5 1-2 1.5-3.5 0.5 1 1.5 2 1.5 3.5 0 1 0 2.5 0 3z"
+      fill="currentColor"
+      fillOpacity="0.4"
+      stroke="none"
     />
   </svg>
 );
