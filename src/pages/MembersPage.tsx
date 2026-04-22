@@ -696,6 +696,43 @@ const MembersPage = () => {
                   · {STAGE_BY_KEY[selected.discipleship_stage].description}
                 </div>
 
+                {/* Household bar */}
+                {selected.household_name && (
+                  <div className="rounded-xl border border-border/40 bg-card p-3 space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                      <Home className="h-3.5 w-3.5 text-prussian" />
+                      Household · {selected.household_name}
+                    </div>
+                    {householdMembers.length === 0 ? (
+                      <p className="text-[11px] text-muted-foreground italic">
+                        No other household members on file.
+                      </p>
+                    ) : (
+                      <ul className="space-y-1">
+                        {householdMembers.map((hm) => (
+                          <li key={hm.id}>
+                            <button
+                              onClick={() => {
+                                setSelectedId(hm.id);
+                                setStageNote("");
+                              }}
+                              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/60 transition-colors text-left"
+                            >
+                              <Avatar member={hm} size="sm" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-foreground truncate">
+                                  {hm.first_name} {hm.last_name}
+                                </p>
+                              </div>
+                              <StageBadge stage={hm.discipleship_stage} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
                 {/* Quick actions */}
                 {nextStage && (
                   <Button
