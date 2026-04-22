@@ -28,7 +28,9 @@ import {
   Filter,
   Eye,
   EyeOff,
+  Flag,
 } from "lucide-react";
+import { STAGE_ICONS } from "@/components/icons/StageIcons";
 import {
   Popover,
   PopoverContent,
@@ -463,9 +465,14 @@ const MembersPage = () => {
           <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-display font-semibold text-foreground">
-                  Pipeline Flow
-                </h2>
+                <div>
+                  <h2 className="text-sm font-display font-semibold text-foreground">
+                    The Journey
+                  </h2>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Every disciple's road — from <span className="font-medium text-foreground/80">Connecting</span> to <span className="font-medium text-amber-700">Multiplying</span>
+                  </p>
+                </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1.5">
                     <UsersIcon className="h-3.5 w-3.5" />
@@ -478,54 +485,109 @@ const MembersPage = () => {
                 </div>
               </div>
 
-              <div className="flex items-stretch gap-2">
-                {STAGES.map((s, i) => {
-                  const count = stageCounts[s.key];
-                  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                  const isActive = stageFilter === s.key;
-                  return (
-                    <div key={s.key} className="flex items-stretch flex-1 min-w-0">
+              {/* Roadmap: dashed road with milestone icons */}
+              <div className="relative pt-3 pb-1">
+                {/* The road — full width, dashed, pointing toward the goal */}
+                <div className="absolute left-[6%] right-[6%] top-[34px] h-[3px] rounded-full bg-gradient-to-r from-slate-300 via-emerald-300 to-amber-400 opacity-70" />
+                <div
+                  className="absolute left-[6%] right-[6%] top-[34px] h-[3px]"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(90deg, transparent 0 8px, hsl(var(--background)) 8px 14px)",
+                  }}
+                />
+                {/* Goal flag at the end */}
+                <div className="absolute right-0 top-[18px] flex flex-col items-center text-amber-600">
+                  <Flag className="h-5 w-5 fill-amber-500/30" />
+                  <span className="text-[9px] font-bold uppercase tracking-wider mt-0.5">Goal</span>
+                </div>
+
+                <div className="grid grid-cols-5 gap-2 relative">
+                  {STAGES.map((s, i) => {
+                    const count = stageCounts[s.key];
+                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                    const isActive = stageFilter === s.key;
+                    const isFinal = i === STAGES.length - 1;
+                    const Icon = STAGE_ICONS[s.key];
+                    return (
                       <button
-                        onClick={() =>
-                          setStageFilter(isActive ? null : s.key)
-                        }
-                        className={`group relative flex-1 min-w-0 rounded-2xl px-3 py-3 text-left transition-all ${
-                          s.bg
-                        } ${
-                          isActive
-                            ? `ring-2 ${s.ring} shadow-md scale-[1.02]`
-                            : "hover:shadow-sm hover:scale-[1.01]"
-                        } ${stageFilter && !isActive ? "opacity-60" : ""}`}
+                        key={s.key}
+                        onClick={() => setStageFilter(isActive ? null : s.key)}
                         title={s.description}
+                        className={`group relative flex flex-col items-center text-center px-2 pt-1 pb-2 rounded-xl transition-all ${
+                          isActive ? "scale-[1.04]" : "hover:scale-[1.02]"
+                        } ${stageFilter && !isActive ? "opacity-55" : ""}`}
                       >
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`h-2 w-2 rounded-full ${s.dot}`} />
+                        {/* Milestone marker */}
+                        <div
+                          className={`relative z-10 h-[52px] w-[52px] rounded-full flex items-center justify-center shadow-md transition-all ${
+                            s.bg
+                          } ${
+                            isActive
+                              ? `ring-4 ${s.ring} shadow-lg`
+                              : "ring-2 ring-white"
+                          } ${isFinal ? "ring-amber-400 shadow-amber-300/40" : ""}`}
+                        >
+                          <Icon
+                            className={`h-7 w-7 ${s.text}`}
+                            style={{ color: s.color }}
+                          />
+                          {/* step number badge */}
                           <span
-                            className={`text-[11px] font-semibold uppercase tracking-wide ${s.text}`}
+                            className={`absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-white shadow text-[10px] font-bold flex items-center justify-center ${s.text}`}
                           >
-                            {s.label}
+                            {i + 1}
+                          </span>
+                          {/* "Goal" pulse on final stage */}
+                          {isFinal && (
+                            <span className="absolute inset-0 rounded-full ring-2 ring-amber-400/60 animate-ping opacity-60" />
+                          )}
+                        </div>
+
+                        {/* Label */}
+                        <div
+                          className={`mt-2 text-[11px] font-bold uppercase tracking-wide ${s.text}`}
+                        >
+                          {s.label}
+                        </div>
+
+                        {/* Stat */}
+                        <div className="mt-1 flex items-baseline gap-1">
+                          <span className={`text-xl font-bold ${s.text}`}>{count}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            · {pct}%
                           </span>
                         </div>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className={`text-2xl font-bold ${s.text}`}>
-                            {count}
-                          </span>
-                          <span className={`text-[11px] ${s.text} opacity-70`}>
-                            {pct}%
-                          </span>
+
+                        {/* Mini progress bar showing how full this stage is */}
+                        <div className="mt-1 h-1 w-full max-w-[120px] rounded-full bg-foreground/5 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${s.dot} transition-all`}
+                            style={{ width: `${Math.max(pct, count > 0 ? 4 : 0)}%` }}
+                          />
                         </div>
-                        <p className="text-[10px] text-foreground/60 mt-1 line-clamp-2 leading-tight">
+
+                        <p className="hidden md:block text-[10px] text-foreground/55 mt-1.5 leading-tight line-clamp-2">
                           {s.description}
                         </p>
                       </button>
-                      {i < STAGES.length - 1 && (
-                        <div className="flex items-center px-1 text-muted-foreground/40">
-                          <ChevronRight className="h-4 w-4" />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+
+                {/* Caption pushing the urgency */}
+                <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Sparkles className="h-3 w-3 text-amber-500" />
+                  <span>
+                    Move every soul toward{" "}
+                    <span className="font-semibold text-amber-700">Multiplying</span>
+                    {total > 0 && stageCounts.multiplying < total && (
+                      <>
+                        {" "}— <span className="font-semibold text-foreground">{total - stageCounts.multiplying}</span> still on the road
+                      </>
+                    )}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
