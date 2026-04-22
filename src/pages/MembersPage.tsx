@@ -322,6 +322,21 @@ const MembersPage = () => {
     [members, selectedId]
   );
 
+  // Other members of the selected person's household
+  const householdMembers = useMemo(() => {
+    if (!selected) return [];
+    const key = selected.household_id || selected.household_name;
+    if (!key) return [];
+    return members.filter(
+      (m) =>
+        m.id !== selected.id &&
+        ((selected.household_id && m.household_id === selected.household_id) ||
+          (!selected.household_id &&
+            m.household_name &&
+            m.household_name === selected.household_name))
+    );
+  }, [members, selected]);
+
   // Movement stat: stage changes affecting church-family members in last 30 days
   const familyIds = useMemo(() => new Set(churchFamily.map((m) => m.id)), [churchFamily]);
   const movementCount = useMemo(
