@@ -488,16 +488,16 @@ const MembersPage = () => {
               {/* Roadmap: dashed road with milestone icons */}
               <div className="relative pt-3 pb-1">
                 {/* The road — full width, dashed, pointing toward the goal */}
-                <div className="absolute left-[6%] right-[6%] top-[34px] h-[3px] rounded-full bg-gradient-to-r from-slate-300 via-emerald-300 to-amber-400 opacity-70" />
+                <div className="absolute left-[6%] right-[6%] top-[44px] h-[3px] rounded-full bg-gradient-to-r from-slate-300 via-emerald-300 to-amber-400 opacity-70" />
                 <div
-                  className="absolute left-[6%] right-[6%] top-[34px] h-[3px]"
+                  className="absolute left-[6%] right-[6%] top-[44px] h-[3px]"
                   style={{
                     backgroundImage:
                       "repeating-linear-gradient(90deg, transparent 0 8px, hsl(var(--background)) 8px 14px)",
                   }}
                 />
                 {/* Goal flag at the end */}
-                <div className="absolute right-0 top-[18px] flex flex-col items-center text-amber-600">
+                <div className="absolute right-0 top-[24px] flex flex-col items-center text-amber-600">
                   <Flag className="h-5 w-5 fill-amber-500/30" />
                   <span className="text-[9px] font-bold uppercase tracking-wider mt-0.5">Goal</span>
                 </div>
@@ -509,6 +509,9 @@ const MembersPage = () => {
                     const isActive = stageFilter === s.key;
                     const isFinal = i === STAGES.length - 1;
                     const Icon = STAGE_ICONS[s.key];
+                    // Milestone is "reached" if anyone in the (filtered) set is at this stage
+                    // or has progressed beyond it.
+                    const reached = STAGES.slice(i).some((later) => stageCounts[later.key] > 0);
                     return (
                       <button
                         key={s.key}
@@ -518,28 +521,33 @@ const MembersPage = () => {
                           isActive ? "scale-[1.04]" : "hover:scale-[1.02]"
                         } ${stageFilter && !isActive ? "opacity-55" : ""}`}
                       >
-                        {/* Milestone marker */}
+                        {/* Milestone marker — empty ring when not reached, filled when reached */}
                         <div
-                          className={`relative z-10 h-[52px] w-[52px] rounded-full flex items-center justify-center shadow-md transition-all ${
-                            s.bg
+                          className={`relative z-10 h-[72px] w-[72px] rounded-full flex items-center justify-center transition-all ${
+                            reached
+                              ? `${s.bg} shadow-md ring-2 ring-white`
+                              : "bg-background ring-2 ring-dashed border-2 border-dashed border-foreground/25"
                           } ${
-                            isActive
-                              ? `ring-4 ${s.ring} shadow-lg`
-                              : "ring-2 ring-white"
-                          } ${isFinal ? "ring-amber-400 shadow-amber-300/40" : ""}`}
+                            isActive ? `ring-4 ${s.ring} shadow-lg` : ""
+                          } ${isFinal && reached ? "ring-amber-400 shadow-amber-300/40" : ""}`}
                         >
                           <Icon
-                            className={`h-7 w-7 ${s.text}`}
-                            style={{ color: s.color }}
+                            className="h-10 w-10 transition-opacity"
+                            style={{
+                              color: reached ? s.color : "hsl(var(--muted-foreground))",
+                              opacity: reached ? 1 : 0.45,
+                            }}
                           />
                           {/* step number badge */}
                           <span
-                            className={`absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-white shadow text-[10px] font-bold flex items-center justify-center ${s.text}`}
+                            className={`absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-white shadow text-[10px] font-bold flex items-center justify-center ${
+                              reached ? s.text : "text-muted-foreground"
+                            }`}
                           >
                             {i + 1}
                           </span>
-                          {/* "Goal" pulse on final stage */}
-                          {isFinal && (
+                          {/* "Goal" pulse on final stage when reached */}
+                          {isFinal && reached && (
                             <span className="absolute inset-0 rounded-full ring-2 ring-amber-400/60 animate-ping opacity-60" />
                           )}
                         </div>
