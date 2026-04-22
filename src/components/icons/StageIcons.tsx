@@ -27,18 +27,18 @@ const baseProps = {
 export const ConnectingIcon = ({ title, ...props }: IconProps) => (
   <svg {...baseProps} {...props}>
     {title && <title>{title}</title>}
-    {/* soft halo behind the cross */}
-    <circle cx="24" cy="24" r="17" opacity="0.25" strokeDasharray="2 3" />
-    {/* cross — vertical beam */}
+    {/* soft halo behind the cross — sized to match other icons */}
+    <circle cx="24" cy="24" r="21" opacity="0.25" strokeDasharray="2 3" />
+    {/* cross */}
     <path
-      d="M21 8h6v10h10v6H27v16h-6V24H11v-6h10z"
+      d="M21 5h6v12h12v6H27v20h-6V23H9v-6h12z"
       fill="currentColor"
       fillOpacity="0.35"
       strokeLinejoin="round"
     />
     {/* highlight along the cross for depth */}
-    <path d="M24 9v30" opacity="0.9" />
-    <path d="M12 21h24" opacity="0.9" />
+    <path d="M24 6v36" opacity="0.9" />
+    <path d="M10 20h28" opacity="0.9" />
   </svg>
 );
 
@@ -88,15 +88,28 @@ export const MaturingIcon = ({ title, ...props }: IconProps) => (
 export const MinisteringIcon = ({ title, ...props }: IconProps) => (
   <svg {...baseProps} {...props}>
     {title && <title>{title}</title>}
-    {/* heart (gift / love) above */}
-    <path d="M24 14c-2-3-7-3-7 1 0 3 4 6 7 8 3-2 7-5 7-8 0-4-5-4-7-1z" fill="currentColor" fillOpacity="0.25" />
-    {/* two interlocking hands */}
-    <path d="M8 36l4-6c1-2 3-2 4 0l3 4" />
-    <path d="M19 34l-3-3c-1-1-1-3 1-3l5 1" />
-    <path d="M40 36l-4-6c-1-2-3-2-4 0l-3 4" />
-    <path d="M29 34l3-3c1-1 1-3-1-3l-5 1" />
-    {/* clasp point */}
-    <circle cx="24" cy="32" r="2.5" fill="currentColor" fillOpacity="0.4" />
+    {/* gift / present box */}
+    {/* bow loops */}
+    <path
+      d="M24 14c-2-4-9-4-9 1 0 3 4 4 9 3z"
+      fill="currentColor"
+      fillOpacity="0.55"
+    />
+    <path
+      d="M24 14c2-4 9-4 9 1 0 3-4 4-9 3z"
+      fill="currentColor"
+      fillOpacity="0.55"
+    />
+    {/* bow knot */}
+    <circle cx="24" cy="16" r="2" fill="currentColor" fillOpacity="0.85" stroke="none" />
+    {/* box lid */}
+    <rect x="7" y="18" width="34" height="7" rx="1.5" fill="currentColor" fillOpacity="0.3" />
+    {/* box body */}
+    <rect x="9" y="25" width="30" height="17" rx="1.5" fill="currentColor" fillOpacity="0.18" />
+    {/* vertical ribbon */}
+    <path d="M24 18v24" strokeWidth="2.5" />
+    {/* horizontal seam under lid */}
+    <path d="M9 25h30" opacity="0.5" />
   </svg>
 );
 
