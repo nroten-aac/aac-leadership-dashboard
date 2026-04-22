@@ -189,13 +189,15 @@ type MembershipKey =
   | "Member Adults"
   | "Member Children"
   | "Regular Attender Adults"
-  | "Regular Attender Children";
+  | "Regular Attender Children"
+  | "Visitors";
 
 const MEMBERSHIP_TYPES: Array<{ key: MembershipKey; label: string }> = [
   { key: "Member Adults", label: "Member Adults" },
   { key: "Member Children", label: "Member Children" },
   { key: "Regular Attender Adults", label: "Regular Adults" },
   { key: "Regular Attender Children", label: "Regular Children" },
+  { key: "Visitors", label: "Visitors" },
 ];
 
 const DEFAULT_MEMBERSHIP_FILTER: MembershipKey[] = [
