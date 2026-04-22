@@ -246,18 +246,16 @@ const MembersPage = () => {
     },
   });
 
-  // Restrict to Member Adults + Member Children
+  // Restrict to selected membership types (defaults to Members & Dependants)
   const churchFamily = useMemo(() => {
+    if (membershipFilter.length === 0) return [];
     return members.filter((m) => {
       const memberLists = m.groups
         .filter((g) => g.group_type === "membership")
         .map((g) => g.group_name);
-      return (
-        memberLists.includes("Member Adults") ||
-        memberLists.includes("Member Children")
-      );
+      return membershipFilter.some((t) => memberLists.includes(t));
     });
-  }, [members]);
+  }, [members, membershipFilter]);
 
   // Stage history (last 30 days for "movement" stat)
   const { data: recentHistory = [] } = useQuery({
