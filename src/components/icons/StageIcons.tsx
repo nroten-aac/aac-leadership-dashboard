@@ -27,8 +27,6 @@ const baseProps = {
 export const ConnectingIcon = ({ title, ...props }: IconProps) => (
   <svg {...baseProps} {...props}>
     {title && <title>{title}</title>}
-    {/* soft halo behind the cross — sized to match other icons */}
-    <circle cx="24" cy="24" r="21" opacity="0.25" strokeDasharray="2 3" />
     {/* cross */}
     <path
       d="M21 5h6v12h12v6H27v20h-6V23H9v-6h12z"
