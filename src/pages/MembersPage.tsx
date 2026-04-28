@@ -698,6 +698,7 @@ const MembersPage = () => {
                 </p>
                 {STAGES.map((s) => {
                   const checked = stageFilter.includes(s.key);
+                  const Icon = STAGE_ICONS[s.key];
                   return (
                     <label
                       key={s.key}
@@ -713,7 +714,11 @@ const MembersPage = () => {
                           );
                         }}
                       />
-                      <span className={`h-2 w-2 rounded-full ${s.dot}`} />
+                      <span
+                        className={`h-6 w-6 rounded-full flex items-center justify-center ${s.bg} ring-1 ${s.ring}`}
+                      >
+                        <Icon className="h-3.5 w-3.5" style={{ color: s.color }} />
+                      </span>
                       <span className="text-foreground">{s.label}</span>
                     </label>
                   );
