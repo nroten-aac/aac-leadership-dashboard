@@ -212,7 +212,7 @@ const DEFAULT_MEMBERSHIP_FILTER: MembershipKey[] = [
 const MembersPage = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [stageFilter, setStageFilter] = useState<StageKey | null>(null);
+  const [stageFilter, setStageFilter] = useState<StageKey[]>([]);
   const [membershipFilter, setMembershipFilter] = useState<MembershipKey[]>(
     DEFAULT_MEMBERSHIP_FILTER
   );
@@ -313,7 +313,7 @@ const MembersPage = () => {
   // Filter list
   const filtered = useMemo(() => {
     return churchFamily.filter((m) => {
-      if (stageFilter && m.discipleship_stage !== stageFilter) return false;
+      if (stageFilter.length > 0 && !stageFilter.includes(m.discipleship_stage)) return false;
       if (!search) return true;
       const q = search.toLowerCase();
       return (
@@ -506,7 +506,7 @@ const MembersPage = () => {
                   {STAGES.map((s, i) => {
                     const count = stageCounts[s.key];
                     const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                    const isActive = stageFilter === s.key;
+                    const isActive = stageFilter.includes(s.key);
                     const isFinal = i === STAGES.length - 1;
                     const Icon = STAGE_ICONS[s.key];
                     // Milestone is "reached" if anyone in the (filtered) set is at this stage
@@ -515,11 +515,17 @@ const MembersPage = () => {
                     return (
                       <button
                         key={s.key}
-                        onClick={() => setStageFilter(isActive ? null : s.key)}
+                        onClick={() =>
+                          setStageFilter((prev) =>
+                            prev.includes(s.key)
+                              ? prev.filter((k) => k !== s.key)
+                              : [...prev, s.key]
+                          )
+                        }
                         title={s.description}
                         className={`group relative flex flex-col items-center text-center px-2 pt-1 pb-2 rounded-xl transition-all ${
                           isActive ? "scale-[1.04]" : "hover:scale-[1.02]"
-                        } ${stageFilter && !isActive ? "opacity-55" : ""}`}
+                        } ${stageFilter.length > 0 && !isActive ? "opacity-55" : ""}`}
                       >
                         {/* Milestone marker — empty ring when not reached, filled when reached */}
                         <div
@@ -672,14 +678,62 @@ const MembersPage = () => {
                 </div>
               </PopoverContent>
             </Popover>
-            {stageFilter && (
-              <button
-                onClick={() => setStageFilter(null)}
-                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
-              >
-                Clear stage filter
-              </button>
-            )}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl gap-2 h-9"
+                >
+                  <Flag className="h-3.5 w-3.5" />
+                  Stage
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
+                    {stageFilter.length === 0 ? "All" : stageFilter.length}
+                  </Badge>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-60 p-3 space-y-2">
+                <p className="text-xs font-semibold text-foreground mb-2">
+                  Journey milestone
+                </p>
+                {STAGES.map((s) => {
+                  const checked = stageFilter.includes(s.key);
+                  return (
+                    <label
+                      key={s.key}
+                      className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded-lg px-2 py-1.5"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          setStageFilter((prev) =>
+                            v
+                              ? [...prev, s.key]
+                              : prev.filter((k) => k !== s.key)
+                          );
+                        }}
+                      />
+                      <span className={`h-2 w-2 rounded-full ${s.dot}`} />
+                      <span className="text-foreground">{s.label}</span>
+                    </label>
+                  );
+                })}
+                <div className="flex items-center justify-between pt-2 border-t border-border/40">
+                  <button
+                    onClick={() => setStageFilter(STAGES.map((s) => s.key))}
+                    className="text-[11px] text-prussian hover:underline"
+                  >
+                    Select all
+                  </button>
+                  <button
+                    onClick={() => setStageFilter([])}
+                    className="text-[11px] text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
             <span className="text-xs text-muted-foreground ml-auto">
               Showing {filtered.length} of {total}
             </span>
@@ -764,13 +818,19 @@ const MembersPage = () => {
                         const pct = total > 0 ? (count / total) * 100 : 0;
                         const barPct = (count / maxCount) * 100;
                         const Icon = STAGE_ICONS[s.key];
-                        const isActive = stageFilter === s.key;
+                        const isActive = stageFilter.includes(s.key);
                         return (
                           <button
                             key={s.key}
-                            onClick={() => setStageFilter(isActive ? null : s.key)}
+                            onClick={() =>
+                              setStageFilter((prev) =>
+                                prev.includes(s.key)
+                                  ? prev.filter((k) => k !== s.key)
+                                  : [...prev, s.key]
+                              )
+                            }
                             className={`group w-full flex items-center gap-3 text-left transition-all ${
-                              stageFilter && !isActive ? "opacity-50" : ""
+                              stageFilter.length > 0 && !isActive ? "opacity-50" : ""
                             }`}
                           >
                             {/* Icon badge */}
