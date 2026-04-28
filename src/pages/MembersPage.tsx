@@ -506,7 +506,7 @@ const MembersPage = () => {
                   {STAGES.map((s, i) => {
                     const count = stageCounts[s.key];
                     const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                    const isActive = stageFilter === s.key;
+                    const isActive = stageFilter.includes(s.key);
                     const isFinal = i === STAGES.length - 1;
                     const Icon = STAGE_ICONS[s.key];
                     // Milestone is "reached" if anyone in the (filtered) set is at this stage
@@ -515,11 +515,17 @@ const MembersPage = () => {
                     return (
                       <button
                         key={s.key}
-                        onClick={() => setStageFilter(isActive ? null : s.key)}
+                        onClick={() =>
+                          setStageFilter((prev) =>
+                            prev.includes(s.key)
+                              ? prev.filter((k) => k !== s.key)
+                              : [...prev, s.key]
+                          )
+                        }
                         title={s.description}
                         className={`group relative flex flex-col items-center text-center px-2 pt-1 pb-2 rounded-xl transition-all ${
                           isActive ? "scale-[1.04]" : "hover:scale-[1.02]"
-                        } ${stageFilter && !isActive ? "opacity-55" : ""}`}
+                        } ${stageFilter.length > 0 && !isActive ? "opacity-55" : ""}`}
                       >
                         {/* Milestone marker — empty ring when not reached, filled when reached */}
                         <div
@@ -812,13 +818,19 @@ const MembersPage = () => {
                         const pct = total > 0 ? (count / total) * 100 : 0;
                         const barPct = (count / maxCount) * 100;
                         const Icon = STAGE_ICONS[s.key];
-                        const isActive = stageFilter === s.key;
+                        const isActive = stageFilter.includes(s.key);
                         return (
                           <button
                             key={s.key}
-                            onClick={() => setStageFilter(isActive ? null : s.key)}
+                            onClick={() =>
+                              setStageFilter((prev) =>
+                                prev.includes(s.key)
+                                  ? prev.filter((k) => k !== s.key)
+                                  : [...prev, s.key]
+                              )
+                            }
                             className={`group w-full flex items-center gap-3 text-left transition-all ${
-                              stageFilter && !isActive ? "opacity-50" : ""
+                              stageFilter.length > 0 && !isActive ? "opacity-50" : ""
                             }`}
                           >
                             {/* Icon badge */}
