@@ -45,14 +45,22 @@ export const ConnectingIcon = ({ title, ...props }: IconProps) => (
 export const BelongingIcon = ({ title, ...props }: IconProps) => (
   <svg {...baseProps} {...props}>
     {title && <title>{title}</title>}
-    {/* baptism water ripples */}
-    <path d="M6 36c2-1 4-1 6 0s4 1 6 0 4-1 6 0 4 1 6 0 4-1 6 0" />
-    <path d="M6 40c2-1 4-1 6 0s4 1 6 0 4-1 6 0 4 1 6 0 4-1 6 0" opacity="0.5" />
-    {/* dove */}
-    <path d="M30 16c-3 0-6 2-7 5l-7-1 5 4-3 5 7-2c1 3 4 5 7 5 4 0 8-3 8-8s-4-8-10-8z" fill="currentColor" fillOpacity="0.18" />
-    <circle cx="36" cy="20" r="0.9" fill="currentColor" stroke="none" />
-    {/* light beam from above */}
-    <path d="M28 4l-2 6M34 4l0 6M40 4l2 6" opacity="0.55" />
+    {/* steeple cross */}
+    <path d="M24 4v8" />
+    <path d="M21 7h6" />
+    {/* steeple roof */}
+    <path d="M24 12l-7 8h14z" fill="currentColor" fillOpacity="0.55" />
+    {/* main church body */}
+    <path d="M10 24l14-8 14 8v18H10z" fill="currentColor" fillOpacity="0.18" />
+    {/* roofline emphasis */}
+    <path d="M10 24l14-8 14 8" />
+    {/* arched door */}
+    <path d="M20 42v-8a4 4 0 0 1 8 0v8" fill="currentColor" fillOpacity="0.5" />
+    {/* side windows */}
+    <path d="M14 30v4M14 28a2 2 0 0 1 4 0v6h-4z" fill="currentColor" fillOpacity="0.4" />
+    <path d="M34 30v4M30 28a2 2 0 0 1 4 0v6h-4z" fill="currentColor" fillOpacity="0.4" />
+    {/* ground line */}
+    <path d="M6 42h36" />
   </svg>
 );
 
