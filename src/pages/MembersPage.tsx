@@ -736,6 +736,87 @@ const MembersPage = () => {
               })}
             </div>
           )}
+
+          {/* Stage distribution chart — visual breakdown of where everyone stands */}
+          {!isLoading && total > 0 && (
+            <Card className="mt-6 border-none shadow-sm rounded-2xl overflow-hidden">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-sm font-display font-semibold text-foreground">
+                      Stage Distribution
+                    </h2>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      How the church family is spread across the journey
+                    </p>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {total} people total
+                  </div>
+                </div>
+
+                {(() => {
+                  const maxCount = Math.max(...STAGES.map((s) => stageCounts[s.key]), 1);
+                  return (
+                    <div className="space-y-3">
+                      {STAGES.map((s, i) => {
+                        const count = stageCounts[s.key];
+                        const pct = total > 0 ? (count / total) * 100 : 0;
+                        const barPct = (count / maxCount) * 100;
+                        const Icon = STAGE_ICONS[s.key];
+                        const isActive = stageFilter === s.key;
+                        return (
+                          <button
+                            key={s.key}
+                            onClick={() => setStageFilter(isActive ? null : s.key)}
+                            className={`group w-full flex items-center gap-3 text-left transition-all ${
+                              stageFilter && !isActive ? "opacity-50" : ""
+                            }`}
+                          >
+                            {/* Icon badge */}
+                            <div
+                              className={`shrink-0 h-11 w-11 rounded-full flex items-center justify-center ${s.bg} ring-1 ${s.ring}`}
+                            >
+                              <Icon className="h-6 w-6" style={{ color: s.color }} />
+                            </div>
+
+                            {/* Label + bar */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-baseline justify-between gap-2 mb-1">
+                                <span className={`text-xs font-bold uppercase tracking-wide ${s.text}`}>
+                                  {i + 1}. {s.label}
+                                </span>
+                                <span className="text-[11px] text-muted-foreground">
+                                  <span className={`text-base font-bold ${s.text}`}>{count}</span>
+                                  <span className="ml-1">· {pct.toFixed(1)}%</span>
+                                </span>
+                              </div>
+                              <div className="relative h-6 rounded-full bg-foreground/5 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${s.dot} transition-all duration-500 group-hover:brightness-110 flex items-center justify-end pr-2`}
+                                  style={{ width: `${Math.max(barPct, count > 0 ? 2 : 0)}%` }}
+                                >
+                                  {count > 0 && barPct > 15 && (
+                                    <span className="text-[10px] font-bold text-white drop-shadow-sm">
+                                      {count}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+
+                <p className="text-[11px] text-muted-foreground mt-4 text-center">
+                  Click any stage to filter the people above · Click again to clear
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </ScrollArea>
       </main>
 
