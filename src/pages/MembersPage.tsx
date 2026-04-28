@@ -88,21 +88,21 @@ const STAGES: Array<{
     key: "ministering",
     label: "Ministering",
     description: "Using spiritual gifts in ministry within the church",
-    color: "hsl(25, 90%, 50%)",
-    bg: "bg-orange-100",
-    ring: "ring-orange-300",
-    text: "text-orange-800",
-    dot: "bg-orange-500",
+    color: "hsl(262, 60%, 52%)",
+    bg: "bg-violet-100",
+    ring: "ring-violet-300",
+    text: "text-violet-800",
+    dot: "bg-violet-500",
   },
   {
     key: "multiplying",
     label: "Multiplying",
     description: "On mission, discipling others, reproducing disciples",
-    color: "hsl(43, 74%, 49%)",
-    bg: "bg-amber-100",
-    ring: "ring-amber-300",
-    text: "text-amber-900",
-    dot: "bg-amber-500",
+    color: "hsl(15, 85%, 53%)",
+    bg: "bg-rose-100",
+    ring: "ring-rose-300",
+    text: "text-rose-800",
+    dot: "bg-rose-500",
   },
 ];
 
@@ -698,6 +698,7 @@ const MembersPage = () => {
                 </p>
                 {STAGES.map((s) => {
                   const checked = stageFilter.includes(s.key);
+                  const Icon = STAGE_ICONS[s.key];
                   return (
                     <label
                       key={s.key}
@@ -713,7 +714,11 @@ const MembersPage = () => {
                           );
                         }}
                       />
-                      <span className={`h-2 w-2 rounded-full ${s.dot}`} />
+                      <span
+                        className={`h-6 w-6 rounded-full flex items-center justify-center ${s.bg} ring-1 ${s.ring}`}
+                      >
+                        <Icon className="h-3.5 w-3.5" style={{ color: s.color }} />
+                      </span>
                       <span className="text-foreground">{s.label}</span>
                     </label>
                   );
