@@ -29,6 +29,8 @@ import {
   Eye,
   EyeOff,
   Flag,
+  BookOpen as BookOpenIcon,
+  HandHeart as HandHeartIcon,
 } from "lucide-react";
 import { STAGE_ICONS } from "@/components/icons/StageIcons";
 import {
@@ -40,6 +42,84 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import confetti from "canvas-confetti";
+
+// ----- Discipleship + Volunteer derivation --------------------------------
+
+const DISCIPLESHIP_CONFIG: Array<{
+  match: string[];
+  label: string;
+  short: string;
+  bg: string;
+  text: string;
+  dot: string;
+  color: string;
+}> = [
+  {
+    match: ["life group"],
+    label: "Life Groups",
+    short: "LG",
+    bg: "bg-emerald-100",
+    text: "text-emerald-800",
+    dot: "bg-emerald-500",
+    color: "hsl(152, 60%, 36%)",
+  },
+  {
+    match: ["bible study", "bible studies"],
+    label: "Bible Studies",
+    short: "BS",
+    bg: "bg-sky-100",
+    text: "text-sky-800",
+    dot: "bg-sky-500",
+    color: "hsl(205, 65%, 42%)",
+  },
+  {
+    match: ["pt mentorship", "pt program", "pt "],
+    label: "PT Mentorship",
+    short: "PT",
+    bg: "bg-violet-100",
+    text: "text-violet-800",
+    dot: "bg-violet-500",
+    color: "hsl(263, 55%, 45%)",
+  },
+  {
+    match: ["discipleship group"],
+    label: "Discipleship Groups",
+    short: "DG",
+    bg: "bg-amber-100",
+    text: "text-amber-800",
+    dot: "bg-amber-500",
+    color: "hsl(38, 90%, 45%)",
+  },
+];
+
+type DiscipleshipTag = (typeof DISCIPLESHIP_CONFIG)[number];
+
+const getDiscipleshipTags = (
+  groups: { group_name: string; group_type: string }[]
+): DiscipleshipTag[] => {
+  const found = new Set<string>();
+  const result: DiscipleshipTag[] = [];
+  for (const g of groups) {
+    if (g.group_type !== "discipleship") continue;
+    const name = g.group_name?.toLowerCase() || "";
+    for (const cfg of DISCIPLESHIP_CONFIG) {
+      if (cfg.match.some((kw) => name.includes(kw)) && !found.has(cfg.short)) {
+        found.add(cfg.short);
+        result.push(cfg);
+      }
+    }
+  }
+  return result;
+};
+
+const getVolunteerRoles = (
+  groups: { group_name: string; group_type: string }[]
+): string[] => {
+  return groups
+    .filter((g) => g.group_type === "volunteer")
+    .map((g) => g.group_name)
+    .filter(Boolean);
+};
 
 // ----- Membership status (M / R / V) ---------------------------------------
 
@@ -383,6 +463,57 @@ const MembersPage = () => {
   }, [churchFamily]);
 
   const total = churchFamily.length;
+
+  // Discipleship engagement: how many people are in each discipleship type,
+  // plus how many are in NONE.
+  const discipleshipBreakdown = useMemo(() => {
+    const counts = new Map<string, number>();
+    let unengaged = 0;
+    for (const m of churchFamily) {
+      const tags = getDiscipleshipTags(m.groups);
+      if (tags.length === 0) {
+        unengaged++;
+      } else {
+        for (const t of tags) {
+          counts.set(t.short, (counts.get(t.short) || 0) + 1);
+        }
+      }
+    }
+    return DISCIPLESHIP_CONFIG.map((cfg) => ({
+      ...cfg,
+      count: counts.get(cfg.short) || 0,
+    }))
+      .sort((a, b) => b.count - a.count)
+      .concat([
+        {
+          match: [],
+          label: "Not yet in a group",
+          short: "—",
+          bg: "bg-foreground/5",
+          text: "text-muted-foreground",
+          dot: "bg-foreground/30",
+          color: "hsl(var(--muted-foreground))",
+          count: unengaged,
+        } as any,
+      ]);
+  }, [churchFamily]);
+
+  // Volunteer engagement: total serving + breakdown by team.
+  const volunteerBreakdown = useMemo(() => {
+    const teamCounts = new Map<string, number>();
+    let serving = 0;
+    for (const m of churchFamily) {
+      const roles = getVolunteerRoles(m.groups);
+      if (roles.length > 0) serving++;
+      for (const r of roles) {
+        teamCounts.set(r, (teamCounts.get(r) || 0) + 1);
+      }
+    }
+    const teams = Array.from(teamCounts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+    return { serving, notServing: total - serving, teams };
+  }, [churchFamily, total]);
 
   // Filter list
   const filtered = useMemo(() => {
@@ -856,6 +987,8 @@ const MembersPage = () => {
               {filtered.map((m) => {
                 const stage = STAGE_BY_KEY[m.discipleship_stage];
                 const status = getStatusBadge(m.groups);
+                const discipleship = getDiscipleshipTags(m.groups);
+                const volunteerRoles = getVolunteerRoles(m.groups);
                 return (
                   <button
                     key={m.id}
@@ -898,6 +1031,41 @@ const MembersPage = () => {
                           addSuffix: true,
                         })}
                       </div>
+
+                      {/* Maturing — discipleship groups */}
+                      <div className="mt-2.5 flex flex-wrap gap-1" title="Discipleship groups">
+                        {discipleship.length > 0 ? (
+                          discipleship.map((d) => (
+                            <span
+                              key={d.short}
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${d.bg} ${d.text}`}
+                              title={d.label}
+                            >
+                              {d.short}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[9px] italic text-muted-foreground/70">
+                            No discipleship group
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Ministering — volunteer roles */}
+                      {volunteerRoles.length > 0 && (
+                        <div className="mt-1.5 flex items-center gap-1 text-[10px] text-rose-700">
+                          <span className="font-semibold">Serves:</span>
+                          <span className="truncate">
+                            {volunteerRoles.slice(0, 2).join(", ")}
+                            {volunteerRoles.length > 2 && (
+                              <span className="text-muted-foreground">
+                                {" "}
+                                +{volunteerRoles.length - 2}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </button>
                 );
@@ -991,6 +1159,134 @@ const MembersPage = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Maturing & Serving — discipleship + volunteer overview */}
+          {!isLoading && total > 0 && (
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Discipleship engagement */}
+              <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-sm font-display font-semibold text-foreground">
+                        Maturing — Discipleship Engagement
+                      </h2>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Where the family is being formed
+                      </p>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {total - (discipleshipBreakdown.find((d) => d.short === "—")?.count || 0)}{" "}
+                      / {total} engaged
+                    </div>
+                  </div>
+                  {(() => {
+                    const maxC = Math.max(...discipleshipBreakdown.map((d) => d.count), 1);
+                    return (
+                      <div className="space-y-3">
+                        {discipleshipBreakdown.map((d) => {
+                          const pct = total > 0 ? (d.count / total) * 100 : 0;
+                          const barPct = (d.count / maxC) * 100;
+                          return (
+                            <div key={d.short} className="flex items-center gap-3">
+                              <div
+                                className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center ${d.bg}`}
+                              >
+                                <span
+                                  className={`text-[10px] font-bold ${d.text}`}
+                                >
+                                  {d.short}
+                                </span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-baseline justify-between gap-2 mb-1">
+                                  <span className={`text-xs font-semibold ${d.text}`}>
+                                    {d.label}
+                                  </span>
+                                  <span className="text-[11px] text-muted-foreground">
+                                    <span className="text-sm font-bold text-foreground">
+                                      {d.count}
+                                    </span>{" "}
+                                    · {pct.toFixed(0)}%
+                                  </span>
+                                </div>
+                                <div className="relative h-5 rounded-full bg-foreground/5 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${d.dot} transition-all duration-500`}
+                                    style={{ width: `${Math.max(barPct, d.count > 0 ? 2 : 0)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Ministering — volunteer engagement */}
+              <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-sm font-display font-semibold text-foreground">
+                        Ministering — Volunteer Teams
+                      </h2>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Where the family is serving
+                      </p>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      <span className="text-sm font-bold text-rose-700">
+                        {volunteerBreakdown.serving}
+                      </span>{" "}
+                      / {total} serving
+                    </div>
+                  </div>
+                  {(() => {
+                    const teams = volunteerBreakdown.teams;
+                    const maxC = Math.max(...teams.map((t) => t.count), 1);
+                    if (teams.length === 0) {
+                      return (
+                        <p className="text-xs text-muted-foreground text-center py-6">
+                          No volunteer team data yet.
+                        </p>
+                      );
+                    }
+                    return (
+                      <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+                        {teams.map((t) => {
+                          const barPct = (t.count / maxC) * 100;
+                          return (
+                            <div key={t.name} className="flex items-center gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                                  <span className="text-xs font-medium text-foreground truncate">
+                                    {t.name}
+                                  </span>
+                                  <span className="text-[11px] font-bold text-rose-700 shrink-0">
+                                    {t.count}
+                                  </span>
+                                </div>
+                                <div className="relative h-3 rounded-full bg-foreground/5 overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full bg-gradient-to-r from-rose-400 to-rose-600 transition-all duration-500"
+                                    style={{ width: `${Math.max(barPct, 4)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </ScrollArea>
       </main>
 
@@ -1081,6 +1377,60 @@ const MembersPage = () => {
                     ))}
                   </div>
                 )}
+
+                {/* Discipleship & Serving */}
+                {(() => {
+                  const dTags = getDiscipleshipTags(selected.groups);
+                  const vRoles = getVolunteerRoles(selected.groups);
+                  return (
+                    <div className="rounded-2xl border border-border/40 p-4 space-y-3">
+                      <div>
+                        <h3 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                          <BookOpenIcon className="h-3.5 w-3.5 text-emerald-600" />
+                          Maturing in
+                        </h3>
+                        {dTags.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {dTags.map((d) => (
+                              <span
+                                key={d.short}
+                                className={`text-[11px] font-semibold px-2 py-1 rounded-lg ${d.bg} ${d.text}`}
+                              >
+                                {d.label}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] italic text-muted-foreground">
+                            Not yet in a discipleship group
+                          </p>
+                        )}
+                      </div>
+                      <div className="border-t border-border/40 pt-3">
+                        <h3 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                          <HandHeartIcon className="h-3.5 w-3.5 text-rose-600" />
+                          Ministering on
+                        </h3>
+                        {vRoles.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {vRoles.map((r) => (
+                              <span
+                                key={r}
+                                className="text-[11px] font-medium px-2 py-1 rounded-lg bg-rose-100 text-rose-800"
+                              >
+                                {r}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] italic text-muted-foreground">
+                            Not currently serving on a team
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Quick actions */}
                 {nextStage && (
