@@ -462,6 +462,57 @@ const MembersPage = () => {
 
   const total = churchFamily.length;
 
+  // Discipleship engagement: how many people are in each discipleship type,
+  // plus how many are in NONE.
+  const discipleshipBreakdown = useMemo(() => {
+    const counts = new Map<string, number>();
+    let unengaged = 0;
+    for (const m of churchFamily) {
+      const tags = getDiscipleshipTags(m.groups);
+      if (tags.length === 0) {
+        unengaged++;
+      } else {
+        for (const t of tags) {
+          counts.set(t.short, (counts.get(t.short) || 0) + 1);
+        }
+      }
+    }
+    return DISCIPLESHIP_CONFIG.map((cfg) => ({
+      ...cfg,
+      count: counts.get(cfg.short) || 0,
+    }))
+      .sort((a, b) => b.count - a.count)
+      .concat([
+        {
+          match: [],
+          label: "Not yet in a group",
+          short: "—",
+          bg: "bg-foreground/5",
+          text: "text-muted-foreground",
+          dot: "bg-foreground/30",
+          color: "hsl(var(--muted-foreground))",
+          count: unengaged,
+        } as any,
+      ]);
+  }, [churchFamily]);
+
+  // Volunteer engagement: total serving + breakdown by team.
+  const volunteerBreakdown = useMemo(() => {
+    const teamCounts = new Map<string, number>();
+    let serving = 0;
+    for (const m of churchFamily) {
+      const roles = getVolunteerRoles(m.groups);
+      if (roles.length > 0) serving++;
+      for (const r of roles) {
+        teamCounts.set(r, (teamCounts.get(r) || 0) + 1);
+      }
+    }
+    const teams = Array.from(teamCounts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+    return { serving, notServing: total - serving, teams };
+  }, [churchFamily, total]);
+
   // Filter list
   const filtered = useMemo(() => {
     return churchFamily.filter((m) => {
