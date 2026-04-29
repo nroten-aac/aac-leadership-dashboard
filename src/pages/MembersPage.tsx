@@ -1261,7 +1261,7 @@ const MembersPage = () => {
                       <span className="text-sm font-bold text-rose-700">
                         {volunteerBreakdown.serving}
                       </span>{" "}
-                      / {total} serving
+                      / {filteredTotal} serving
                     </div>
                   </div>
                   {(() => {
