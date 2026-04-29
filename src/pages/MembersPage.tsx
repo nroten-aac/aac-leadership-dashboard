@@ -1005,29 +1005,87 @@ const MembersPage = () => {
                   <label className="text-xs font-medium text-foreground">
                     Reassign stage
                   </label>
-                  <div className="grid grid-cols-5 gap-1.5">
-                    {STAGES.map((s) => {
-                      const active = s.key === selected.discipleship_stage;
-                      return (
-                        <button
-                          key={s.key}
-                          onClick={() => updateStage(s.key)}
-                          disabled={savingStage}
-                          className={`px-2 py-2 rounded-xl text-[10px] font-medium transition-all ${
-                            s.bg
-                          } ${s.text} ${
-                            active
-                              ? `ring-2 ${s.ring} shadow-sm`
-                              : "hover:shadow-sm opacity-70 hover:opacity-100"
-                          }`}
-                          title={s.description}
-                        >
-                          <div className={`h-1.5 w-1.5 rounded-full ${s.dot} mx-auto mb-1`} />
-                          {s.label}
-                        </button>
-                      );
-                    })}
+                  {/* Personal journey roadmap — completed stages are filled in */}
+                  <div className="relative pt-1">
+                    {/* Connecting road behind the milestones */}
+                    <div className="absolute left-[8%] right-[8%] top-[26px] h-[3px] rounded-full bg-foreground/10" />
+                    <div
+                      className="absolute left-[8%] top-[26px] h-[3px] rounded-full bg-gradient-to-r from-slate-400 via-emerald-400 to-rose-500 transition-all"
+                      style={{
+                        width: `${
+                          currentStageIdx > 0
+                            ? (currentStageIdx / (STAGES.length - 1)) * 84
+                            : 0
+                        }%`,
+                      }}
+                    />
+                    <div className="grid grid-cols-5 gap-1 relative">
+                      {STAGES.map((s, i) => {
+                        const Icon = STAGE_ICONS[s.key];
+                        const active = s.key === selected.discipleship_stage;
+                        const completed = currentStageIdx >= 0 && i < currentStageIdx;
+                        const reached = completed || active;
+                        return (
+                          <button
+                            key={s.key}
+                            onClick={() => updateStage(s.key)}
+                            disabled={savingStage}
+                            title={
+                              completed
+                                ? `Journeyed through ${s.label}`
+                                : active
+                                ? `Currently ${s.label}`
+                                : `Not yet ${s.label}`
+                            }
+                            className={`relative flex flex-col items-center px-1 pt-1 pb-1.5 rounded-xl transition-all ${
+                              active ? "scale-[1.05]" : "hover:scale-[1.03]"
+                            } ${!reached ? "opacity-55 hover:opacity-90" : ""}`}
+                          >
+                            <div
+                              className={`relative z-10 h-12 w-12 rounded-full flex items-center justify-center transition-all ${
+                                reached
+                                  ? `${s.bg} shadow-sm ring-2 ring-white`
+                                  : "bg-background ring-2 border-2 border-dashed border-foreground/25"
+                              } ${active ? `ring-[3px] ${s.ring} shadow-md` : ""}`}
+                            >
+                              <Icon
+                                className="h-6 w-6"
+                                style={{
+                                  color: reached ? s.color : "hsl(var(--muted-foreground))",
+                                  opacity: reached ? 1 : 0.5,
+                                }}
+                              />
+                              {completed && (
+                                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center shadow ring-1 ring-white">
+                                  ✓
+                                </span>
+                              )}
+                              {active && (
+                                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full bg-foreground shadow" />
+                              )}
+                            </div>
+                            <span
+                              className={`mt-1.5 text-[9px] font-bold uppercase tracking-wide ${
+                                reached ? s.text : "text-muted-foreground"
+                              }`}
+                            >
+                              {s.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    {currentStageIdx >= 0 && (
+                      <>
+                        <span className="font-semibold text-foreground/80">
+                          {currentStageIdx + 1} of {STAGES.length}
+                        </span>{" "}
+                        milestones reached · tap any stage to reassign
+                      </>
+                    )}
+                  </p>
                 </div>
 
                 {/* Note */}

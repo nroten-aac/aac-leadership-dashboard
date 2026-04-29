@@ -14,7 +14,7 @@ const DashboardSidebar = () => {
   const allNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/", tabId: "dashboard" },
     { icon: DollarSign, label: "Giving", path: "/giving", tabId: "giving" },
-    { icon: SheepIcon, label: "Shepherding", path: "/members", tabId: "members" },
+    { icon: Users, label: "Shepherding", path: "/members", tabId: "members" },
     { icon: ClipboardEdit, label: "Data Entry", path: "/data-entry", tabId: "data-entry" },
     { icon: Calendar, label: "Attendance", path: "/attendance", tabId: "attendance" },
     { icon: BookOpen, label: "Discipleship", path: "/discipleship", tabId: "discipleship" },
