@@ -41,6 +41,84 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import confetti from "canvas-confetti";
 
+// ----- Discipleship + Volunteer derivation --------------------------------
+
+const DISCIPLESHIP_CONFIG: Array<{
+  match: string[];
+  label: string;
+  short: string;
+  bg: string;
+  text: string;
+  dot: string;
+  color: string;
+}> = [
+  {
+    match: ["life group"],
+    label: "Life Groups",
+    short: "LG",
+    bg: "bg-emerald-100",
+    text: "text-emerald-800",
+    dot: "bg-emerald-500",
+    color: "hsl(152, 60%, 36%)",
+  },
+  {
+    match: ["bible study", "bible studies"],
+    label: "Bible Studies",
+    short: "BS",
+    bg: "bg-sky-100",
+    text: "text-sky-800",
+    dot: "bg-sky-500",
+    color: "hsl(205, 65%, 42%)",
+  },
+  {
+    match: ["pt mentorship", "pt program", "pt "],
+    label: "PT Mentorship",
+    short: "PT",
+    bg: "bg-violet-100",
+    text: "text-violet-800",
+    dot: "bg-violet-500",
+    color: "hsl(263, 55%, 45%)",
+  },
+  {
+    match: ["discipleship group"],
+    label: "Discipleship Groups",
+    short: "DG",
+    bg: "bg-amber-100",
+    text: "text-amber-800",
+    dot: "bg-amber-500",
+    color: "hsl(38, 90%, 45%)",
+  },
+];
+
+type DiscipleshipTag = (typeof DISCIPLESHIP_CONFIG)[number];
+
+const getDiscipleshipTags = (
+  groups: { group_name: string; group_type: string }[]
+): DiscipleshipTag[] => {
+  const found = new Set<string>();
+  const result: DiscipleshipTag[] = [];
+  for (const g of groups) {
+    if (g.group_type !== "discipleship") continue;
+    const name = g.group_name?.toLowerCase() || "";
+    for (const cfg of DISCIPLESHIP_CONFIG) {
+      if (cfg.match.some((kw) => name.includes(kw)) && !found.has(cfg.short)) {
+        found.add(cfg.short);
+        result.push(cfg);
+      }
+    }
+  }
+  return result;
+};
+
+const getVolunteerRoles = (
+  groups: { group_name: string; group_type: string }[]
+): string[] => {
+  return groups
+    .filter((g) => g.group_type === "volunteer")
+    .map((g) => g.group_name)
+    .filter(Boolean);
+};
+
 // ----- Membership status (M / R / V) ---------------------------------------
 
 type StatusBadge = {
