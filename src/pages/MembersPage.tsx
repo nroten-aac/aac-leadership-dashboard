@@ -39,6 +39,80 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import confetti from "canvas-confetti";
+
+// ----- Membership status (M / R / V) ---------------------------------------
+
+type StatusBadge = {
+  letter: "M" | "R" | "V";
+  label: string;
+  bg: string;
+  text: string;
+  ring: string;
+};
+
+const getStatusBadge = (groups: { group_name: string }[]): StatusBadge => {
+  const names = groups.map((g) => g.group_name?.toLowerCase() || "");
+  const has = (kw: string) => names.some((n) => n.includes(kw));
+  if (has("member")) {
+    return {
+      letter: "M",
+      label: "Member",
+      bg: "bg-prussian",
+      text: "text-white",
+      ring: "ring-prussian/30",
+    };
+  }
+  if (has("regular")) {
+    return {
+      letter: "R",
+      label: "Regular Attender",
+      bg: "bg-sky-600",
+      text: "text-white",
+      ring: "ring-sky-600/30",
+    };
+  }
+  return {
+    letter: "V",
+    label: "Visitor",
+    bg: "bg-amber-500",
+    text: "text-white",
+    ring: "ring-amber-500/30",
+  };
+};
+
+// ----- Celebration ----------------------------------------------------------
+
+const celebrateAdvancement = (color: string) => {
+  // Parse hsl(h, s%, l%) → rough hex for confetti palette
+  const colors = [color, "#F2C84B", "#1F4068", "#5DA9E9", "#10B981"];
+  const burst = (originX: number) => {
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      startVelocity: 45,
+      origin: { x: originX, y: 0.65 },
+      colors,
+      scalar: 1.1,
+      ticks: 220,
+    });
+  };
+  burst(0.25);
+  burst(0.75);
+  setTimeout(
+    () =>
+      confetti({
+        particleCount: 120,
+        spread: 110,
+        startVelocity: 55,
+        origin: { x: 0.5, y: 0.55 },
+        colors,
+        scalar: 1.2,
+        ticks: 260,
+      }),
+    180
+  );
+};
 
 // ----- Stage definitions ---------------------------------------------------
 
@@ -381,6 +455,9 @@ const MembersPage = () => {
       toast.info("Pick a different stage or add a note.");
       return;
     }
+    const prevIdx = STAGES.findIndex((s) => s.key === selected.discipleship_stage);
+    const nextIdx = STAGES.findIndex((s) => s.key === newStage);
+    const isAdvancement = nextIdx > prevIdx;
     setSavingStage(true);
     try {
       const { error } = await supabase
@@ -418,6 +495,9 @@ const MembersPage = () => {
       }
 
       toast.success(`${selected.first_name} moved to ${STAGE_BY_KEY[newStage].label}`);
+      if (isAdvancement) {
+        celebrateAdvancement(STAGE_BY_KEY[newStage].color);
+      }
       setStageNote("");
       queryClient.invalidateQueries({ queryKey: ["shepherding-members"] });
       queryClient.invalidateQueries({ queryKey: ["stage-history", selected.id] });
@@ -775,6 +855,7 @@ const MembersPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {filtered.map((m) => {
                 const stage = STAGE_BY_KEY[m.discipleship_stage];
+                const status = getStatusBadge(m.groups);
                 return (
                   <button
                     key={m.id}
@@ -784,7 +865,15 @@ const MembersPage = () => {
                     }}
                     className="text-left bg-card rounded-2xl border border-border/40 hover:border-prussian/30 hover:shadow-md transition-all p-4 flex items-start gap-3"
                   >
-                    <Avatar member={m} size="md" />
+                    <div className="relative shrink-0">
+                      <Avatar member={m} size="md" />
+                      <span
+                        title={status.label}
+                        className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full ${status.bg} ${status.text} text-[10px] font-bold flex items-center justify-center ring-2 ring-card shadow`}
+                      >
+                        {status.letter}
+                      </span>
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-foreground truncate">
                         {m.first_name} {m.last_name}
@@ -796,6 +885,11 @@ const MembersPage = () => {
                       )}
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <StageBadge stage={m.discipleship_stage} />
+                        <span
+                          className={`text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-foreground/5 text-foreground/70`}
+                        >
+                          {status.label}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1 mt-2 text-[10px] text-muted-foreground">
                         <Clock className="h-3 w-3" />
