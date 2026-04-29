@@ -985,6 +985,8 @@ const MembersPage = () => {
               {filtered.map((m) => {
                 const stage = STAGE_BY_KEY[m.discipleship_stage];
                 const status = getStatusBadge(m.groups);
+                const discipleship = getDiscipleshipTags(m.groups);
+                const volunteerRoles = getVolunteerRoles(m.groups);
                 return (
                   <button
                     key={m.id}
@@ -1027,6 +1029,41 @@ const MembersPage = () => {
                           addSuffix: true,
                         })}
                       </div>
+
+                      {/* Maturing — discipleship groups */}
+                      <div className="mt-2.5 flex flex-wrap gap-1" title="Discipleship groups">
+                        {discipleship.length > 0 ? (
+                          discipleship.map((d) => (
+                            <span
+                              key={d.short}
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${d.bg} ${d.text}`}
+                              title={d.label}
+                            >
+                              {d.short}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[9px] italic text-muted-foreground/70">
+                            No discipleship group
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Ministering — volunteer roles */}
+                      {volunteerRoles.length > 0 && (
+                        <div className="mt-1.5 flex items-center gap-1 text-[10px] text-rose-700">
+                          <span className="font-semibold">Serves:</span>
+                          <span className="truncate">
+                            {volunteerRoles.slice(0, 2).join(", ")}
+                            {volunteerRoles.length > 2 && (
+                              <span className="text-muted-foreground">
+                                {" "}
+                                +{volunteerRoles.length - 2}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </button>
                 );
