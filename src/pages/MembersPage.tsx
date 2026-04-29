@@ -458,18 +458,20 @@ const MembersPage = () => {
       ministering: 0,
       multiplying: 0,
     };
-    for (const m of churchFamily) counts[m.discipleship_stage]++;
+    for (const m of filtered) counts[m.discipleship_stage]++;
     return counts;
-  }, [churchFamily]);
+  }, [filtered]);
 
-  const total = churchFamily.length;
+  // Total reflects the active filters so every chart speaks about the same set.
+  const total = filtered.length;
+  const churchFamilyTotal = churchFamily.length;
 
   // Discipleship engagement: how many people are in each discipleship type,
   // plus how many are in NONE.
   const discipleshipBreakdown = useMemo(() => {
     const counts = new Map<string, number>();
     let unengaged = 0;
-    for (const m of churchFamily) {
+    for (const m of filtered) {
       const tags = getDiscipleshipTags(m.groups);
       if (tags.length === 0) {
         unengaged++;
@@ -496,13 +498,13 @@ const MembersPage = () => {
           count: unengaged,
         } as any,
       ]);
-  }, [churchFamily]);
+  }, [filtered]);
 
   // Volunteer engagement: total serving + breakdown by team.
   const volunteerBreakdown = useMemo(() => {
     const teamCounts = new Map<string, number>();
     let serving = 0;
-    for (const m of churchFamily) {
+    for (const m of filtered) {
       const roles = getVolunteerRoles(m.groups);
       if (roles.length > 0) serving++;
       for (const r of roles) {
@@ -513,7 +515,7 @@ const MembersPage = () => {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count);
     return { serving, notServing: total - serving, teams };
-  }, [churchFamily, total]);
+  }, [filtered, total]);
 
   // Filter list
   const filtered = useMemo(() => {
