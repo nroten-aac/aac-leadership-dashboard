@@ -1186,6 +1186,15 @@ const MembersPage = () => {
                           {status.label}
                         </span>
                       </div>
+                      {isSkippingBelonging(m.discipleship_stage, status) && (
+                        <div
+                          className="mt-1.5 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 ring-1 ring-amber-300"
+                          title={`${status.label} but already at ${STAGE_BY_KEY[m.discipleship_stage].label} — skipped Belonging (membership)`}
+                        >
+                          <AlertTriangle className="h-2.5 w-2.5" />
+                          Skipped Belonging
+                        </div>
+                      )}
                       <div className="flex items-center gap-1 mt-2 text-[10px] text-muted-foreground">
                         <Clock className="h-3 w-3" />
                         Updated{" "}
