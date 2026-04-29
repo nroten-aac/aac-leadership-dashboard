@@ -564,6 +564,58 @@ const MembersPage = () => {
     return { serving, notServing: filteredTotal - serving, teams };
   }, [filtered, filteredTotal]);
 
+  // Engagement matrix — rows = milestone, columns = engagement type.
+  // Used to render a Stage × Engagement heatmap so leadership can spot
+  // where maturing actually happens along the journey.
+  const ENGAGEMENT_COLS = useMemo(
+    () => [
+      ...DISCIPLESHIP_CONFIG.map((c) => ({
+        key: c.short,
+        label: c.label,
+        short: c.short,
+      })),
+      { key: "SRV", label: "Serving", short: "SRV" },
+    ],
+    []
+  );
+  const engagementMatrix = useMemo(() => {
+    // matrix[stageKey][colKey] = count
+    const matrix: Record<string, Record<string, number>> = {};
+    for (const s of STAGES) {
+      matrix[s.key] = Object.fromEntries(ENGAGEMENT_COLS.map((c) => [c.key, 0]));
+    }
+    for (const m of filtered) {
+      const stage = m.discipleship_stage;
+      const tags = getDiscipleshipTags(m.groups);
+      for (const t of tags) {
+        if (matrix[stage] && t.short in matrix[stage]) {
+          matrix[stage][t.short]++;
+        }
+      }
+      if (getVolunteerRoles(m.groups).length > 0) {
+        matrix[stage]["SRV"]++;
+      }
+    }
+    let max = 1;
+    for (const s of STAGES) {
+      for (const c of ENGAGEMENT_COLS) {
+        if (matrix[s.key][c.key] > max) max = matrix[s.key][c.key];
+      }
+    }
+    return { matrix, max };
+  }, [filtered, ENGAGEMENT_COLS]);
+
+  // People who've leapfrogged Belonging (membership) — Regular/Visitor but
+  // already at Maturing or beyond.
+  const skippedBelongingCount = useMemo(() => {
+    let n = 0;
+    for (const m of filtered) {
+      const status = getStatusBadge(m.groups);
+      if (isSkippingBelonging(m.discipleship_stage, status)) n++;
+    }
+    return n;
+  }, [filtered]);
+
   const selected = useMemo(
     () => members.find((m) => m.id === selectedId) || null,
     [members, selectedId]
