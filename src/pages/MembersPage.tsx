@@ -455,6 +455,9 @@ const MembersPage = () => {
       toast.info("Pick a different stage or add a note.");
       return;
     }
+    const prevIdx = STAGES.findIndex((s) => s.key === selected.discipleship_stage);
+    const nextIdx = STAGES.findIndex((s) => s.key === newStage);
+    const isAdvancement = nextIdx > prevIdx;
     setSavingStage(true);
     try {
       const { error } = await supabase
@@ -492,6 +495,9 @@ const MembersPage = () => {
       }
 
       toast.success(`${selected.first_name} moved to ${STAGE_BY_KEY[newStage].label}`);
+      if (isAdvancement) {
+        celebrateAdvancement(STAGE_BY_KEY[newStage].color);
+      }
       setStageNote("");
       queryClient.invalidateQueries({ queryKey: ["shepherding-members"] });
       queryClient.invalidateQueries({ queryKey: ["stage-history", selected.id] });
