@@ -1194,8 +1194,9 @@ const MembersPage = () => {
                       </p>
                     </div>
                     <div className="text-[11px] text-muted-foreground">
-                      {total - (discipleshipBreakdown.find((d) => d.short === "—")?.count || 0)}{" "}
-                      / {total} engaged
+                      {filteredTotal -
+                        (discipleshipBreakdown.find((d) => d.short === "—")?.count || 0)}{" "}
+                      / {filteredTotal} engaged
                     </div>
                   </div>
                   {(() => {
@@ -1203,7 +1204,7 @@ const MembersPage = () => {
                     return (
                       <div className="space-y-3">
                         {discipleshipBreakdown.map((d) => {
-                          const pct = total > 0 ? (d.count / total) * 100 : 0;
+                          const pct = filteredTotal > 0 ? (d.count / filteredTotal) * 100 : 0;
                           const barPct = (d.count / maxC) * 100;
                           return (
                             <div key={d.short} className="flex items-center gap-3">
