@@ -991,6 +991,133 @@ const MembersPage = () => {
 
         {/* People grid */}
         <ScrollArea className="flex-1 px-6 pb-6">
+          {/* Maturing & Serving — discipleship + volunteer overview (above the people grid) */}
+          {!isLoading && total > 0 && (
+            <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Discipleship engagement */}
+              <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-sm font-display font-semibold text-foreground">
+                        Maturing — Discipleship Engagement
+                      </h2>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Where the family is being formed
+                      </p>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {filteredTotal -
+                        (discipleshipBreakdown.find((d) => d.short === "—")?.count || 0)}{" "}
+                      / {filteredTotal} engaged
+                    </div>
+                  </div>
+                  {(() => {
+                    const maxC = Math.max(...discipleshipBreakdown.map((d) => d.count), 1);
+                    return (
+                      <div className="space-y-3">
+                        {discipleshipBreakdown.map((d) => {
+                          const pct = filteredTotal > 0 ? (d.count / filteredTotal) * 100 : 0;
+                          const barPct = (d.count / maxC) * 100;
+                          return (
+                            <div key={d.short} className="flex items-center gap-3">
+                              <div
+                                className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center ${d.bg}`}
+                              >
+                                <span className={`text-[10px] font-bold ${d.text}`}>
+                                  {d.short}
+                                </span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-baseline justify-between gap-2 mb-1">
+                                  <span className={`text-xs font-semibold ${d.text}`}>
+                                    {d.label}
+                                  </span>
+                                  <span className="text-[11px] text-muted-foreground">
+                                    <span className="text-sm font-bold text-foreground">
+                                      {d.count}
+                                    </span>{" "}
+                                    · {pct.toFixed(0)}%
+                                  </span>
+                                </div>
+                                <div className="relative h-5 rounded-full bg-foreground/5 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${d.dot} transition-all duration-500`}
+                                    style={{ width: `${Math.max(barPct, d.count > 0 ? 2 : 0)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Ministering — volunteer engagement */}
+              <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-sm font-display font-semibold text-foreground">
+                        Ministering — Volunteer Teams
+                      </h2>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Where the family is serving
+                      </p>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      <span className="text-sm font-bold text-rose-700">
+                        {volunteerBreakdown.serving}
+                      </span>{" "}
+                      / {filteredTotal} serving
+                    </div>
+                  </div>
+                  {(() => {
+                    const teams = volunteerBreakdown.teams;
+                    const maxC = Math.max(...teams.map((t) => t.count), 1);
+                    if (teams.length === 0) {
+                      return (
+                        <p className="text-xs text-muted-foreground text-center py-6">
+                          No volunteer team data yet.
+                        </p>
+                      );
+                    }
+                    return (
+                      <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+                        {teams.map((t) => {
+                          const barPct = (t.count / maxC) * 100;
+                          return (
+                            <div key={t.name} className="flex items-center gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                                  <span className="text-xs font-medium text-foreground truncate">
+                                    {t.name}
+                                  </span>
+                                  <span className="text-[11px] font-bold text-rose-700 shrink-0">
+                                    {t.count}
+                                  </span>
+                                </div>
+                                <div className="relative h-3 rounded-full bg-foreground/5 overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full bg-gradient-to-r from-rose-400 to-rose-600 transition-all duration-500"
+                                    style={{ width: `${Math.max(barPct, 4)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {isLoading ? (
             <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
               Loading church family...
@@ -1176,135 +1303,6 @@ const MembersPage = () => {
                 </p>
               </CardContent>
             </Card>
-          )}
-
-          {/* Maturing & Serving — discipleship + volunteer overview */}
-          {!isLoading && total > 0 && (
-            <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Discipleship engagement */}
-              <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h2 className="text-sm font-display font-semibold text-foreground">
-                        Maturing — Discipleship Engagement
-                      </h2>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Where the family is being formed
-                      </p>
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {filteredTotal -
-                        (discipleshipBreakdown.find((d) => d.short === "—")?.count || 0)}{" "}
-                      / {filteredTotal} engaged
-                    </div>
-                  </div>
-                  {(() => {
-                    const maxC = Math.max(...discipleshipBreakdown.map((d) => d.count), 1);
-                    return (
-                      <div className="space-y-3">
-                        {discipleshipBreakdown.map((d) => {
-                          const pct = filteredTotal > 0 ? (d.count / filteredTotal) * 100 : 0;
-                          const barPct = (d.count / maxC) * 100;
-                          return (
-                            <div key={d.short} className="flex items-center gap-3">
-                              <div
-                                className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center ${d.bg}`}
-                              >
-                                <span
-                                  className={`text-[10px] font-bold ${d.text}`}
-                                >
-                                  {d.short}
-                                </span>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-baseline justify-between gap-2 mb-1">
-                                  <span className={`text-xs font-semibold ${d.text}`}>
-                                    {d.label}
-                                  </span>
-                                  <span className="text-[11px] text-muted-foreground">
-                                    <span className="text-sm font-bold text-foreground">
-                                      {d.count}
-                                    </span>{" "}
-                                    · {pct.toFixed(0)}%
-                                  </span>
-                                </div>
-                                <div className="relative h-5 rounded-full bg-foreground/5 overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full ${d.dot} transition-all duration-500`}
-                                    style={{ width: `${Math.max(barPct, d.count > 0 ? 2 : 0)}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-
-              {/* Ministering — volunteer engagement */}
-              <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h2 className="text-sm font-display font-semibold text-foreground">
-                        Ministering — Volunteer Teams
-                      </h2>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Where the family is serving
-                      </p>
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      <span className="text-sm font-bold text-rose-700">
-                        {volunteerBreakdown.serving}
-                      </span>{" "}
-                      / {filteredTotal} serving
-                    </div>
-                  </div>
-                  {(() => {
-                    const teams = volunteerBreakdown.teams;
-                    const maxC = Math.max(...teams.map((t) => t.count), 1);
-                    if (teams.length === 0) {
-                      return (
-                        <p className="text-xs text-muted-foreground text-center py-6">
-                          No volunteer team data yet.
-                        </p>
-                      );
-                    }
-                    return (
-                      <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
-                        {teams.map((t) => {
-                          const barPct = (t.count / maxC) * 100;
-                          return (
-                            <div key={t.name} className="flex items-center gap-3">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-baseline justify-between gap-2 mb-0.5">
-                                  <span className="text-xs font-medium text-foreground truncate">
-                                    {t.name}
-                                  </span>
-                                  <span className="text-[11px] font-bold text-rose-700 shrink-0">
-                                    {t.count}
-                                  </span>
-                                </div>
-                                <div className="relative h-3 rounded-full bg-foreground/5 overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full bg-gradient-to-r from-rose-400 to-rose-600 transition-all duration-500"
-                                    style={{ width: `${Math.max(barPct, 4)}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
-            </div>
           )}
         </ScrollArea>
       </main>
