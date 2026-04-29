@@ -1376,6 +1376,60 @@ const MembersPage = () => {
                   </div>
                 )}
 
+                {/* Discipleship & Serving */}
+                {(() => {
+                  const dTags = getDiscipleshipTags(selected.groups);
+                  const vRoles = getVolunteerRoles(selected.groups);
+                  return (
+                    <div className="rounded-2xl border border-border/40 p-4 space-y-3">
+                      <div>
+                        <h3 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                          <BookOpenIcon className="h-3.5 w-3.5 text-emerald-600" />
+                          Maturing in
+                        </h3>
+                        {dTags.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {dTags.map((d) => (
+                              <span
+                                key={d.short}
+                                className={`text-[11px] font-semibold px-2 py-1 rounded-lg ${d.bg} ${d.text}`}
+                              >
+                                {d.label}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] italic text-muted-foreground">
+                            Not yet in a discipleship group
+                          </p>
+                        )}
+                      </div>
+                      <div className="border-t border-border/40 pt-3">
+                        <h3 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                          <HandHeartIcon className="h-3.5 w-3.5 text-rose-600" />
+                          Ministering on
+                        </h3>
+                        {vRoles.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {vRoles.map((r) => (
+                              <span
+                                key={r}
+                                className="text-[11px] font-medium px-2 py-1 rounded-lg bg-rose-100 text-rose-800"
+                              >
+                                {r}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] italic text-muted-foreground">
+                            Not currently serving on a team
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Quick actions */}
                 {nextStage && (
                   <Button
