@@ -449,7 +449,36 @@ const MembersPage = () => {
     },
   });
 
-  // Stage counts (within church family)
+  // Filter list (membership type already applied in churchFamily; here we
+  // additionally apply the search box and the journey-stage filter)
+  const filtered = useMemo(() => {
+    return churchFamily.filter((m) => {
+      if (stageFilter.length > 0 && !stageFilter.includes(m.discipleship_stage)) return false;
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
+        (m.email || "").toLowerCase().includes(q) ||
+        (m.household_name || "").toLowerCase().includes(q)
+      );
+    });
+  }, [churchFamily, search, stageFilter]);
+
+  // For the stage charts we ignore the stage-filter itself (otherwise the
+  // unselected bars would always read 0). Search still applies.
+  const stageChartBase = useMemo(() => {
+    return churchFamily.filter((m) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
+        (m.email || "").toLowerCase().includes(q) ||
+        (m.household_name || "").toLowerCase().includes(q)
+      );
+    });
+  }, [churchFamily, search]);
+
+  // Stage counts — reflect filters (search) without the stage filter itself
   const stageCounts = useMemo(() => {
     const counts: Record<StageKey, number> = {
       connecting: 0,
@@ -458,18 +487,21 @@ const MembersPage = () => {
       ministering: 0,
       multiplying: 0,
     };
-    for (const m of churchFamily) counts[m.discipleship_stage]++;
+    for (const m of stageChartBase) counts[m.discipleship_stage]++;
     return counts;
-  }, [churchFamily]);
+  }, [stageChartBase]);
 
-  const total = churchFamily.length;
+  // Total people the journey/stage charts speak about
+  const total = stageChartBase.length;
+  // Total people the discipleship + volunteer charts speak about
+  const filteredTotal = filtered.length;
 
   // Discipleship engagement: how many people are in each discipleship type,
   // plus how many are in NONE.
   const discipleshipBreakdown = useMemo(() => {
     const counts = new Map<string, number>();
     let unengaged = 0;
-    for (const m of churchFamily) {
+    for (const m of filtered) {
       const tags = getDiscipleshipTags(m.groups);
       if (tags.length === 0) {
         unengaged++;
@@ -496,13 +528,13 @@ const MembersPage = () => {
           count: unengaged,
         } as any,
       ]);
-  }, [churchFamily]);
+  }, [filtered]);
 
   // Volunteer engagement: total serving + breakdown by team.
   const volunteerBreakdown = useMemo(() => {
     const teamCounts = new Map<string, number>();
     let serving = 0;
-    for (const m of churchFamily) {
+    for (const m of filtered) {
       const roles = getVolunteerRoles(m.groups);
       if (roles.length > 0) serving++;
       for (const r of roles) {
@@ -512,22 +544,8 @@ const MembersPage = () => {
     const teams = Array.from(teamCounts.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count);
-    return { serving, notServing: total - serving, teams };
-  }, [churchFamily, total]);
-
-  // Filter list
-  const filtered = useMemo(() => {
-    return churchFamily.filter((m) => {
-      if (stageFilter.length > 0 && !stageFilter.includes(m.discipleship_stage)) return false;
-      if (!search) return true;
-      const q = search.toLowerCase();
-      return (
-        `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
-        (m.email || "").toLowerCase().includes(q) ||
-        (m.household_name || "").toLowerCase().includes(q)
-      );
-    });
-  }, [churchFamily, search, stageFilter]);
+    return { serving, notServing: filteredTotal - serving, teams };
+  }, [filtered, filteredTotal]);
 
   const selected = useMemo(
     () => members.find((m) => m.id === selectedId) || null,
@@ -1176,8 +1194,9 @@ const MembersPage = () => {
                       </p>
                     </div>
                     <div className="text-[11px] text-muted-foreground">
-                      {total - (discipleshipBreakdown.find((d) => d.short === "—")?.count || 0)}{" "}
-                      / {total} engaged
+                      {filteredTotal -
+                        (discipleshipBreakdown.find((d) => d.short === "—")?.count || 0)}{" "}
+                      / {filteredTotal} engaged
                     </div>
                   </div>
                   {(() => {
@@ -1185,7 +1204,7 @@ const MembersPage = () => {
                     return (
                       <div className="space-y-3">
                         {discipleshipBreakdown.map((d) => {
-                          const pct = total > 0 ? (d.count / total) * 100 : 0;
+                          const pct = filteredTotal > 0 ? (d.count / filteredTotal) * 100 : 0;
                           const barPct = (d.count / maxC) * 100;
                           return (
                             <div key={d.short} className="flex items-center gap-3">
@@ -1242,7 +1261,7 @@ const MembersPage = () => {
                       <span className="text-sm font-bold text-rose-700">
                         {volunteerBreakdown.serving}
                       </span>{" "}
-                      / {total} serving
+                      / {filteredTotal} serving
                     </div>
                   </div>
                   {(() => {
