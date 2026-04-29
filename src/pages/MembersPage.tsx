@@ -1351,6 +1351,23 @@ const MembersPage = () => {
                     <div className="mt-2">
                       <StageBadge stage={selected.discipleship_stage} />
                     </div>
+                    {(() => {
+                      const s = getStatusBadge(selected.groups);
+                      if (!isSkippingBelonging(selected.discipleship_stage, s)) return null;
+                      return (
+                        <div className="mt-2 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-[11px] text-amber-900">
+                          <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-700" />
+                          <span>
+                            <span className="font-semibold">Skipped Belonging.</span>{" "}
+                            Tagged as <span className="font-semibold">{s.label}</span> but already at{" "}
+                            <span className="font-semibold">
+                              {STAGE_BY_KEY[selected.discipleship_stage].label}
+                            </span>
+                            {" "}— invite into membership.
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </SheetHeader>
