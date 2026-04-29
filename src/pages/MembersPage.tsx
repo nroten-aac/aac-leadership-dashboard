@@ -449,7 +449,36 @@ const MembersPage = () => {
     },
   });
 
-  // Stage counts (within church family)
+  // Filter list (membership type already applied in churchFamily; here we
+  // additionally apply the search box and the journey-stage filter)
+  const filtered = useMemo(() => {
+    return churchFamily.filter((m) => {
+      if (stageFilter.length > 0 && !stageFilter.includes(m.discipleship_stage)) return false;
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
+        (m.email || "").toLowerCase().includes(q) ||
+        (m.household_name || "").toLowerCase().includes(q)
+      );
+    });
+  }, [churchFamily, search, stageFilter]);
+
+  // For the stage charts we ignore the stage-filter itself (otherwise the
+  // unselected bars would always read 0). Search still applies.
+  const stageChartBase = useMemo(() => {
+    return churchFamily.filter((m) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
+        (m.email || "").toLowerCase().includes(q) ||
+        (m.household_name || "").toLowerCase().includes(q)
+      );
+    });
+  }, [churchFamily, search]);
+
+  // Stage counts — reflect filters (search) without the stage filter itself
   const stageCounts = useMemo(() => {
     const counts: Record<StageKey, number> = {
       connecting: 0,
@@ -458,13 +487,14 @@ const MembersPage = () => {
       ministering: 0,
       multiplying: 0,
     };
-    for (const m of filtered) counts[m.discipleship_stage]++;
+    for (const m of stageChartBase) counts[m.discipleship_stage]++;
     return counts;
-  }, [filtered]);
+  }, [stageChartBase]);
 
-  // Total reflects the active filters so every chart speaks about the same set.
-  const total = filtered.length;
-  const churchFamilyTotal = churchFamily.length;
+  // Total people the journey/stage charts speak about
+  const total = stageChartBase.length;
+  // Total people the discipleship + volunteer charts speak about
+  const filteredTotal = filtered.length;
 
   // Discipleship engagement: how many people are in each discipleship type,
   // plus how many are in NONE.
@@ -514,22 +544,8 @@ const MembersPage = () => {
     const teams = Array.from(teamCounts.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count);
-    return { serving, notServing: total - serving, teams };
-  }, [filtered, total]);
-
-  // Filter list
-  const filtered = useMemo(() => {
-    return churchFamily.filter((m) => {
-      if (stageFilter.length > 0 && !stageFilter.includes(m.discipleship_stage)) return false;
-      if (!search) return true;
-      const q = search.toLowerCase();
-      return (
-        `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
-        (m.email || "").toLowerCase().includes(q) ||
-        (m.household_name || "").toLowerCase().includes(q)
-      );
-    });
-  }, [churchFamily, search, stageFilter]);
+    return { serving, notServing: filteredTotal - serving, teams };
+  }, [filtered, filteredTotal]);
 
   const selected = useMemo(
     () => members.find((m) => m.id === selectedId) || null,
