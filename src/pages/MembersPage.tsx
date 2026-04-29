@@ -39,6 +39,80 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import confetti from "canvas-confetti";
+
+// ----- Membership status (M / R / V) ---------------------------------------
+
+type StatusBadge = {
+  letter: "M" | "R" | "V";
+  label: string;
+  bg: string;
+  text: string;
+  ring: string;
+};
+
+const getStatusBadge = (groups: { group_name: string }[]): StatusBadge => {
+  const names = groups.map((g) => g.group_name?.toLowerCase() || "");
+  const has = (kw: string) => names.some((n) => n.includes(kw));
+  if (has("member")) {
+    return {
+      letter: "M",
+      label: "Member",
+      bg: "bg-prussian",
+      text: "text-white",
+      ring: "ring-prussian/30",
+    };
+  }
+  if (has("regular")) {
+    return {
+      letter: "R",
+      label: "Regular Attender",
+      bg: "bg-sky-600",
+      text: "text-white",
+      ring: "ring-sky-600/30",
+    };
+  }
+  return {
+    letter: "V",
+    label: "Visitor",
+    bg: "bg-amber-500",
+    text: "text-white",
+    ring: "ring-amber-500/30",
+  };
+};
+
+// ----- Celebration ----------------------------------------------------------
+
+const celebrateAdvancement = (color: string) => {
+  // Parse hsl(h, s%, l%) → rough hex for confetti palette
+  const colors = [color, "#F2C84B", "#1F4068", "#5DA9E9", "#10B981"];
+  const burst = (originX: number) => {
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      startVelocity: 45,
+      origin: { x: originX, y: 0.65 },
+      colors,
+      scalar: 1.1,
+      ticks: 220,
+    });
+  };
+  burst(0.25);
+  burst(0.75);
+  setTimeout(
+    () =>
+      confetti({
+        particleCount: 120,
+        spread: 110,
+        startVelocity: 55,
+        origin: { x: 0.5, y: 0.55 },
+        colors,
+        scalar: 1.2,
+        ticks: 260,
+      }),
+    180
+  );
+};
 
 // ----- Stage definitions ---------------------------------------------------
 
