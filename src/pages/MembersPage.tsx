@@ -162,6 +162,22 @@ const getStatusBadge = (groups: { group_name: string }[]): StatusBadge => {
   };
 };
 
+// ----- "Skipped Belonging" detection --------------------------------------
+// Belonging = becoming a member. If a person is at Maturing, Ministering, or
+// Multiplying but their group tags say they're still a Regular Attender or
+// Visitor, they've leapfrogged the membership milestone.
+const STAGE_ORDER: Record<string, number> = {
+  connecting: 0,
+  belonging: 1,
+  maturing: 2,
+  ministering: 3,
+  multiplying: 4,
+};
+const isSkippingBelonging = (
+  stage: string,
+  status: { letter: "M" | "R" | "V" }
+) => (STAGE_ORDER[stage] ?? 0) >= 2 && status.letter !== "M";
+
 // ----- Celebration ----------------------------------------------------------
 
 const celebrateAdvancement = (color: string) => {
