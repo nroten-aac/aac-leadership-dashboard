@@ -855,6 +855,7 @@ const MembersPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {filtered.map((m) => {
                 const stage = STAGE_BY_KEY[m.discipleship_stage];
+                const status = getStatusBadge(m.groups);
                 return (
                   <button
                     key={m.id}
@@ -864,7 +865,15 @@ const MembersPage = () => {
                     }}
                     className="text-left bg-card rounded-2xl border border-border/40 hover:border-prussian/30 hover:shadow-md transition-all p-4 flex items-start gap-3"
                   >
-                    <Avatar member={m} size="md" />
+                    <div className="relative shrink-0">
+                      <Avatar member={m} size="md" />
+                      <span
+                        title={status.label}
+                        className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full ${status.bg} ${status.text} text-[10px] font-bold flex items-center justify-center ring-2 ring-card shadow`}
+                      >
+                        {status.letter}
+                      </span>
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-foreground truncate">
                         {m.first_name} {m.last_name}
@@ -876,6 +885,11 @@ const MembersPage = () => {
                       )}
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <StageBadge stage={m.discipleship_stage} />
+                        <span
+                          className={`text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-foreground/5 text-foreground/70`}
+                        >
+                          {status.label}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1 mt-2 text-[10px] text-muted-foreground">
                         <Clock className="h-3 w-3" />
