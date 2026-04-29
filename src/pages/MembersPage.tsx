@@ -29,6 +29,8 @@ import {
   Eye,
   EyeOff,
   Flag,
+  BookOpen as BookOpenIcon,
+  HandHeart as HandHeartIcon,
 } from "lucide-react";
 import { STAGE_ICONS } from "@/components/icons/StageIcons";
 import {
