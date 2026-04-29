@@ -506,6 +506,14 @@ const MembersPage = () => {
                   {STAGES.map((s, i) => {
                     const count = stageCounts[s.key];
                     const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                    // Cumulative: everyone currently at this stage or beyond has
+                    // already journeyed THROUGH this milestone.
+                    const journeyedThrough = STAGES.slice(i).reduce(
+                      (sum, later) => sum + stageCounts[later.key],
+                      0
+                    );
+                    const journeyedPct =
+                      total > 0 ? Math.round((journeyedThrough / total) * 100) : 0;
                     const isActive = stageFilter.includes(s.key);
                     const isFinal = i === STAGES.length - 1;
                     const Icon = STAGE_ICONS[s.key];
@@ -522,7 +530,7 @@ const MembersPage = () => {
                               : [...prev, s.key]
                           )
                         }
-                        title={s.description}
+                        title={`${journeyedThrough} of ${total} have journeyed through ${s.label}`}
                         className={`group relative flex flex-col items-center text-center px-2 pt-1 pb-2 rounded-xl transition-all ${
                           isActive ? "scale-[1.04]" : "hover:scale-[1.02]"
                         } ${stageFilter.length > 0 && !isActive ? "opacity-55" : ""}`}
@@ -544,13 +552,14 @@ const MembersPage = () => {
                               opacity: reached ? 1 : 0.45,
                             }}
                           />
-                          {/* step number badge */}
+                          {/* Cumulative "journeyed through" badge */}
                           <span
-                            className={`absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-white shadow text-[10px] font-bold flex items-center justify-center ${
+                            className={`absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1 rounded-full bg-white shadow text-[10px] font-bold flex items-center justify-center ${
                               reached ? s.text : "text-muted-foreground"
                             }`}
+                            title={`${journeyedThrough} have reached or passed ${s.label}`}
                           >
-                            {i + 1}
+                            {journeyedThrough}
                           </span>
                           {/* "Goal" pulse on final stage when reached */}
                           {isFinal && reached && (
@@ -565,19 +574,25 @@ const MembersPage = () => {
                           {s.label}
                         </div>
 
-                        {/* Stat */}
+                        {/* Stat — currently here, plus cumulative journeyed-through */}
                         <div className="mt-1 flex items-baseline gap-1">
                           <span className={`text-xl font-bold ${s.text}`}>{count}</span>
                           <span className="text-[10px] text-muted-foreground">
-                            · {pct}%
+                            here · {pct}%
                           </span>
                         </div>
+                        <div className="mt-0.5 text-[10px] text-foreground/60">
+                          <span className="font-semibold text-foreground/75">
+                            {journeyedThrough}
+                          </span>{" "}
+                          journeyed through
+                        </div>
 
-                        {/* Mini progress bar showing how full this stage is */}
-                        <div className="mt-1 h-1 w-full max-w-[120px] rounded-full bg-foreground/5 overflow-hidden">
+                        {/* Cumulative progress bar — fills based on % who've reached this milestone */}
+                        <div className="mt-1 h-1.5 w-full max-w-[120px] rounded-full bg-foreground/5 overflow-hidden">
                           <div
                             className={`h-full rounded-full ${s.dot} transition-all`}
-                            style={{ width: `${Math.max(pct, count > 0 ? 4 : 0)}%` }}
+                            style={{ width: `${Math.max(journeyedPct, journeyedThrough > 0 ? 6 : 0)}%` }}
                           />
                         </div>
 
