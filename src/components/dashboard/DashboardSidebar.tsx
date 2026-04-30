@@ -3,7 +3,7 @@ import SheepIcon from "@/components/icons/SheepIcon";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/usePermissions";
 import { useNavigate, useLocation } from "react-router-dom";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/dashboard-logo.png";
 
 const DashboardSidebar = () => {
   const { signOut } = useAuth();
@@ -28,8 +28,8 @@ const DashboardSidebar = () => {
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[72px] bg-card flex flex-col items-center py-6 z-40 shadow-soft">
       {/* Logo */}
-      <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center mb-8">
-        <img src={logo} alt="AAC" className="h-6 brightness-0 invert" />
+      <div className="w-11 h-11 rounded-2xl overflow-hidden flex items-center justify-center mb-8 shadow-soft">
+        <img src={logo} alt="AAC Leadership Dashboard" className="w-full h-full object-cover" />
       </div>
 
       {/* Nav items */}
