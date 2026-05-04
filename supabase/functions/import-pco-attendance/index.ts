@@ -150,31 +150,30 @@ serve(async (req) => {
     };
 
     // ---- 1. Sanctuary headcounts ----
-    // Fetch event_times for the Sunday Service event in date range, then headcounts per time
-    console.log("Fetching Sanctuary event times...");
-    const eventTimesUrl =
-      `${PC_CHECKINS_BASE}/events/${SANCTUARY_EVENT_ID}/event_times` +
-      `?where[starts_at][gte]=${startDate}T00:00:00Z&where[starts_at][lte]=${endDate}T23:59:59Z&per_page=100`;
-    const { data: eventTimes } = await fetchAllPages(eventTimesUrl, PC_APP_ID, PC_SECRET);
-    console.log(`Found ${eventTimes.length} event times`);
+    // PCO doesn't expose /events/{id}/event_times directly. Fetch event_periods with included event_times.
+    console.log("Fetching Sanctuary event periods + times...");
+    const periodsUrl =
+      `${PC_CHECKINS_BASE}/events/${SANCTUARY_EVENT_ID}/event_periods` +
+      `?where[starts_at][gte]=${startDate}T00:00:00Z&where[starts_at][lte]=${endDate}T23:59:59Z` +
+      `&include=event_times&per_page=100`;
+    const { data: periods, included: periodIncluded } = await fetchAllPages(periodsUrl, PC_APP_ID, PC_SECRET);
+    const eventTimes = (periodIncluded || []).filter((i: any) => i.type === "EventTime");
+    console.log(`Found ${periods.length} event periods, ${eventTimes.length} event times`);
 
     for (const et of eventTimes) {
       const startsAt: string = et.attributes?.starts_at;
       if (!startsAt) continue;
       const dt = new Date(startsAt);
       const dateStr = startsAt.split("T")[0];
-      const hourUTC = dt.getUTCHours();
-      // Determine service slot using local hour (event names usually contain time)
-      // Use the event_time name if available
+      // EventTime has explicit hour/minute fields
+      const hour = et.attributes?.hour;
       const name: string = (et.attributes?.name || "").toLowerCase();
       let slot: "9:15" | "11:00" | null = null;
       if (name.includes("9:15") || name.includes("915")) slot = "9:15";
       else if (name.includes("11:00") || name.includes("11am") || name.includes("11 am")) slot = "11:00";
-      else {
-        // Fallback by hour (Eastern time roughly)
-        const localHour = (hourUTC - 4 + 24) % 24; // EDT approx
-        if (localHour >= 8 && localHour <= 10) slot = "9:15";
-        else if (localHour >= 10 && localHour <= 12) slot = "11:00";
+      else if (typeof hour === "number") {
+        if (hour === 9) slot = "9:15";
+        else if (hour === 11) slot = "11:00";
       }
       if (!slot) continue;
 
