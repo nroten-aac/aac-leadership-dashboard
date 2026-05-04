@@ -1,0 +1,156 @@
+{
+  "laws": [
+    {
+      "n": "01",
+      "title": "The Law of Purpose",
+      "accent": "Purpose",
+      "subtitle": "Great Commission clarity drives everything. Make disciples — not crowds, not programs.",
+      "status": "in-progress",
+      "duration": "52 min",
+      "audioId": "18Ejr9BHkcfp9hXsS__nPmVStkyQuLLlN",
+      "heroStat": {
+        "number": "0",
+        "label": "The honest answer",
+        "text": "new converts at AAC in the past year — the gap this Law exists to close."
+      },
+      "principle": "A high-impact church is not defined by size, music style, or personality. It is defined by three outcomes: lost people coming to Christ, believers growing to maturity, and the church shaping its community.",
+      "principleAttr": "Chip Ingram",
+      "standfirst": "Everything flows from one thing: knowing and committing to the church's God-given mission. The central verb is \"make disciples.\" Not attract crowds. Not run programs. Make disciples.",
+      "insights": [
+        { "title": "Rethinking what \"impact\" means", "body": "Measure impact not by who walks in but by what kind of people walk out. Three markers: lost people coming to Christ, believers maturing, the church influencing its community." },
+        { "title": "The discipleship pipeline", "body": "Reach the lost → bring them into belonging → mature them in Bible, prayer, family leadership → discover and deploy spiritual gifts → live out the mission in workplace and community → lead others to Christ. Cycle complete." },
+        { "title": "You always get what you measure", "body": "If your primary metrics are attendance and budget, that is what your culture will optimize for — even unintentionally. High-impact churches measure spiritual growth, evangelism, and leadership reproduction." },
+        { "title": "Vision must be dynamic, simple, local", "body": "Vision statements must express movement, not description. Short enough to be remembered. Specific enough to anchor the church in its actual community." },
+        { "title": "The research that matters most", "body": "Christian Schwartz studied 1,000 churches across 32 countries: the single strongest predictor of growth is a church's willingness to seek outside help. Isolation kills growth." }
+      ],
+      "diagnostic": {
+        "working": [
+          "Theologically solid mission statement",
+          "Small life groups exist where discipleship is happening",
+          "Responding to God bringing young families — building children's wing",
+          "Leadership team is self-aware and willing to evaluate honestly",
+          "3.5 years old — early enough to reset before bad habits calcify"
+        ],
+        "gaps": [
+          "Mission statement lacks urgency, movement, and local specificity",
+          "Next-generation vision (children's wing) not in the mission statement",
+          "Elder meetings lead with attendance & financials, not discipleship metrics",
+          "No intentional outreach to non-believers — zero new converts in past year",
+          "No defined discipleship pipeline or tracking of spiritual progress"
+        ],
+        "hardTruth": "\"How many lost people came to Christ this year, and who is specifically nurturing their growth?\" Current answer: Zero. That is not condemnation — it is a clarifying crisis. AAC has been in formation mode. It is now time to activate the mission."
+      },
+      "coaching": {
+        "coach": "Jim Wiegland",
+        "intro": "Practical, ground-level tactics from coach Jim Wiegland that translate Chip's principles into AAC's reality.",
+        "featuredVizKey": "ppp",
+        "strategies": [
+          { "name": "Discovering people's design", "concept": "Passion · Pain · Proficiency", "body": "Form a core team of 5+ leaders. Each takes one unengaged person to coffee weekly. Don't recruit them — discover them. Three questions: What are you passionate about? What breaks your heart? What are you naturally gifted at? Where the circles overlap is their design." },
+          { "name": "Recruiting volunteers", "concept": "Notice · Compliment · Invite", "body": "Stand near nursery check-in. Watch for parents who are calm and put-together. Compliment them: \"I just want to say — that was neat watching a loving family.\" Then ask for a micro-commitment: \"Would you go in once a month for 20 minutes — tell a story or help with a snack?\" Almost no one says no." },
+          { "name": "Re-engaging volunteers", "concept": "Dinner with a purpose", "body": "Volunteer Appreciation Night with free dinner, games, prizes — that's the draw. 10–15 minutes of vision casting embedded in the gratitude. Have key leaders personally call the fringe 50." },
+          { "name": "Building evangelism culture", "concept": "Public reward", "body": "Include one evangelism story in every Sunday sermon — even when no conversion happened. \"Brother Bill felt led to share the gospel at the grocery store. The man didn't receive Christ yet — but I am so proud of Bill.\" That is enough. What is rewarded is repeated." }
+        ],
+        "meeting3": [
+          { "name": "Equipping for gospel conversations", "concept": "The Sniper & Pairing Model", "body": "Identify your 3–5 \"aces\" — people gifted at gospel conversations. They exist. Name them. When a less-confident member gets into a deep conversation, they invite \"Fred\" over: \"Hey Fred, come hear what this guy is saying.\" Rookie watches and prays. Then Fred hands it back." },
+          { "name": "Where to take the mission", "concept": "Cultural centers · Lingering opportunities", "body": "Look at your community like an alien from above. Where do strangers naturally talk to strangers? Get in there. The exchange has to be longer than the handout. A backpack takes 3 seconds. A water slide takes 3 hours. West Jefferson Farmers Market is your summer move." }
+        ]
+      },
+      "metrics": [
+        { "metric": "Lost people who came to Christ (annual)", "goal": "Growing each year", "current": "0 (April 2026)" },
+        { "metric": "% of attenders in a small group", "goal": "60%+", "current": "Unknown" },
+        { "metric": "People who moved into a serving role", "goal": "Growing each year", "current": "Unknown" },
+        { "metric": "People reproducing their faith", "goal": "5%+ of congregation", "current": "Unknown" },
+        { "metric": "New believers actively discipled", "goal": "100% of new converts", "current": "N/A" }
+      ],
+      "pullQuote": "You never measure a church by how many people come in, but what kind of people are leaving.",
+      "pullAttr": "Chip Ingram"
+    },
+    {
+      "n": "02",
+      "title": "The Law of Expectation",
+      "accent": "Expectation",
+      "subtitle": "Pastor's faith — not funding — drives growth. Faith is the lid.",
+      "status": "pending",
+      "duration": "47 min",
+      "audioId": "1pAonC7kW13EUGGft_xwNoyUjk_GPDu4s",
+      "heroStat": {
+        "number": "#1",
+        "label": "Schwartz study finding",
+        "text": "predictor of growth across 1,000 churches in 32 countries — the pastor's faith and life."
+      },
+      "principle": "Christian Schwartz's research across 1,000 churches confirms it: pastor's faith and life are the main growth drivers — not money, space, or staff. Growth is normal, supernatural, and commanded.",
+      "principleAttr": "Chip Ingram",
+      "standfirst": "When Chip shifted his mindset from focusing on barriers to expecting growth, his church doubled. Faith must be reflected in planning, budgeting, and organizing — or you signal \"stay small\" without saying a word.",
+      "insights": [
+        { "title": "Pastor's expectation shapes outcomes", "body": "Faith reflected in planning, budgeting, and organizing. Otherwise the congregation reads the unspoken signal that this church will stay small." },
+        { "title": "Growth is normal, not exceptional", "body": "Acts shows growth as God's design — thousands added regularly. Early church grew by adapting structure (deacons), not by stalling. Growth requires adapting roles and structure." },
+        { "title": "Supernatural but requires stewardship", "body": "God alone causes growth. Pastors prepare soil through prayer, teaching, care. The gardening analogy frees pastors from burnout — you don't \"make\" growth, but you must remove what prevents it." },
+        { "title": "Three growing-pastor traits", "body": "Commitment to growth as non-negotiable (spiritual, not just numerical). Visionary faith with active prayer life. Effective pastoral leadership." },
+        { "title": "Four barriers to identify and remove", "body": "Spiritual (sin, pride, lack of integrity). Sociological (relational caps around 100–150). Structural (decentralization needed at 200+). Emotional (the \"we're a small church\" identity that limits growth)." }
+      ],
+      "pullQuote": "Churches only grow as far as their leaders' faith and vision allow. Poor leadership caps growth potential.",
+      "pullAttr": "Chip Ingram"
+    },
+    {
+      "n": "03",
+      "title": "The Law of Design",
+      "accent": "Design",
+      "subtitle": "Leaders equip; members minister. The clergy-laity divide must die.",
+      "status": "pending",
+      "duration": "45 min",
+      "audioId": "1XsIZ25ieK4eqNVOUFKmUqHGLwBAQIShZ",
+      "heroStat": {
+        "number": "94/92",
+        "label": "Chip's warning",
+        "text": "baptisms vs. children — when growth metrics mask the absence of adult conversions."
+      },
+      "frameworkKey": "twoDrivers",
+      "principle": "Pastors equip the saints — they don't do all the ministry. Churches that miss this stagnate around 100. Churches that embrace it multiply.",
+      "principleAttr": "Chip Ingram",
+      "standfirst": "Ephesians 4 and 1 Peter 2 establish the design: every believer is a minister. Pastors are coaches. The pastor doing everything alone is going backwards — limiting growth and burning out.",
+      "insights": [
+        { "title": "Leaders equip; members minister", "body": "Growing past 100 requires decentralizing ministry. The pastor who does everything alone limits growth and burns out. God's design has pastors leading and equipping while members serve using their gifts." },
+        { "title": "Biblical foundation: Eph + 1 Peter", "body": "Ephesians 4:11–12 — Christ gave apostles, prophets, evangelists, pastor-teachers to equip saints for ministry. 1 Peter 2 — every believer is a \"living stone\" and part of a holy priesthood." },
+        { "title": "No one ministers alone", "body": "Ministries should be gift-based and team-structured (3–4 people sharing responsibility). New ministry ideas must come back with a committed team, not just an individual initiative." },
+        { "title": "Pastor as coach, not star player", "body": "Chip's shift from doing ministry alone to equipping others doubled church size in 9 months. Coaching multiplies impact. Investing time in training and coaching beats trying to do all tasks." },
+        { "title": "Growth metrics beyond attendance", "body": "Real growth = mature disciples making disciples. Chip noted 94 baptisms with 92 being children — flagged the lack of adult conversions. Counting numbers alone can mask lack of real transformation." }
+      ],
+      "pullQuote": "The average pastor drives the church backwards — doing everything alone. God's design has the pastor leading and equipping while members minister.",
+      "pullAttr": "Chip Ingram"
+    },
+    {
+      "n": "04",
+      "title": "The Law of Liberation",
+      "accent": "Liberation",
+      "subtitle": "Discover gifts. Deploy. Get out of the way.",
+      "status": "pending",
+      "duration": "54 min",
+      "audioId": "1qCcmWI6QPoLRlmF65iLOMa0aoA_mFZJk",
+      "heroStat": {
+        "number": "6,500+",
+        "label": "What lay-led can do",
+        "text": "weekly attendees at Santa Cruz Bible Church when Chip stopped being the star and became the coach."
+      },
+      "principle": "Growing churches actively train members to discover and use their spiritual gifts — both inside and outside the church. Churches without gift training plateau or decline.",
+      "principleAttr": "Chip Ingram",
+      "standfirst": "Romans 12 establishes interdependent gifting. Every member has a unique role. Pastors who are insecure micromanage — and gifted lay leaders walk away. Pastors who are secure unleash an army.",
+      "insights": [
+        { "title": "Gift-based ministry drives growth", "body": "Aligning individual gifts with church purpose — not just filling internal slots — results in lost people coming to Christ, found people maturing, and mature people reproducing." },
+        { "title": "Romans 12 — focus on strengths", "body": "Spiritual gifts are sovereignly given for God's ordained purposes. Don't fix weaknesses — deploy strengths. Prune outdated ministries that lack gifted, passionate leaders." },
+        { "title": "Pastor as coach, not star", "body": "Great coaches recruit and organize talent, then unleash them. Empowering lay leaders sparked growth at Santa Cruz Bible Church to 6,500+. High-capacity laypeople bring secular skills the pastor doesn't have." },
+        { "title": "Liberate without control fears", "body": "Micromanagement drives gifted people away. Focus on doctrinal quality and team health. Allow methods freedom. Accountability should be clear but not stifling." },
+        { "title": "Build a gifts-discovery system", "body": "Classes, networking systems, or custom tools. Cover motivation, gift identification, ministry fit, deployment. Throw people into ministry quickly — confidence comes from doing." }
+      ],
+      "pullQuote": "Liberating gifted people demands overcoming pastoral control fears. Micromanagement drives them away.",
+      "pullAttr": "Chip Ingram"
+    },
+    { "n": "05", "title": "The Law of Dependency",     "accent": "Dependency",     "subtitle": "Coming soon — Chip on prayer as the foundation.",                  "status": "pending", "duration": "~50 min", "audioId": "11YIZj-IS_0Uoqqfaz0cLHsmK-BS_1r7O" },
+    { "n": "06", "title": "The Law of Structure",      "accent": "Structure",      "subtitle": "Coming soon — Chip on size thresholds & decentralization.",         "status": "pending", "duration": "~62 min", "audioId": "1D6qHJRJZM3YdkUGAE4mFjujH90Y2fgdR" },
+    { "n": "07", "title": "The Law of Inspiration",    "accent": "Inspiration",    "subtitle": "Coming soon — Chip on preaching with conviction.",                   "status": "pending", "duration": "~46 min", "audioId": "1agw2olvEwKwwH1dA-q_5eoDfY1DjAExY" },
+    { "n": "08", "title": "The Law of Focus",          "accent": "Focus",          "subtitle": "Coming soon — Chip on doing fewer things excellently.",              "status": "pending", "duration": "~48 min", "audioId": "18Zya3NwUFX65fVrMW37HahVeDGQj1GaE" },
+    { "n": "09", "title": "The Law of Community",      "accent": "Community",      "subtitle": "Coming soon — Chip on belonging before believing.",                  "status": "pending", "duration": "~58 min", "audioId": "1cI72JCUpzi2d0FheqNnl-fj6NOyRspm1" },
+    { "n": "10", "title": "The Law of Intentionality", "accent": "Intentionality", "subtitle": "Coming soon — Chip on systems for spiritual growth.",                "status": "pending", "duration": "~64 min", "audioId": "1rezJuS5EmWO_Bf9--UDkvfWtAVnY5Jwa" },
+    { "n": "11", "title": "The Law of Love",           "accent": "Love",           "subtitle": "Coming soon — Chip on the unmistakable mark of the disciple.",       "status": "pending", "duration": "~51 min", "audioId": "1C0qSVd64BsTyvnOneo2zT-zJoEv3l6fe" },
+    { "n": "12", "title": "The Law of the Kingdom",    "accent": "the Kingdom",    "subtitle": "Coming soon — Chip on impact beyond the four walls.",                "status": "pending", "duration": "~48 min", "audioId": "1-pOpRynz8qb6FM1JTL-nBfqgdIRnHI13" }
+  ]
+}

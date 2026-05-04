@@ -2,130 +2,140 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    /* Ashe Alliance Church Palette */
-    --prussian: 205 79% 20%;
-    --sky: 205 58% 47%;
-    --gold: 49 86% 46%;
-    --ivory-black: 210 25% 15%;
-    --light-gray: 140 8% 93%;
+    /* === AAC dark editorial (default for whole app) === */
+    --background: 210 41% 7%;       /* #0a121a */
+    --foreground: 150 11% 95%;      /* #F2F4F3 */
 
-    --background: 140 8% 93%;
-    --foreground: 210 25% 15%;
+    --card: 210 41% 12%;            /* #11202d */
+    --card-foreground: 150 11% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 210 25% 15%;
+    --popover: 210 41% 12%;
+    --popover-foreground: 150 11% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 25% 15%;
+    --primary: 205 79% 21%;         /* Prussian #0B3C5D */
+    --primary-foreground: 150 11% 95%;
 
-    --primary: 205 79% 20%;
-    --primary-foreground: 0 0% 100%;
+    --secondary: 205 58% 47%;       /* Sky #328CC1 */
+    --secondary-foreground: 150 11% 95%;
 
-    --secondary: 205 58% 47%;
-    --secondary-foreground: 0 0% 100%;
+    --muted: 210 32% 16%;           /* #15293a */
+    --muted-foreground: 210 14% 70%;
 
-    --muted: 150 6% 90%;
-    --muted-foreground: 210 10% 50%;
+    --accent: 49 86% 47%;           /* Gold #D9B310 */
+    --accent-foreground: 210 25% 12%;
 
-    --accent: 49 86% 46%;
-    --accent-foreground: 210 25% 15%;
-
-    --destructive: 0 72% 51%;
+    --destructive: 350 84% 61%;     /* #ef476f */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 150 6% 88%;
-    --input: 150 6% 88%;
-    --ring: 205 79% 20%;
+    --border: 210 45% 23%;          /* #1f3a52 */
+    --input: 210 45% 23%;
+    --ring: 49 86% 47%;
 
     --radius: 1rem;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 210 10% 50%;
-    --sidebar-primary: 205 79% 20%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 140 8% 93%;
-    --sidebar-accent-foreground: 210 25% 15%;
-    --sidebar-border: 150 6% 90%;
-    --sidebar-ring: 205 79% 20%;
+    /* AAC palette (raw) */
+    --prussian: 205 79% 21%;
+    --sky: 205 58% 47%;
+    --gold: 49 86% 47%;
+    --ivory-black: 210 25% 15%;
+    --light-gray: 150 11% 95%;
 
-    /* Custom tokens */
-    --chart-1: 205 79% 20%;
-    --chart-2: 205 58% 47%;
-    --chart-3: 49 86% 46%;
-    --chart-4: 210 25% 15%;
-    --chart-5: 205 40% 60%;
+    /* Roadmap-specific tokens */
+    --bg-2: 210 41% 12%;
+    --bg-3: 210 41% 16%;
+    --bg-4: 210 41% 20%;
+    --bg-prus: 205 79% 21%;
+    --border-2: 210 45% 28%;
+    --border-3: 210 45% 35%;
+    --text-muted: 210 14% 70%;
+    --text-dim: 210 12% 50%;
+    --text-faint: 210 14% 36%;
+    --gold-glow: 49 86% 60%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(205 79% 20%), hsl(205 58% 37%));
-    --gradient-gold: linear-gradient(135deg, hsl(49 86% 46%), hsl(45 80% 55%));
-    --shadow-card: 0 1px 4px 0 rgb(0 0 0 / 0.04);
-    --shadow-card-hover: 0 8px 24px -4px rgb(0 0 0 / 0.08);
-    --shadow-soft: 0 2px 8px 0 rgb(0 0 0 / 0.05);
-  }
+    /* Stage colors */
+    --stage-connect: 210 12% 50%;
+    --stage-belong: 205 58% 47%;
+    --stage-mature: 160 84% 39%;
+    --stage-minister: 258 90% 66%;
+    --stage-multiply: 49 86% 47%;
 
-  .dark {
-    --background: 210 25% 10%;
-    --foreground: 150 11% 95%;
-    --card: 210 25% 13%;
-    --card-foreground: 150 11% 95%;
-    --popover: 210 25% 13%;
-    --popover-foreground: 150 11% 95%;
-    --primary: 205 58% 47%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 205 79% 20%;
-    --secondary-foreground: 150 11% 95%;
-    --muted: 210 20% 18%;
-    --muted-foreground: 210 10% 60%;
-    --accent: 49 86% 46%;
-    --accent-foreground: 210 25% 15%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 210 20% 22%;
-    --input: 210 20% 22%;
-    --ring: 205 58% 47%;
-    --sidebar-background: 210 25% 8%;
-    --sidebar-foreground: 150 11% 95%;
-    --sidebar-primary: 49 86% 46%;
-    --sidebar-primary-foreground: 210 25% 15%;
-    --sidebar-accent: 210 25% 15%;
+    --good: 160 84% 39%;
+    --warn: 38 92% 53%;
+    --bad: 350 84% 61%;
+
+    --sidebar-background: 210 41% 5%;
+    --sidebar-foreground: 210 14% 70%;
+    --sidebar-primary: 49 86% 47%;
+    --sidebar-primary-foreground: 210 25% 12%;
+    --sidebar-accent: 210 41% 12%;
     --sidebar-accent-foreground: 150 11% 95%;
-    --sidebar-border: 210 20% 18%;
-    --sidebar-ring: 49 86% 46%;
+    --sidebar-border: 210 45% 18%;
+    --sidebar-ring: 49 86% 47%;
+
+    --chart-1: 205 79% 35%;
+    --chart-2: 205 58% 47%;
+    --chart-3: 49 86% 47%;
+    --chart-4: 160 84% 39%;
+    --chart-5: 258 90% 66%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(205 79% 21%), hsl(205 58% 37%));
+    --gradient-gold: linear-gradient(135deg, hsl(49 86% 47%), hsl(45 80% 60%));
+    --shadow-card: 0 1px 4px 0 rgb(0 0 0 / 0.3);
+    --shadow-card-hover: 0 12px 32px -8px rgb(0 0 0 / 0.5);
+    --shadow-soft: 0 2px 12px 0 rgb(0 0 0 / 0.25);
+    --shadow-gold-glow: 0 0 24px hsl(49 86% 47% / 0.35);
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
+  * { @apply border-border; }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'ss01', 'cv11';
   }
-
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.01em;
   }
 }
 
 @layer utilities {
-  .gradient-primary {
-    background: var(--gradient-primary);
+  .font-display { font-family: 'Outfit', 'Inter', sans-serif; }
+  .font-serif-italic { font-family: 'Newsreader', Georgia, serif; font-style: italic; font-weight: 500; }
+  .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  .gradient-primary { background: var(--gradient-primary); }
+  .gradient-gold { background: var(--gradient-gold); }
+  .gradient-gold-text {
+    background: linear-gradient(135deg, hsl(49 86% 55%), hsl(45 80% 70%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
-  .gradient-gold {
-    background: var(--gradient-gold);
+  .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-card-hover { box-shadow: var(--shadow-card-hover); }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-gold-glow { box-shadow: var(--shadow-gold-glow); }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: hsl(var(--accent));
   }
-  .shadow-card {
-    box-shadow: var(--shadow-card);
+
+  @keyframes road-dash { to { stroke-dashoffset: -40; } }
+  .road-dashed { animation: road-dash 2.5s linear infinite; }
+
+  @keyframes gold-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(49 86% 47% / 0.6); }
+    50% { box-shadow: 0 0 0 12px hsl(49 86% 47% / 0); }
   }
-  .shadow-card-hover {
-    box-shadow: var(--shadow-card-hover);
-  }
-  .shadow-soft {
-    box-shadow: var(--shadow-soft);
-  }
+  .gold-pulse { animation: gold-pulse 2.4s ease-out infinite; }
 }

@@ -10,7 +10,7 @@ import AuthPage from "./pages/AuthPage";
 import AdminPanel from "./pages/AdminPanel";
 import SettingsPage from "./pages/SettingsPage";
 import GivingPage from "./pages/GivingPage";
-import MembersPage from "./pages/MembersPage";
+import RoadmapShell from "./pages/RoadmapShell";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 
@@ -42,7 +42,7 @@ const App = () => (
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/data-entry" element={<ProtectedRoute><DataEntry /></ProtectedRoute>} />
           <Route path="/giving" element={<ProtectedRoute><GivingPage /></ProtectedRoute>} />
-          <Route path="/members" element={<ProtectedRoute><MembersPage /></ProtectedRoute>} />
+          <Route path="/members/*" element={<ProtectedRoute><RoadmapShell /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
           <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />

@@ -1,0 +1,80 @@
+{
+  "phases": [
+    {
+      "n": 1,
+      "title": "This Week",
+      "when": "Do these before anything else",
+      "blurb": "Foundational moves. Don't start Phase 2 until these four are done. The way you spend Sunday afternoon and Tuesday night this week sets the trajectory."
+    },
+    {
+      "n": 2,
+      "title": "Before Summer",
+      "when": "Next 8–10 weeks",
+      "blurb": "Short-term priorities. PPP conversations, vision-statement workshop, Dinner with a Purpose, and the Easter goal of every soul reassessed."
+    },
+    {
+      "n": 3,
+      "title": "Ongoing Rhythms",
+      "when": "Permanent culture moves",
+      "blurb": "These never end. They become the heartbeat of AAC: the discipleship questions before financials, the vision said every Sunday, the testimony in every sermon."
+    },
+    {
+      "n": 4,
+      "title": "Summer",
+      "when": "Community engagement season",
+      "blurb": "Deploy the mission outward. Farmers Market, ace pairings, Easter benchmarking. The summer is when we test whether the formation became reproduction."
+    }
+  ],
+
+  "actions": [
+    { "id": "p1-1", "phase": 1, "source": "impl", "law": "01", "title": "Restructure the elder meeting agenda",
+      "body": "Move attendance & financials to the end. Open every meeting with: (1) Who is in a relationship with someone who doesn't know Jesus? (2) Who came to faith or took a major step this month? (3) Who moved stages in the pipeline?" },
+    { "id": "p1-2", "phase": 1, "source": "jim", "law": "01", "title": "Name your 3–5 evangelism aces",
+      "body": "The people who naturally and comfortably share their faith. Write their names down. These people will lead the sniper pairing model." },
+    { "id": "p1-3", "phase": 1, "source": "chip", "law": "01", "title": "Begin drafting a new vision statement",
+      "body": "Dynamic, simple, includes next-generation and Ashe County specificity. Draft candidate: \"Ashe Alliance exists to make and multiply disciples of every generation in Ashe County and beyond.\"" },
+    { "id": "p1-4", "phase": 1, "source": "impl", "law": "04", "title": "Form the 5-person PPP team",
+      "body": "Nate + Jordan + at least 2 women + 1 elder. Assign each of the people in the dashboard to a specific team member for a PPP conversation." },
+
+    { "id": "p2-1", "phase": 2, "source": "jim", "law": "04", "title": "Run weekly PPP conversations",
+      "body": "Every team member takes one person to coffee or a meal each week. Ask: What are you passionate about? What breaks your heart? What are you naturally gifted at? Update the dashboard after each conversation." },
+    { "id": "p2-2", "phase": 2, "source": "jim", "law": "01", "title": "Include an evangelism story in every Sunday sermon",
+      "body": "Even if it didn't result in a conversion. \"I am so proud of Bill for taking that leap.\" What is rewarded is repeated." },
+    { "id": "p2-3", "phase": 2, "source": "jim", "law": "01", "title": "Host a \"Dinner with a Purpose\"",
+      "body": "Volunteer appreciation night with a free meal, games, and prizes — that's the draw. Have key leaders personally call the fringe 50. Include 10–15 minutes of vision casting embedded in gratitude." },
+    { "id": "p2-4", "phase": 2, "source": "jim", "law": "01", "title": "Apply Notice / Compliment / Invite for children's wing",
+      "body": "Stand near nursery check-in. Find calm, well-adjusted families. Compliment their parenting. Ask for a 20-minute once-a-month commitment — not changing diapers, just telling a story." },
+    { "id": "p2-5", "phase": 2, "source": "chip", "law": "01", "title": "Workshop the revised vision statement",
+      "body": "Test it: Is it dynamic (expresses movement)? Simple (7 words or fewer)? Compelling (does it make people want to join)? Finalize and begin saying it every Sunday." },
+    { "id": "p2-6", "phase": 2, "source": "chip", "law": "01", "title": "Preach a 4-week series on the Great Commission",
+      "body": "Don't announce a new direction — create a \"crisis of understanding\" where the congregation grasps the gap between where AAC is and where God is calling it. Let them arrive at the vision themselves." },
+    { "id": "p2-7", "phase": 2, "source": "impl", "law": "01", "title": "Multi-church youth event (end of April)",
+      "body": "Already in planning. Execute well. Early test of the community engagement model. Have your aces present and intentional in conversations." },
+    { "id": "p2-8", "phase": 2, "source": "impl", "law": "04", "title": "Easter target: 100% PPP completion",
+      "body": "Every person in the dashboard should have had a PPP conversation and an updated, honest stage assignment. The dashboard should show real distribution across all five pipeline stages." },
+
+    { "id": "p3-1", "phase": 3, "source": "impl", "law": "01", "title": "Open every elder meeting with the 3 discipleship questions",
+      "body": "Before any numbers. Review the Shepherding dashboard together. Celebrate every person who moved a stage. Track Multiplying as the long-term church health indicator." },
+    { "id": "p3-2", "phase": 3, "source": "jim", "law": "02", "title": "Say the vision statement every Sunday",
+      "body": "In announcements, during giving, or at the opening. Jim's rule: \"By the time you're tired of saying it, people are just starting to get it.\"" },
+    { "id": "p3-3", "phase": 3, "source": "jim", "law": "01", "title": "Embed evangelism stories in every sermon",
+      "body": "At least one story of a congregation member living on mission — sharing their faith, serving a neighbor, discipling someone. Evangelism culture is built through narrative, not announcements." },
+    { "id": "p3-4", "phase": 3, "source": "jim", "law": "01", "title": "Record video testimonies",
+      "body": "5-minute smartphone testimonies of evangelism experiences. Play them during the service. Production time: under 30 minutes. Let the church see that ordinary people share their faith." },
+    { "id": "p3-5", "phase": 3, "source": "impl", "law": "01", "title": "Quarterly: update the pipeline snapshot",
+      "body": "Real numbers from the dashboard. Compare against goals. Adjust strategy. The metrics that get tracked are the metrics that grow." },
+    { "id": "p3-6", "phase": 3, "source": "impl", "law": "04", "title": "Use Stage Transition Pathways pastorally",
+      "body": "When someone is stuck at a stage, ask — what's the specific next step for this person? PPP conversation → Serve team → Sniper pairing → Timothy assignment." },
+
+    { "id": "p4-1", "phase": 4, "source": "jim", "law": "01", "title": "Research Ashe County cultural centers",
+      "body": "Where do people already congregate with strangers? Farmers Market is identified. Find 2–3 others: schools, seasonal events, community gatherings." },
+    { "id": "p4-2", "phase": 4, "source": "jim", "law": "01", "title": "Lock in Farmers Market presence for summer",
+      "body": "Don't just set up a table — make the event better. Create a reason to linger. Wear matching shirts. Have your aces present and working the crowd naturally." },
+    { "id": "p4-3", "phase": 4, "source": "jim", "law": "01", "title": "Pair aces with rookies for outreach",
+      "body": "At least one outreach event before summer ends. Debrief afterwards. Ask: What happened? What felt natural? Who do you want to follow up with?" },
+    { "id": "p4-4", "phase": 4, "source": "jim", "law": "02", "title": "Use Easter as growth benchmark",
+      "body": "Last Easter's attendance is this year's average attendance goal. Identify what barriers showed up (parking, children's space, seating) — fix them before next Easter." },
+    { "id": "p4-5", "phase": 4, "source": "impl", "law": "06", "title": "Consider one service for summer",
+      "body": "Wave-surfing strategy. Full room, rested volunteers, easier to build community. Re-evaluate two services in the fall as attendance climbs past 100." }
+  ]
+}
