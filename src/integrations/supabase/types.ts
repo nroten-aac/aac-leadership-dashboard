@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      action_completions: {
+        Row: {
+          action_id: string
+          completed_at: string | null
+          completed_by: string | null
+          is_done: boolean
+        }
+        Insert: {
+          action_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          is_done?: boolean
+        }
+        Update: {
+          action_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          is_done?: boolean
+        }
+        Relationships: []
+      }
+      activity_events: {
+        Row: {
+          actor_id: string | null
+          id: string
+          payload: Json
+          ts: string
+          type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          id?: string
+          payload: Json
+          ts?: string
+          type: string
+        }
+        Update: {
+          actor_id?: string | null
+          id?: string
+          payload?: Json
+          ts?: string
+          type?: string
+        }
+        Relationships: []
+      }
       attendance: {
         Row: {
           adjusted_total: number
@@ -143,6 +188,39 @@ export type Database = {
           month?: string
           notes?: string | null
           year?: number
+        }
+        Relationships: []
+      }
+      custom_actions: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          law_n: string
+          phase: number
+          source: string
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id: string
+          law_n: string
+          phase: number
+          source: string
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          law_n?: string
+          phase?: number
+          source?: string
+          title?: string
         }
         Relationships: []
       }
@@ -300,6 +378,51 @@ export type Database = {
         }
         Relationships: []
       }
+      law_content_overrides: {
+        Row: {
+          diagnostic: Json | null
+          law_n: string
+          metrics: Json | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          diagnostic?: Json | null
+          law_n: string
+          metrics?: Json | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          diagnostic?: Json | null
+          law_n?: string
+          metrics?: Json | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      law_status_overrides: {
+        Row: {
+          law_n: string
+          promoted_at: string
+          promoted_by: string | null
+          status: string
+        }
+        Insert: {
+          law_n: string
+          promoted_at?: string
+          promoted_by?: string | null
+          status: string
+        }
+        Update: {
+          law_n?: string
+          promoted_at?: string
+          promoted_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       member_groups: {
         Row: {
           created_at: string
@@ -431,6 +554,27 @@ export type Database = {
         }
         Relationships: []
       }
+      pastoral_notes: {
+        Row: {
+          member_id: string
+          note: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          member_id: string
+          note?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          member_id?: string
+          note?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -536,6 +680,27 @@ export type Database = {
           id?: string
           tab_name?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      vision_statement: {
+        Row: {
+          id: number
+          statement: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: number
+          statement?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: number
+          statement?: string | null
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
