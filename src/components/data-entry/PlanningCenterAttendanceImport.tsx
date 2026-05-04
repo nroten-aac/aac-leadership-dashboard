@@ -11,7 +11,7 @@ const PlanningCenterAttendanceImport = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [importing, setImporting] = useState(false);
-  const [weeks, setWeeks] = useState("4");
+  const [weeks, setWeeks] = useState("6");
   const [result, setResult] = useState<{ message: string; rows?: number; dates?: number; details?: any[]; errors?: string[] } | null>(null);
 
   const handleImport = async () => {
@@ -19,7 +19,7 @@ const PlanningCenterAttendanceImport = () => {
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("import-pco-attendance", {
-        body: { weeks: parseInt(weeks) || 4 },
+        body: { weeks: parseInt(weeks) || 6 },
       });
       if (error) {
         toast({ title: "Sync failed", description: error.message, variant: "destructive" });
