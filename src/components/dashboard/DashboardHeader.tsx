@@ -128,9 +128,12 @@ const DashboardHeader = () => {
         supabase.functions.invoke("import-pco-attendance", { body: { weeks: 4 } }),
         supabase.functions.invoke("import-pco-giving", { body: { months: 3 } }),
       ]);
-      if (att.error) throw att.error;
-      if (giv.error) throw giv.error;
-      toast.success("Sync complete");
+      const errs: string[] = [];
+      if (att.error) errs.push(`Attendance: ${att.error.message ?? att.error}`);
+      if (giv.error) errs.push(`Giving: ${giv.error.message ?? giv.error}`);
+      if (errs.length === 2) throw new Error(errs.join(" | "));
+      if (errs.length === 1) toast.warning(`Partial sync — ${errs[0]}`);
+      else toast.success("Sync complete");
       queryClient.invalidateQueries({ queryKey: ["attendance"] });
       queryClient.invalidateQueries({ queryKey: ["monthly_giving"] });
       queryClient.invalidateQueries({ queryKey: ["donations"] });
