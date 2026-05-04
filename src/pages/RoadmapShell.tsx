@@ -9,7 +9,7 @@ import PeopleTab from "@/roadmap/tabs/PeopleTab";
 
 export default function RoadmapShell() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="roadmap-dark min-h-screen bg-background">
       <DashboardSidebar />
       <div className="ml-[72px]">
         <RoadmapHeader />
