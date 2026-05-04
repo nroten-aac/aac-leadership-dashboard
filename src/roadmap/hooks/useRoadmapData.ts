@@ -113,7 +113,7 @@ export function useMembers() {
   return useQuery({
     queryKey: ["roadmap", "members"],
     queryFn: async () => {
-      const { data } = await supabase.from("members").select("id, first_name, last_name, discipleship_stage, stage_updated_at, email, phone, photo_url");
+      const { data } = await supabase.from("members").select("id, first_name, last_name, discipleship_stage, stage_updated_at, email, phone, photo_url, household_name, membership_status, membership_date");
       return data || [];
     },
   });
