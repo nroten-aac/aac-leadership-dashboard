@@ -4,6 +4,7 @@ import RoadmapHeader from "@/roadmap/components/RoadmapHeader";
 import TodayTab from "@/roadmap/tabs/TodayTab";
 import DashboardTab from "@/roadmap/tabs/DashboardTab";
 import PlaybookTab from "@/roadmap/tabs/PlaybookTab";
+import LawDetail from "@/roadmap/tabs/LawDetail";
 import ActionPlanTab from "@/roadmap/tabs/ActionPlanTab";
 import PeopleTab from "@/roadmap/tabs/PeopleTab";
 
@@ -18,6 +19,7 @@ export default function RoadmapShell() {
             <Route index element={<TodayTab />} />
             <Route path="dashboard" element={<DashboardTab />} />
             <Route path="playbook" element={<PlaybookTab />} />
+            <Route path="playbook/:n" element={<LawDetail />} />
             <Route path="actions" element={<ActionPlanTab />} />
             <Route path="people" element={<PeopleTab />} />
           </Routes>
