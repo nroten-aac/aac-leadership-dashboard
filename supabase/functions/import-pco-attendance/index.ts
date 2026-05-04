@@ -15,6 +15,8 @@ const CHILDRENS_EVENT_ID = "850959"; // Children's Ministry
 
 // Sanctuary headcount attendance type (Sanctuary = 291169)
 const SANCTUARY_ATTENDANCE_TYPE_ID = "291169";
+// Online Live headcount attendance type
+const ONLINE_ATTENDANCE_TYPE_ID = "338718";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -70,6 +72,8 @@ interface DayAggregate {
   event_date: string;
   service_9_15: number;
   service_11_00: number;
+  online_9_15: number;
+  online_11_00: number;
   // Children's totals (single row per date with service "Not Applicable")
   nursery: number;
   k3: number;
@@ -143,6 +147,7 @@ serve(async (req) => {
       let d = byDate.get(date);
       if (!d) {
         d = { event_date: date, service_9_15: 0, service_11_00: 0,
+              online_9_15: 0, online_11_00: 0,
               nursery: 0, k3: 0, grade_4_6: 0, youth: 0, volunteers: 0 };
         byDate.set(date, d);
       }
@@ -181,15 +186,17 @@ serve(async (req) => {
       const hcUrl = `${PC_CHECKINS_BASE}/event_times/${et.id}/headcounts?per_page=100`;
       try {
         const { data: headcounts } = await fetchAllPages(hcUrl, PC_APP_ID, PC_SECRET);
-        const sanctuaryHc = headcounts.find((h: any) => {
+        const day = ensure(dateStr);
+        for (const h of headcounts) {
           const atId = h.relationships?.attendance_type?.data?.id;
-          return atId === SANCTUARY_ATTENDANCE_TYPE_ID;
-        });
-        if (sanctuaryHc) {
-          const total = sanctuaryHc.attributes?.total || 0;
-          const day = ensure(dateStr);
-          if (slot === "9:15") day.service_9_15 = total;
-          else day.service_11_00 = total;
+          const total = h.attributes?.total || 0;
+          if (atId === SANCTUARY_ATTENDANCE_TYPE_ID) {
+            if (slot === "9:15") day.service_9_15 = total;
+            else day.service_11_00 = total;
+          } else if (atId === ONLINE_ATTENDANCE_TYPE_ID) {
+            if (slot === "9:15") day.online_9_15 = total;
+            else day.online_11_00 = total;
+          }
         }
       } catch (e) {
         errors.push(`Sanctuary headcounts ${dateStr} ${slot}: ${e instanceof Error ? e.message : e}`);
@@ -260,7 +267,7 @@ serve(async (req) => {
           service: "1st Sunday Service (9:15)",
           month: monthName, year, quarter,
           sanctuary_attendance: day.service_9_15,
-          online_attendance: 0,
+          online_attendance: day.online_9_15,
           ...baseKids,
           notes: "Imported from Planning Center",
         });
@@ -271,7 +278,7 @@ serve(async (req) => {
           service: "2nd Sunday Service (11:00)",
           month: monthName, year, quarter,
           sanctuary_attendance: day.service_11_00,
-          online_attendance: 0,
+          online_attendance: day.online_11_00,
           ...baseKids,
           notes: "Imported from Planning Center",
         });
@@ -349,6 +356,8 @@ serve(async (req) => {
           date: d.event_date,
           "9:15": d.service_9_15,
           "11:00": d.service_11_00,
+          "online 9:15": d.online_9_15,
+          "online 11:00": d.online_11_00,
           nursery: d.nursery,
           k3: d.k3,
           "4-6": d.grade_4_6,
