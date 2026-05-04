@@ -18,8 +18,9 @@ const PlanningCenterAttendanceImport = () => {
     setImporting(true);
     setResult(null);
     try {
+      const requestedWeeks = parseInt(weeks);
       const { data, error } = await supabase.functions.invoke("import-pco-attendance", {
-        body: { weeks: parseInt(weeks) || 6 },
+        body: { weeks: Math.max(Number.isFinite(requestedWeeks) ? requestedWeeks : 6, 6) },
       });
       if (error) {
         toast({ title: "Sync failed", description: error.message, variant: "destructive" });
@@ -52,7 +53,7 @@ const PlanningCenterAttendanceImport = () => {
           <Input
             id="weeks"
             type="number"
-            min={1}
+            min={6}
             max={26}
             value={weeks}
             onChange={(e) => setWeeks(e.target.value)}
