@@ -122,7 +122,7 @@ serve(async (req) => {
     // Parse body — { weeks?: number, startDate?: "YYYY-MM-DD", endDate?: "YYYY-MM-DD" }
     let body: any = {};
     try { body = await req.json(); } catch { /* default */ }
-    const weeks = Math.min(Math.max(parseInt(body.weeks) || 4, 1), 26);
+    const weeks = Math.min(Math.max(parseInt(body.weeks) || 6, 1), 26);
 
     let startDate: string;
     let endDate: string;
