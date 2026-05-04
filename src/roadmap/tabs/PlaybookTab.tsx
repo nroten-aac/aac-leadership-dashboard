@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { LAWS } from "../seed";
 import { useLawStatusOverrides } from "../hooks/useRoadmapData";
 import { LAW_SVGS } from "../illustrations";
@@ -34,7 +35,8 @@ export default function PlaybookTab() {
         {laws.map((l) => {
           const isReady = l.insights && l.insights.length > 0;
           return (
-            <div key={l.n} className={`group relative rounded-2xl border p-5 transition hover:scale-[1.01] hover:shadow-card-hover ${
+            <Link to={`/members/playbook/${l.n}`} key={l.n}
+              className={`group relative rounded-2xl border p-5 transition hover:scale-[1.01] hover:shadow-card-hover cursor-pointer block ${
               l.status === "in-progress" ? "border-accent/40 bg-card shadow-card" : "border-border/60 bg-card/60"
             }`}>
               <div className={`mb-4 h-12 w-12 ${isReady ? "text-accent" : "text-muted-foreground/50"}`}
@@ -53,7 +55,7 @@ export default function PlaybookTab() {
                 <span>▶ {l.duration}</span>
                 <span className="text-accent opacity-0 group-hover:opacity-100 transition">→</span>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
