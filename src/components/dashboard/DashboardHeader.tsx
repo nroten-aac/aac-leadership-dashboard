@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, Bell, Download, Printer } from "lucide-react";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
+import { useState } from "react";
+import { RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 const captureDashboard = async (): Promise<HTMLCanvasElement | null> => {
   const el = document.getElementById("dashboard-content");
@@ -114,6 +117,29 @@ const handlePrint = async () => {
 
 const DashboardHeader = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [syncing, setSyncing] = useState(false);
+
+  const handleSyncNow = async () => {
+    setSyncing(true);
+    toast.info("Syncing from Planning Center...");
+    try {
+      const [att, giv] = await Promise.all([
+        supabase.functions.invoke("import-pco-attendance", { body: { weeks: 4 } }),
+        supabase.functions.invoke("import-pco-giving", { body: { months: 3 } }),
+      ]);
+      if (att.error) throw att.error;
+      if (giv.error) throw giv.error;
+      toast.success("Sync complete");
+      queryClient.invalidateQueries({ queryKey: ["attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly_giving"] });
+      queryClient.invalidateQueries({ queryKey: ["donations"] });
+    } catch (e: any) {
+      toast.error(`Sync failed: ${e.message ?? e}`);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -148,6 +174,15 @@ const DashboardHeader = () => {
         </p>
       </div>
       <div className="flex items-center gap-3">
+        <button
+          onClick={handleSyncNow}
+          disabled={syncing}
+          className="h-10 px-4 rounded-xl bg-card shadow-card flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60"
+          title="Sync from Planning Center"
+        >
+          <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+          <span className="hidden sm:inline">{syncing ? "Syncing..." : "Sync Now"}</span>
+        </button>
         <button
           onClick={handleDownload}
           className="w-10 h-10 rounded-xl bg-card shadow-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
