@@ -18,8 +18,6 @@ const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
-  // TEMP: auth bypass for preview
-  return <>{children}</>;
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
