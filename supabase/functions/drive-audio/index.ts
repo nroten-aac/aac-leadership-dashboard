@@ -1,4 +1,8 @@
-import { corsHeaders } from "@supabase/supabase-js/cors";
+const corsHeaders: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, range",
+  "Access-Control-Expose-Headers": "content-length, content-range, accept-ranges",
+};
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_drive/drive/v3";
 
