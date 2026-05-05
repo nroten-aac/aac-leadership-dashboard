@@ -1,18 +1,50 @@
 import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useMembers, dbStageToRoadmap } from "../hooks/useRoadmapData";
 import { STAGE_NAMES, type Stage } from "../types";
 import { Input } from "@/components/ui/input";
 import { Mail, Phone, Home } from "lucide-react";
 
 const STAGES: Stage[] = ["connect", "belong", "mature", "minister", "multiply"];
-const STATUSES = ["active", "inactive"] as const;
-type Status = typeof STATUSES[number];
+
+const STATUS_DEFS = [
+  { key: "member", label: "Members", lists: ["Member Adults", "Member Children"] },
+  { key: "regular", label: "Regular Attenders", lists: ["Regular Attender Adults", "Regular Attender Children"] },
+  { key: "visitor", label: "Visitors", lists: ["Visitors"] },
+] as const;
+type StatusKey = typeof STATUS_DEFS[number]["key"];
 
 export default function PeopleTab() {
   const { data: members = [] } = useMembers();
+  const { data: groups = [] } = useQuery({
+    queryKey: ["member_groups", "membership"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("member_groups")
+        .select("member_id, group_name")
+        .eq("group_type", "membership");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // member_id -> status key (member > regular > visitor priority)
+  const statusByMember = useMemo(() => {
+    const map = new Map<string, StatusKey>();
+    const priority: Record<StatusKey, number> = { member: 3, regular: 2, visitor: 1 };
+    (groups as any[]).forEach((g) => {
+      const def = STATUS_DEFS.find((s) => (s.lists as readonly string[]).includes(g.group_name));
+      if (!def) return;
+      const existing = map.get(g.member_id);
+      if (!existing || priority[def.key] > priority[existing]) map.set(g.member_id, def.key);
+    });
+    return map;
+  }, [groups]);
+
   const [q, setQ] = useState("");
   const [stageFilter, setStageFilter] = useState<Set<Stage>>(new Set());
-  const [statusFilter, setStatusFilter] = useState<Set<Status>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<Set<StatusKey>>(new Set());
 
   const toggle = <T,>(set: Set<T>, val: T, setter: (s: Set<T>) => void) => {
     const next = new Set(set);
@@ -25,10 +57,13 @@ export default function PeopleTab() {
     return members.filter((m: any) => {
       if (!`${m.first_name} ${m.last_name}`.toLowerCase().includes(ql)) return false;
       if (stageFilter.size && !stageFilter.has(dbStageToRoadmap(m.discipleship_stage))) return false;
-      if (statusFilter.size && !statusFilter.has((m.membership_status || "active") as Status)) return false;
+      if (statusFilter.size) {
+        const s = statusByMember.get(m.id);
+        if (!s || !statusFilter.has(s)) return false;
+      }
       return true;
     });
-  }, [members, q, stageFilter, statusFilter]);
+  }, [members, q, stageFilter, statusFilter, statusByMember]);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 space-y-10">
@@ -70,17 +105,17 @@ export default function PeopleTab() {
 
         <div className="flex flex-wrap items-center gap-2">
           <span className="eyebrow text-[10px] mr-1">Status</span>
-          {STATUSES.map((s) => {
-            const on = statusFilter.has(s);
+          {STATUS_DEFS.map((def) => {
+            const on = statusFilter.has(def.key);
             return (
               <button
-                key={s}
-                onClick={() => toggle(statusFilter, s, setStatusFilter)}
+                key={def.key}
+                onClick={() => toggle(statusFilter, def.key, setStatusFilter)}
                 className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ${
                   on ? "border-accent bg-accent/15 text-accent" : "border-border bg-card text-muted-foreground hover:border-accent/40"
                 }`}
               >
-                {s}
+                {def.label}
               </button>
             );
           })}
