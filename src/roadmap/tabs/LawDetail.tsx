@@ -1,7 +1,8 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, Play, Sparkles } from "lucide-react";
 import { LAWS } from "../seed";
 import { LAW_SVGS } from "../illustrations";
+import { useLawStatusOverrides } from "../hooks/useRoadmapData";
 
 const STATUS_LABEL: Record<string, string> = {
   "in-progress": "IN PROGRESS",
@@ -12,6 +13,8 @@ const STATUS_LABEL: Record<string, string> = {
 export default function LawDetail() {
   const { n } = useParams<{ n: string }>();
   const law = LAWS.find((l) => l.n === n);
+  const { data: statusMap = {} } = useLawStatusOverrides();
+  const status = law ? (statusMap[law.n] ?? law.status) : null;
 
   if (!law) {
     return (
@@ -187,6 +190,51 @@ export default function LawDetail() {
         <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
           <p className="font-serif-italic">Detailed teaching content for this law is still being extracted from the audio session.</p>
         </div>
+      )}
+
+      {status === "pending" && (
+        <section className="rounded-2xl border border-border/60 bg-gradient-to-br from-card to-background p-8 shadow-card relative overflow-hidden">
+          <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
+          <div className="relative space-y-5">
+            <div className="eyebrow text-accent">→ READY TO BEGIN?</div>
+            <h2 className="font-display text-3xl md:text-4xl font-black">Start AAC work on this Law</h2>
+            <p className="font-serif-italic text-muted-foreground max-w-2xl leading-relaxed">
+              Listen to Chip's session above. Then schedule a time with Claude to work through the AAC
+              diagnostic for <span className="text-accent font-semibold not-italic">this</span> law specifically — your gaps,
+              your action steps, your metrics. Rooted in AAC's context, not generic advice.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+              {[
+                "Listen to the session above",
+                "Schedule diagnostic interview with Claude",
+                "Define AAC-specific action steps",
+                "Begin executing — actions appear here and in the Action Plan tab",
+              ].map((step, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-3"
+                >
+                  <span className="rounded-md border border-accent/40 bg-accent/10 px-2 py-1 font-mono text-[10px] text-accent shrink-0">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-sm text-foreground">{step}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-3">
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-3 font-mono text-[11px] tracking-wider text-accent-foreground font-bold shadow-[0_0_30px_hsl(var(--accent)/0.4)] hover:scale-[1.02] transition"
+              >
+                <Sparkles className="h-4 w-4" />
+                BEGIN AAC WORK ON THIS LAW
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );
