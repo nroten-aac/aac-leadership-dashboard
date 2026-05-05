@@ -88,6 +88,8 @@ export default function PeopleTab() {
   const filtered = useMemo(() => {
     const ql = q.toLowerCase();
     return members.filter((m: any) => {
+      // Only show people categorized as Member, Regular, or Visitor
+      if (!statusByMember.has(m.id)) return false;
       if (!`${m.first_name} ${m.last_name}`.toLowerCase().includes(ql)) return false;
       if (stageFilter.size && !stageFilter.has(dbStageToRoadmap(m.discipleship_stage))) return false;
       if (statusFilter.size) {
