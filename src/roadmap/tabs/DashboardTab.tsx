@@ -4,6 +4,7 @@ import StatBlock from "../components/StatBlock";
 import EngagementMatrix from "../components/EngagementMatrix";
 import StageDetailDialog from "../components/StageDetailDialog";
 import { useMembers, useActivityEvents, dbStageToRoadmap } from "../hooks/useRoadmapData";
+import { useTaggedMemberIds } from "../hooks/useTaggedMembers";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import type { Stage } from "../types";
 
@@ -11,13 +12,19 @@ export default function DashboardTab() {
   const { data: members = [] } = useMembers();
   const { data: events = [] } = useActivityEvents(200);
   const { pcoListCounts } = useDashboardData();
+  const { data: taggedIds } = useTaggedMemberIds();
   const [openStage, setOpenStage] = useState<Stage | null>(null);
+
+  const scopedMembers = useMemo(
+    () => (taggedIds ? members.filter((m: any) => taggedIds.has(m.id)) : members),
+    [members, taggedIds]
+  );
 
   const counts = useMemo(() => {
     const c: Record<Stage, number> = { connect: 0, belong: 0, mature: 0, minister: 0, multiply: 0 };
-    members.forEach((m: any) => { c[dbStageToRoadmap(m.discipleship_stage)]++; });
+    scopedMembers.forEach((m: any) => { c[dbStageToRoadmap(m.discipleship_stage)]++; });
     return c;
-  }, [members]);
+  }, [scopedMembers]);
 
   // From the PCO source-of-truth lists (synced via fetch-pco-list-counts)
   const family = pcoListCounts
@@ -28,7 +35,7 @@ export default function DashboardTab() {
     : null;
   // "Exploring connection" = PCO Visitors list (source of truth)
   const exploring = pcoListCounts ? (pcoListCounts["Visitors"] || 0) : null;
-  const total = members.length;
+  const total = scopedMembers.length;
   const stillOnRoad = total - counts.multiply;
   const moves30d = events.filter((e) => e.type === "stage-move" && Date.now() - e.ts < 30 * 86400000).length;
   const month = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }).toUpperCase();
