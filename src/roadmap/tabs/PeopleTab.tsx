@@ -5,6 +5,7 @@ import { useMembers, dbStageToRoadmap } from "../hooks/useRoadmapData";
 import { STAGE_NAMES, type Stage } from "../types";
 import { Input } from "@/components/ui/input";
 import { Mail, Phone, Home } from "lucide-react";
+import PersonDrawer from "../components/PersonDrawer";
 
 const STAGES: Stage[] = ["connect", "belong", "mature", "minister", "multiply"];
 
@@ -25,6 +26,7 @@ type DiscKey = typeof DISCIPLESHIP_DEFS[number]["key"];
 
 export default function PeopleTab() {
   const { data: members = [] } = useMembers();
+  const [selected, setSelected] = useState<any | null>(null);
   const { data: groups = [] } = useQuery({
     queryKey: ["member_groups", "all"],
     queryFn: async () => {
@@ -215,7 +217,7 @@ export default function PeopleTab() {
           const discKeys = Array.from(discByMember.get(m.id) || []);
           const volTeams = Array.from(volunteerByMember.get(m.id) || []);
           return (
-            <div key={m.id} className="group rounded-xl border border-border/60 bg-card p-4 hover:border-accent/40 transition cursor-pointer flex flex-col gap-3">
+            <div key={m.id} onClick={() => setSelected(m)} className="group rounded-xl border border-border/60 bg-card p-4 hover:border-accent/40 transition cursor-pointer flex flex-col gap-3">
               <div className="flex items-start gap-3">
                 {m.photo_url ? (
                   <img src={m.photo_url} alt={`${m.first_name} ${m.last_name}`}
@@ -276,6 +278,14 @@ export default function PeopleTab() {
         })}
         {filtered.length === 0 && <p className="col-span-full text-center text-muted-foreground italic py-12">No matches.</p>}
       </div>
+
+      <PersonDrawer
+        member={selected}
+        onOpenChange={(open) => !open && setSelected(null)}
+        discKeys={selected ? Array.from(discByMember.get(selected.id) || []) : []}
+        volTeams={selected ? Array.from(volunteerByMember.get(selected.id) || []) : []}
+        discLabel={(k) => DISCIPLESHIP_DEFS.find((d) => d.key === k)?.label ?? k}
+      />
     </div>
   );
 }
