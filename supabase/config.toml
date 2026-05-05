@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.pco-daily-sync]
 verify_jwt = false
+
+[functions.drive-audio]
+verify_jwt = false
