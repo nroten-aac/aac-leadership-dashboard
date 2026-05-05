@@ -4,14 +4,31 @@ import { STAGE_NAMES, type Stage } from "../types";
 import { Input } from "@/components/ui/input";
 import { Mail, Phone, Home } from "lucide-react";
 
+const STAGES: Stage[] = ["connect", "belong", "mature", "minister", "multiply"];
+const STATUSES = ["active", "inactive"] as const;
+type Status = typeof STATUSES[number];
+
 export default function PeopleTab() {
   const { data: members = [] } = useMembers();
   const [q, setQ] = useState("");
+  const [stageFilter, setStageFilter] = useState<Set<Stage>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<Set<Status>>(new Set());
+
+  const toggle = <T,>(set: Set<T>, val: T, setter: (s: Set<T>) => void) => {
+    const next = new Set(set);
+    next.has(val) ? next.delete(val) : next.add(val);
+    setter(next);
+  };
 
   const filtered = useMemo(() => {
     const ql = q.toLowerCase();
-    return members.filter((m: any) => `${m.first_name} ${m.last_name}`.toLowerCase().includes(ql));
-  }, [members, q]);
+    return members.filter((m: any) => {
+      if (!`${m.first_name} ${m.last_name}`.toLowerCase().includes(ql)) return false;
+      if (stageFilter.size && !stageFilter.has(dbStageToRoadmap(m.discipleship_stage))) return false;
+      if (statusFilter.size && !statusFilter.has((m.membership_status || "active") as Status)) return false;
+      return true;
+    });
+  }, [members, q, stageFilter, statusFilter]);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 space-y-10">
@@ -25,8 +42,57 @@ export default function PeopleTab() {
         </p>
       </section>
 
-      <Input placeholder="Search people…" value={q} onChange={(e) => setQ(e.target.value)}
-        className="max-w-md bg-card border-border" />
+      <div className="space-y-4">
+        <Input placeholder="Search people…" value={q} onChange={(e) => setQ(e.target.value)}
+          className="max-w-md bg-card border-border" />
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="eyebrow text-[10px] mr-1">Stage</span>
+          {STAGES.map((s) => {
+            const on = stageFilter.has(s);
+            return (
+              <button
+                key={s}
+                onClick={() => toggle(stageFilter, s, setStageFilter)}
+                className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ${
+                  on ? "border-transparent text-background" : "border-border bg-card hover:border-accent/40"
+                }`}
+                style={on ? { background: `hsl(var(--stage-${s}))`, color: "hsl(var(--background))" } : { color: `hsl(var(--stage-${s}))` }}
+              >
+                {STAGE_NAMES[s]}
+              </button>
+            );
+          })}
+          {stageFilter.size > 0 && (
+            <button onClick={() => setStageFilter(new Set())} className="text-[10px] text-muted-foreground underline ml-1">clear</button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="eyebrow text-[10px] mr-1">Status</span>
+          {STATUSES.map((s) => {
+            const on = statusFilter.has(s);
+            return (
+              <button
+                key={s}
+                onClick={() => toggle(statusFilter, s, setStatusFilter)}
+                className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ${
+                  on ? "border-accent bg-accent/15 text-accent" : "border-border bg-card text-muted-foreground hover:border-accent/40"
+                }`}
+              >
+                {s}
+              </button>
+            );
+          })}
+          {statusFilter.size > 0 && (
+            <button onClick={() => setStatusFilter(new Set())} className="text-[10px] text-muted-foreground underline ml-1">clear</button>
+          )}
+        </div>
+
+        <div className="text-xs text-muted-foreground">
+          Showing <span className="font-mono text-foreground">{filtered.length}</span> of {members.length}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {filtered.map((m: any) => {
