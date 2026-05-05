@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Play, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { LAWS } from "../seed";
 import { LAW_SVGS } from "../illustrations";
 import { useLawStatusOverrides } from "../hooks/useRoadmapData";
@@ -51,22 +51,25 @@ export default function LawDetail() {
         </div>
       </header>
 
-      <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4 flex items-center gap-4">
-        <button
-          type="button"
-          className="h-12 w-12 shrink-0 rounded-full bg-accent text-accent-foreground flex items-center justify-center hover:scale-105 transition"
-          aria-label="Play audio"
-        >
-          <Play className="h-5 w-5 fill-current ml-0.5" />
-        </button>
+      <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex-1 min-w-0">
           <div className="font-display text-sm font-bold">Listen · Chip Ingram</div>
           <div className="font-mono text-[11px] text-muted-foreground mt-0.5 truncate">
             The Law of {law.accent} · {law.duration}
           </div>
         </div>
+        <audio
+          controls
+          preload="none"
+          className="w-full sm:w-[360px]"
+          src={`https://pimsbchtatfyezssynfg.supabase.co/functions/v1/drive-audio?fileId=${law.audioId}`}
+        >
+          Your browser does not support audio playback.
+        </audio>
         <a
-          href="#"
+          href={`https://drive.google.com/file/d/${law.audioId}/view`}
+          target="_blank"
+          rel="noreferrer"
           className="hidden sm:inline-flex items-center gap-2 rounded-full border border-accent/40 px-4 py-2 font-mono text-[10px] tracking-wider text-accent hover:bg-accent/10 transition"
         >
           OPEN IN DRIVE →
