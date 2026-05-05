@@ -17,6 +17,8 @@ export default function DashboardTab() {
     return c;
   }, [members]);
 
+  const exploring = members.filter((m: any) => m.membership_status === "visitor").length;
+  const family = members.filter((m: any) => m.membership_status === "active" || m.membership_status === "regular_attender").length;
   const total = members.length;
   const stillOnRoad = total - counts.multiply;
   const moves30d = events.filter((e) => e.type === "stage-move" && Date.now() - e.ts < 30 * 86400000).length;
@@ -35,8 +37,9 @@ export default function DashboardTab() {
         </p>
       </section>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-        <StatBlock value={total} label="Souls in the family" />
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+        <StatBlock value={exploring} label="People exploring connection" />
+        <StatBlock value={family} label="Members + regular attenders" />
         <StatBlock value={moves30d} label="Stage changes · last 30 days" />
         <StatBlock value={counts.multiply} label="Multiplying disciples" gold />
         <StatBlock value={stillOnRoad} label="Still on the road" />
