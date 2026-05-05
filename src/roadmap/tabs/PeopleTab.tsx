@@ -16,6 +16,12 @@ const STATUS_DEFS = [
 ] as const;
 type StatusKey = typeof STATUS_DEFS[number]["key"];
 
+const AGE_DEFS = [
+  { key: "adult", label: "Adults" },
+  { key: "dependent", label: "Dependents" },
+] as const;
+type AgeKey = typeof AGE_DEFS[number]["key"];
+
 const DISCIPLESHIP_DEFS = [
   { key: "LG", label: "Life Groups", match: (g: string) => g === "Life Groups" },
   { key: "BS", label: "Bible Studies", match: (g: string) => g.toLowerCase().includes("bible") },
@@ -45,9 +51,10 @@ export default function PeopleTab() {
   });
 
   // member_id -> status key, discipleship keys, volunteer team names
-  const { statusByMember, discByMember, volunteerByMember, allVolunteerTeams } = useMemo(() => {
+  const { statusByMember, ageByMember, discByMember, volunteerByMember, allVolunteerTeams } = useMemo(() => {
     const map = new Map<string, StatusKey>();
     const priority: Record<StatusKey, number> = { member: 3, regular: 2, visitor: 1 };
+    const age = new Map<string, AgeKey>();
     const disc = new Map<string, Set<DiscKey>>();
     const vol = new Map<string, Set<string>>();
     const teams = new Set<string>();
@@ -57,6 +64,9 @@ export default function PeopleTab() {
         if (def) {
           const existing = map.get(g.member_id);
           if (!existing || priority[def.key] > priority[existing]) map.set(g.member_id, def.key);
+          // Children list → dependent; Adults list → adult; otherwise default to adult
+          if (/Children/i.test(g.group_name)) age.set(g.member_id, "dependent");
+          else if (!age.has(g.member_id)) age.set(g.member_id, "adult");
         }
       } else if (g.group_type === "discipleship") {
         const d = DISCIPLESHIP_DEFS.find((x) => x.match(g.group_name));
@@ -70,7 +80,7 @@ export default function PeopleTab() {
         vol.get(g.member_id)!.add(g.group_name);
       }
     });
-    return { statusByMember: map, discByMember: disc, volunteerByMember: vol, allVolunteerTeams: Array.from(teams).sort() };
+    return { statusByMember: map, ageByMember: age, discByMember: disc, volunteerByMember: vol, allVolunteerTeams: Array.from(teams).sort() };
   }, [groups]);
 
   const [q, setQ] = useState("");
@@ -78,6 +88,7 @@ export default function PeopleTab() {
   const [statusFilter, setStatusFilter] = useState<Set<StatusKey>>(new Set());
   const [discFilter, setDiscFilter] = useState<Set<DiscKey>>(new Set());
   const [volFilter, setVolFilter] = useState<Set<string>>(new Set());
+  const [ageFilter, setAgeFilter] = useState<Set<AgeKey>>(new Set());
 
   const toggle = <T,>(set: Set<T>, val: T, setter: (s: Set<T>) => void) => {
     const next = new Set(set);
@@ -104,9 +115,13 @@ export default function PeopleTab() {
         const vs = volunteerByMember.get(m.id);
         if (!vs || ![...volFilter].some((k) => vs.has(k))) return false;
       }
+      if (ageFilter.size) {
+        const a = ageByMember.get(m.id) ?? "adult";
+        if (!ageFilter.has(a)) return false;
+      }
       return true;
     });
-  }, [members, q, stageFilter, statusFilter, discFilter, volFilter, statusByMember, discByMember, volunteerByMember]);
+  }, [members, q, stageFilter, statusFilter, discFilter, volFilter, ageFilter, statusByMember, ageByMember, discByMember, volunteerByMember]);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 space-y-10">
