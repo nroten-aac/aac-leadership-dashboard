@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone, Home, ArrowRight, Check } from "lucide-react";
+import { Mail, Phone, Home, ArrowRight, Check, Pencil, Trash2, X } from "lucide-react";
 import { STAGE_NAMES, STAGE_ORDER, STAGE_DESC, type Stage } from "../types";
 import { dbStageToRoadmap } from "../hooks/useRoadmapData";
 import { formatDistanceToNow } from "date-fns";
@@ -61,13 +61,35 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
     queryFn: async () => {
       if (!member?.id) return [];
       const { data } = await supabase.from("discipleship_stage_history" as any)
-        .select("previous_stage, new_stage, changed_at")
+        .select("id, previous_stage, new_stage, changed_at")
         .eq("member_id", member.id)
         .order("changed_at", { ascending: false })
         .limit(10);
       return (data as any[]) || [];
     },
     enabled: !!member?.id,
+  });
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingDate, setEditingDate] = useState<string>("");
+
+  const updateHistoryDate = useMutation({
+    mutationFn: async ({ id, date }: { id: string; date: string }) => {
+      await supabase.from("discipleship_stage_history" as any)
+        .update({ changed_at: new Date(date).toISOString() } as any)
+        .eq("id", id);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["stage_history", member?.id] });
+      setEditingId(null);
+    },
+  });
+
+  const deleteHistory = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("discipleship_stage_history" as any).delete().eq("id", id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["stage_history", member?.id] }),
   });
 
   // Move stage
@@ -238,17 +260,21 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
 
         {/* Stage history */}
         <div className="p-6 border-b border-border/60">
-          <div className="eyebrow mb-3">Stage history</div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="eyebrow">Stage history</div>
+            <span className="font-mono text-[9px] text-muted-foreground">tap date to edit</span>
+          </div>
           {history.length === 0 ? (
             <p className="text-xs text-muted-foreground italic">No transitions recorded yet.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {history.map((h: any, i: number) => {
                 const from = h.previous_stage ? dbStageToRoadmap(h.previous_stage) : null;
                 const to = dbStageToRoadmap(h.new_stage);
+                const isEditing = editingId === h.id;
                 return (
-                  <div key={i} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
+                  <div key={h.id} className="flex items-center justify-between text-xs gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       {from && (
                         <>
                           <span className="rounded px-1.5 py-0.5 font-mono text-[10px]" style={{ background: `hsl(var(--stage-${from}) / 0.15)`, color: `hsl(var(--stage-${from}))` }}>
@@ -261,9 +287,48 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
                         {STAGE_NAMES[to]}
                       </span>
                     </div>
-                    <span className="text-muted-foreground font-mono text-[10px]">
-                      {formatDistanceToNow(new Date(h.changed_at), { addSuffix: true })}
-                    </span>
+                    {isEditing ? (
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="date"
+                          value={editingDate}
+                          onChange={(e) => setEditingDate(e.target.value)}
+                          className="bg-background border border-border rounded px-1.5 py-0.5 font-mono text-[10px] text-foreground"
+                        />
+                        <button
+                          onClick={() => updateHistoryDate.mutate({ id: h.id, date: editingDate })}
+                          className="p-1 rounded hover:bg-emerald-500/20 text-emerald-400"
+                          title="Save"
+                        >
+                          <Check className="h-3 w-3" />
+                        </button>
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="p-1 rounded hover:bg-muted text-muted-foreground"
+                          title="Cancel"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                        <button
+                          onClick={() => { if (confirm("Delete this transition?")) deleteHistory.mutate(h.id); }}
+                          className="p-1 rounded hover:bg-destructive/20 text-destructive"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditingId(h.id);
+                          setEditingDate(new Date(h.changed_at).toISOString().slice(0, 10));
+                        }}
+                        className="group flex items-center gap-1 text-muted-foreground font-mono text-[10px] hover:text-accent transition"
+                      >
+                        <span>{formatDistanceToNow(new Date(h.changed_at), { addSuffix: true })}</span>
+                        <Pencil className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition" />
+                      </button>
+                    )}
                   </div>
                 );
               })}
