@@ -22,9 +22,16 @@ interface Props {
   discKeys: string[];
   volTeams: string[];
   discLabel: (k: string) => string;
+  status?: "member" | "regular" | "visitor" | null;
 }
 
-export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams, discLabel }: Props) {
+const STATUS_STYLE = {
+  member:  { label: "Member",  dot: "bg-sky-400",    bg: "bg-sky-500/10",    text: "text-sky-300",    border: "border-sky-500/40" },
+  regular: { label: "Regular", dot: "bg-violet-400", bg: "bg-violet-500/10", text: "text-violet-300", border: "border-violet-500/40" },
+  visitor: { label: "Visitor", dot: "bg-amber-400",  bg: "bg-amber-500/10",  text: "text-amber-300",  border: "border-amber-500/40" },
+} as const;
+
+export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams, discLabel, status }: Props) {
   const qc = useQueryClient();
   const open = !!member;
   const stage: Stage = member ? dbStageToRoadmap(member.discipleship_stage) : "connect";
@@ -132,6 +139,12 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
                 style={{ borderColor: `hsl(var(--stage-${stage}) / 0.5)`, color: `hsl(var(--stage-${stage}))`, background: `hsl(var(--stage-${stage}) / 0.1)` }}>
                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: `hsl(var(--stage-${stage}))` }} /> {STAGE_NAMES[stage]}
               </span>
+              {status && (
+                <span className={`inline-flex items-center gap-1.5 mt-2 ml-2 rounded-full border ${STATUS_STYLE[status].border} ${STATUS_STYLE[status].bg} ${STATUS_STYLE[status].text} px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${STATUS_STYLE[status].dot}`} />
+                  {STATUS_STYLE[status].label}
+                </span>
+              )}
             </div>
           </div>
 
