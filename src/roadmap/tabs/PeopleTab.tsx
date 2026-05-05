@@ -302,6 +302,7 @@ export default function PeopleTab() {
         discKeys={selected ? Array.from(discByMember.get(selected.id) || []) : []}
         volTeams={selected ? Array.from(volunteerByMember.get(selected.id) || []) : []}
         discLabel={(k) => DISCIPLESHIP_DEFS.find((d) => d.key === k)?.label ?? k}
+        status={selected ? statusByMember.get(selected.id) ?? null : null}
       />
     </div>
   );
