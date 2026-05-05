@@ -86,7 +86,7 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto bg-card border-border p-0">
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto border-border p-0 dark bg-background text-foreground">
         {/* Header */}
         <div className="p-6 border-b border-border/60">
           <div className="flex items-start gap-4">
@@ -123,7 +123,7 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
         {/* Engagement */}
         <div className="p-6 border-b border-border/60 space-y-4">
           <div>
-            <div className="eyebrow mb-2">📖 Maturing in</div>
+            <div className="eyebrow mb-2 text-accent">📖 Maturing in</div>
             <div className="flex flex-wrap gap-2">
               {discKeys.length === 0 && <span className="text-xs text-muted-foreground italic">Not in a discipleship group</span>}
               {discKeys.map((k) => (
@@ -134,7 +134,7 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
             </div>
           </div>
           <div>
-            <div className="eyebrow mb-2">🤝 Ministering on</div>
+            <div className="eyebrow mb-2 text-emerald-400">🤝 Ministering on</div>
             <div className="flex flex-wrap gap-2">
               {volTeams.length === 0 && <span className="text-xs text-muted-foreground italic">Not on a serve team</span>}
               {volTeams.map((t) => (
