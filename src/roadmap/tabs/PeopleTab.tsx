@@ -24,6 +24,12 @@ const DISCIPLESHIP_DEFS = [
 ] as const;
 type DiscKey = typeof DISCIPLESHIP_DEFS[number]["key"];
 
+export const STATUS_STYLE: Record<StatusKey, { label: string; dot: string; bg: string; text: string; border: string }> = {
+  member:  { label: "Member",   dot: "bg-sky-400",     bg: "bg-sky-500/10",     text: "text-sky-300",     border: "border-sky-500/40" },
+  regular: { label: "Regular",  dot: "bg-violet-400",  bg: "bg-violet-500/10",  text: "text-violet-300",  border: "border-violet-500/40" },
+  visitor: { label: "Visitor",  dot: "bg-amber-400",   bg: "bg-amber-500/10",   text: "text-amber-300",   border: "border-amber-500/40" },
+};
+
 export default function PeopleTab() {
   const { data: members = [] } = useMembers();
   const [selected, setSelected] = useState<any | null>(null);
@@ -216,8 +222,19 @@ export default function PeopleTab() {
             : null;
           const discKeys = Array.from(discByMember.get(m.id) || []);
           const volTeams = Array.from(volunteerByMember.get(m.id) || []);
+          const status = statusByMember.get(m.id);
+          const statusStyle = status ? STATUS_STYLE[status] : null;
           return (
-            <div key={m.id} onClick={() => setSelected(m)} className="group rounded-xl border border-border/60 bg-card p-4 hover:border-accent/40 transition cursor-pointer flex flex-col gap-3">
+            <div key={m.id} onClick={() => setSelected(m)} className="group relative rounded-xl border border-border/60 bg-card p-4 hover:border-accent/40 transition cursor-pointer flex flex-col gap-3">
+              {statusStyle && (
+                <span
+                  className={`absolute top-2 right-2 inline-flex items-center gap-1 rounded-full border ${statusStyle.border} ${statusStyle.bg} ${statusStyle.text} px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider`}
+                  title={statusStyle.label}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${statusStyle.dot}`} />
+                  {statusStyle.label}
+                </span>
+              )}
               <div className="flex items-start gap-3">
                 {m.photo_url ? (
                   <img src={m.photo_url} alt={`${m.first_name} ${m.last_name}`}
