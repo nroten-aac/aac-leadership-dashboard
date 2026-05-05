@@ -10,6 +10,7 @@ export interface PcoListCounts {
   "Member Children": number;
   "Regular Attender Adults": number;
   "Regular Attender Children": number;
+  "Visitors": number;
 }
 
 export function useDashboardData() {
