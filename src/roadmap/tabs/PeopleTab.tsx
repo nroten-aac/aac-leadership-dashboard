@@ -15,36 +15,61 @@ const STATUS_DEFS = [
 ] as const;
 type StatusKey = typeof STATUS_DEFS[number]["key"];
 
+const DISCIPLESHIP_DEFS = [
+  { key: "LG", label: "Life Groups", match: (g: string) => g === "Life Groups" },
+  { key: "BS", label: "Bible Studies", match: (g: string) => g.toLowerCase().includes("bible") },
+  { key: "PT", label: "PT Mentorship", match: (g: string) => g === "PT Mentorship" },
+  { key: "DG", label: "Discipleship Groups", match: (g: string) => g === "Discipleship Groups" },
+] as const;
+type DiscKey = typeof DISCIPLESHIP_DEFS[number]["key"];
+
 export default function PeopleTab() {
   const { data: members = [] } = useMembers();
   const { data: groups = [] } = useQuery({
-    queryKey: ["member_groups", "membership"],
+    queryKey: ["member_groups", "all"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("member_groups")
-        .select("member_id, group_name")
-        .eq("group_type", "membership");
+        .select("member_id, group_name, group_type");
       if (error) throw error;
       return data;
     },
   });
 
-  // member_id -> status key (member > regular > visitor priority)
-  const statusByMember = useMemo(() => {
+  // member_id -> status key, discipleship keys, volunteer team names
+  const { statusByMember, discByMember, volunteerByMember, allVolunteerTeams } = useMemo(() => {
     const map = new Map<string, StatusKey>();
     const priority: Record<StatusKey, number> = { member: 3, regular: 2, visitor: 1 };
+    const disc = new Map<string, Set<DiscKey>>();
+    const vol = new Map<string, Set<string>>();
+    const teams = new Set<string>();
     (groups as any[]).forEach((g) => {
-      const def = STATUS_DEFS.find((s) => (s.lists as readonly string[]).includes(g.group_name));
-      if (!def) return;
-      const existing = map.get(g.member_id);
-      if (!existing || priority[def.key] > priority[existing]) map.set(g.member_id, def.key);
+      if (g.group_type === "membership") {
+        const def = STATUS_DEFS.find((s) => (s.lists as readonly string[]).includes(g.group_name));
+        if (def) {
+          const existing = map.get(g.member_id);
+          if (!existing || priority[def.key] > priority[existing]) map.set(g.member_id, def.key);
+        }
+      } else if (g.group_type === "discipleship") {
+        const d = DISCIPLESHIP_DEFS.find((x) => x.match(g.group_name));
+        if (d) {
+          if (!disc.has(g.member_id)) disc.set(g.member_id, new Set());
+          disc.get(g.member_id)!.add(d.key);
+        }
+      } else if (g.group_type === "volunteer") {
+        teams.add(g.group_name);
+        if (!vol.has(g.member_id)) vol.set(g.member_id, new Set());
+        vol.get(g.member_id)!.add(g.group_name);
+      }
     });
-    return map;
+    return { statusByMember: map, discByMember: disc, volunteerByMember: vol, allVolunteerTeams: Array.from(teams).sort() };
   }, [groups]);
 
   const [q, setQ] = useState("");
   const [stageFilter, setStageFilter] = useState<Set<Stage>>(new Set());
   const [statusFilter, setStatusFilter] = useState<Set<StatusKey>>(new Set());
+  const [discFilter, setDiscFilter] = useState<Set<DiscKey>>(new Set());
+  const [volFilter, setVolFilter] = useState<Set<string>>(new Set());
 
   const toggle = <T,>(set: Set<T>, val: T, setter: (s: Set<T>) => void) => {
     const next = new Set(set);
@@ -61,9 +86,17 @@ export default function PeopleTab() {
         const s = statusByMember.get(m.id);
         if (!s || !statusFilter.has(s)) return false;
       }
+      if (discFilter.size) {
+        const ds = discByMember.get(m.id);
+        if (!ds || ![...discFilter].some((k) => ds.has(k))) return false;
+      }
+      if (volFilter.size) {
+        const vs = volunteerByMember.get(m.id);
+        if (!vs || ![...volFilter].some((k) => vs.has(k))) return false;
+      }
       return true;
     });
-  }, [members, q, stageFilter, statusFilter, statusByMember]);
+  }, [members, q, stageFilter, statusFilter, discFilter, volFilter, statusByMember, discByMember, volunteerByMember]);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 space-y-10">
@@ -124,6 +157,49 @@ export default function PeopleTab() {
           )}
         </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="eyebrow text-[10px] mr-1">Discipleship</span>
+        {DISCIPLESHIP_DEFS.map((def) => {
+          const on = discFilter.has(def.key);
+          return (
+            <button
+              key={def.key}
+              onClick={() => toggle(discFilter, def.key, setDiscFilter)}
+              className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ${
+                on ? "border-accent bg-accent/15 text-accent" : "border-border bg-card text-muted-foreground hover:border-accent/40"
+              }`}
+              title={def.label}
+            >
+              {def.key} · {def.label}
+            </button>
+          );
+        })}
+        {discFilter.size > 0 && (
+          <button onClick={() => setDiscFilter(new Set())} className="text-[10px] text-muted-foreground underline ml-1">clear</button>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="eyebrow text-[10px] mr-1">Serving</span>
+        {allVolunteerTeams.map((team) => {
+          const on = volFilter.has(team);
+          return (
+            <button
+              key={team}
+              onClick={() => toggle(volFilter, team, setVolFilter)}
+              className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ${
+                on ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" : "border-border bg-card text-muted-foreground hover:border-emerald-500/40"
+              }`}
+            >
+              {team}
+            </button>
+          );
+        })}
+        {volFilter.size > 0 && (
+          <button onClick={() => setVolFilter(new Set())} className="text-[10px] text-muted-foreground underline ml-1">clear</button>
+        )}
+      </div>
+
         <div className="text-xs text-muted-foreground">
           Showing <span className="font-mono text-foreground">{filtered.length}</span> of {members.length}
         </div>
@@ -136,6 +212,8 @@ export default function PeopleTab() {
           const stageDays = m.stage_updated_at
             ? Math.floor((Date.now() - new Date(m.stage_updated_at).getTime()) / 86400000)
             : null;
+          const discKeys = Array.from(discByMember.get(m.id) || []);
+          const volTeams = Array.from(volunteerByMember.get(m.id) || []);
           return (
             <div key={m.id} className="group rounded-xl border border-border/60 bg-card p-4 hover:border-accent/40 transition cursor-pointer flex flex-col gap-3">
               <div className="flex items-start gap-3">
@@ -163,6 +241,22 @@ export default function PeopleTab() {
                   )}
                 </div>
               </div>
+              {(discKeys.length > 0 || volTeams.length > 0) && (
+                <div className="flex flex-wrap gap-1 -mt-1">
+                  {discKeys.map((k) => (
+                    <span key={k} className="rounded-full border border-accent/40 bg-accent/10 text-accent px-1.5 py-0.5 font-mono text-[9px] tracking-wider"
+                      title={DISCIPLESHIP_DEFS.find((d) => d.key === k)?.label}>
+                      {k}
+                    </span>
+                  ))}
+                  {volTeams.map((t) => (
+                    <span key={t} className="rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 font-mono text-[9px] tracking-wider truncate max-w-[110px]"
+                      title={t}>
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
               {(m.email || m.phone) && (
                 <div className="border-t border-border/40 pt-2 space-y-1 text-[11px] text-muted-foreground">
                   {m.email && (
