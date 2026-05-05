@@ -1,13 +1,15 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import TheRoad from "../components/TheRoad";
 import StatBlock from "../components/StatBlock";
 import EngagementMatrix from "../components/EngagementMatrix";
+import StageDetailDialog from "../components/StageDetailDialog";
 import { useMembers, useActivityEvents, dbStageToRoadmap } from "../hooks/useRoadmapData";
 import type { Stage } from "../types";
 
 export default function DashboardTab() {
   const { data: members = [] } = useMembers();
   const { data: events = [] } = useActivityEvents(200);
+  const [openStage, setOpenStage] = useState<Stage | null>(null);
 
   const counts = useMemo(() => {
     const c: Record<Stage, number> = { connect: 0, belong: 0, mature: 0, minister: 0, multiply: 0 };
@@ -48,12 +50,14 @@ export default function DashboardTab() {
         <p className="text-muted-foreground mb-8 max-w-3xl">
           The pipeline isn't a funnel — it's a road. Connecting → Belonging → Maturing → Ministering → Multiplying. Track movement, not attendance.
         </p>
-        <TheRoad counts={counts} total={total} />
+        <TheRoad counts={counts} total={total} onStageClick={setOpenStage} />
       </section>
 
       <section>
         <EngagementMatrix />
       </section>
+
+      <StageDetailDialog stage={openStage} onClose={() => setOpenStage(null)} />
     </div>
   );
 }
