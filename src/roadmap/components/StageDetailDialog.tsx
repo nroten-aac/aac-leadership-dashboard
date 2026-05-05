@@ -7,34 +7,134 @@ import { STAGE_NAMES, STAGE_DESC, type Stage } from "../types";
 import { STAGE_ICONS } from "@/components/icons/StageIcons";
 import { Link } from "react-router-dom";
 
-const ENG_TYPES: Array<{ key: string; label: string; match: (g: string, t: string) => boolean }> = [
-  { key: "LG", label: "Life Groups",         match: (g) => g === "Life Groups" },
-  { key: "BS", label: "Bible Studies",       match: (g) => g.toLowerCase().includes("bible") },
-  { key: "PT", label: "PT Mentorship",       match: (g) => g === "PT Mentorship" },
-  { key: "DG", label: "Discipleship Groups", match: (g) => g === "Discipleship Groups" },
-  { key: "SRV", label: "Serving",            match: (_g, t) => t === "volunteer" },
-];
+// Per-stage engagement chip definitions. Each chip's `count` receives the stage's
+// member rows + their group memberships and returns the number of people that fit.
+type Chip = {
+  key: string;
+  label: string;
+  count: (members: any[], groupsByMember: Map<string, any[]>) => number;
+};
+
+const DAYS = (n: number) => Date.now() - n * 86400000;
+const recent = (date: string | null, days: number) => !!date && new Date(date).getTime() >= DAYS(days);
+
+const hasGroup = (groups: any[] | undefined, pred: (name: string, type: string) => boolean) =>
+  !!groups?.some((g) => pred(g.group_name, g.group_type));
+
+const STAGE_CHIPS: Record<Stage, Chip[]> = {
+  connect: [
+    { key: "NEW", label: "First-time visitors",
+      count: (m) => m.filter((p) => p.membership_status === "visitor" && recent(p.membership_date, 30)).length },
+    { key: "RTN", label: "Recent attendees",
+      count: (m) => m.filter((p) => p.membership_status === "visitor").length },
+    { key: "INT", label: "Showing interest",
+      count: (m, g) => m.filter((p) => (g.get(p.id) || []).length > 0).length },
+  ],
+  belong: [
+    { key: "MEM", label: "Members",
+      count: (m) => m.filter((p) => p.membership_status === "active").length },
+    { key: "BAP", label: "Recently baptized",
+      count: () => 0 },
+    { key: "NEW", label: "New members (90d)",
+      count: (m) => m.filter((p) => recent(p.membership_date, 90)).length },
+  ],
+  mature: [
+    { key: "LG", label: "Life Groups",
+      count: (m, g) => m.filter((p) => hasGroup(g.get(p.id), (n) => n === "Life Groups")).length },
+    { key: "BS", label: "Bible Studies",
+      count: (m, g) => m.filter((p) => hasGroup(g.get(p.id), (n) => n.toLowerCase().includes("bible"))).length },
+    { key: "PT", label: "PT Mentorship",
+      count: (m, g) => m.filter((p) => hasGroup(g.get(p.id), (n) => n === "PT Mentorship")).length },
+    { key: "DG", label: "Discipleship Groups",
+      count: (m, g) => m.filter((p) => hasGroup(g.get(p.id), (n) => n === "Discipleship Groups")).length },
+  ],
+  minister: [
+    { key: "ANN", label: "Announcement Team",
+      count: (m, g) => m.filter((p) => hasGroup(g.get(p.id), (n) => n === "Announcement Team")).length },
+    { key: "COM", label: "Communion",
+      count: (m, g) => m.filter((p) => hasGroup(g.get(p.id), (n) => n === "Communion")).length },
+    { key: "CHL", label: "Children's Ministry",
+      count: (m, g) => m.filter((p) => hasGroup(g.get(p.id), (n) => n === "Children's Ministry")).length },
+    { key: "TTH", label: "Tithe Counters",
+      count: (m, g) => m.filter((p) => hasGroup(g.get(p.id), (n) => n.startsWith("Tithe"))).length },
+    { key: "PRD", label: "Production",
+      count: (m, g) => m.filter((p) => hasGroup(g.get(p.id), (n) => n === "Production" || n === "Band" || n === "Vocals")).length },
+    { key: "ENC", label: "Encounter Team",
+      count: (m, g) => m.filter((p) => hasGroup(g.get(p.id), (n) => n === "Encounter Team")).length },
+  ],
+  multiply: [
+    { key: "TIM", label: "Discipling someone",
+      count: (m, g) => m.filter((p) => hasGroup(g.get(p.id), (n) => n === "PT Mentorship" || n === "Discipleship Groups")).length },
+    { key: "LED", label: "Leading group",
+      count: (m, g) => m.filter((p) => hasGroup(g.get(p.id), (_n, t) => t === "discipleship")).length },
+    { key: "EXT", label: "External mission",
+      count: () => 0 },
+  ],
+};
+
+// What tags appear on the per-person row at this stage
+const STAGE_PERSON_TAGS: Record<Stage, Array<{ key: string; match: (g: any) => boolean }>> = {
+  connect: [
+    { key: "NEW", match: () => false },
+  ],
+  belong: [
+    { key: "MEM", match: () => false }, // populated below from membership_status
+  ],
+  mature: [
+    { key: "LG", match: (g) => g.group_name === "Life Groups" },
+    { key: "BS", match: (g) => g.group_name.toLowerCase().includes("bible") },
+    { key: "PT", match: (g) => g.group_name === "PT Mentorship" },
+    { key: "DG", match: (g) => g.group_name === "Discipleship Groups" },
+  ],
+  minister: [
+    { key: "LG", match: (g) => g.group_name === "Life Groups" },
+    { key: "BS", match: (g) => g.group_name.toLowerCase().includes("bible") },
+    { key: "SRV", match: (g) => g.group_type === "volunteer" },
+  ],
+  multiply: [
+    { key: "LG", match: (g) => g.group_name === "Life Groups" },
+    { key: "BS", match: (g) => g.group_name.toLowerCase().includes("bible") },
+    { key: "SRV", match: (g) => g.group_type === "volunteer" },
+    { key: "TIM", match: (g) => g.group_name === "PT Mentorship" || g.group_name === "Discipleship Groups" },
+  ],
+};
+
+const STAGE_QUOTE: Record<Stage, string> = {
+  connect: "In orbit — attending but not yet committed to Christ. The mission field that walks through your doors.",
+  belong: "Came to faith, baptized, joined the church family. The decisive turn from outside to inside.",
+  mature: "Growing through Scripture, small group, and prayer. The deep work of formation — where most of AAC currently lives.",
+  minister: "Using spiritual gifts in ministry within the church. The leap from learner to giver — where formation becomes function.",
+  multiply: "On mission, discipling others, reproducing disciples. The summit of the road — where the gospel goes beyond them and starts working through them.",
+};
+
+const STAGE_EMPTY: Record<Stage, string> = {
+  connect: "No one tracked here yet — and that is the gap. The mission begins with naming visitors and following up before Sunday becomes a memory.",
+  belong: "No one is at this stage right now.",
+  mature: "No one is at this stage right now.",
+  minister: "No one is at this stage right now.",
+  multiply: "No one is at this stage right now.",
+};
 
 const STAGE_COACHING: Record<Stage, { label: string; body: string }> = {
   connect: {
-    label: "Welcome them in",
-    body: "Personal follow-up within 48 hours. Invite to a Life Group or first-step gathering. Goal: every guest is known by name within 3 visits.",
+    label: "Move them forward",
+    body: "Open this stage by tracking visitors and follow-up conversations from Sunday services. Add anyone showing interest who hasn't yet committed.",
   },
   belong: {
-    label: "Root them deep",
-    body: "Pair with a Life Group leader. Walk through baptism + membership pathway. Goal: every belonger is in a weekly group within 60 days.",
+    label: "Move them forward",
+    body: "Assign a shepherd · connect to a Life Group · begin a Bible reading plan · schedule the membership conversation with Pastor Nate.",
   },
   mature: {
     label: "Move them forward",
-    body: "PPP Conversation — discover Passion / Pain / Proficiency for each. Connect every soul to a serve team that matches their design. Goal: 100% have had a PPP conversation.",
+    body: "PPP Conversation — discover Passion / Pain / Proficiency for each. Connect every soul to a serve team that matches their design. Easter goal: 100% have had a PPP conversation.",
   },
   minister: {
-    label: "Multiply their impact",
-    body: "Identify their disciple-making capacity. Pair with a PT mentor. Goal: every minister is intentionally pouring into 1–3 others.",
+    label: "Move them forward",
+    body: 'Assign each a Timothy — someone they begin discipling. Recruit as a "sniper" for outreach pairings. Deploy at the Farmers Market and community events this summer.',
   },
   multiply: {
-    label: "Send them out",
-    body: "Champion their reproduction stories. Resource them for church planting, missions, or multi-generational discipleship. Celebrate publicly.",
+    label: "Move them forward",
+    body: "Keep investing. They are reproducing the gospel — protect their soul, unleash their gifts, and let them lead the next wave at AAC.",
   },
 };
 
@@ -74,28 +174,27 @@ export default function StageDetailDialog({ stage, onClose }: Props) {
   const pct = total ? ((here / total) * 100).toFixed(1) : "0.0";
   const color = `hsl(var(--stage-${stage}))`;
 
-  // Engagement counts for this stage
+  // Group memberships keyed by member id (only this stage's members)
   const stageMemberIds = new Set(stageMembers.map((m: any) => m.id));
-  const engCounts: Record<string, Set<string>> = {};
-  ENG_TYPES.forEach((t) => (engCounts[t.key] = new Set()));
+  const groupsByMember = new Map<string, any[]>();
   groups.forEach((g: any) => {
     if (!stageMemberIds.has(g.member_id)) return;
-    for (const t of ENG_TYPES) {
-      if (t.match(g.group_name, g.group_type)) engCounts[t.key].add(g.member_id);
-    }
+    const arr = groupsByMember.get(g.member_id) || [];
+    arr.push(g);
+    groupsByMember.set(g.member_id, arr);
   });
 
-  // Per-member tags
+  const chips = STAGE_CHIPS[stage];
+  const tagDefs = STAGE_PERSON_TAGS[stage];
   const tagsByMember = new Map<string, string[]>();
-  groups.forEach((g: any) => {
-    if (!stageMemberIds.has(g.member_id)) return;
-    for (const t of ENG_TYPES) {
-      if (t.match(g.group_name, g.group_type)) {
-        const arr = tagsByMember.get(g.member_id) || [];
-        if (!arr.includes(t.key)) arr.push(t.key);
-        tagsByMember.set(g.member_id, arr);
-      }
-    }
+  stageMembers.forEach((m: any) => {
+    const memberGroups = groupsByMember.get(m.id) || [];
+    const tags: string[] = [];
+    if (stage === "belong" && m.membership_status === "active") tags.push("MEM");
+    tagDefs.forEach((td) => {
+      if (memberGroups.some(td.match) && !tags.includes(td.key)) tags.push(td.key);
+    });
+    if (tags.length) tagsByMember.set(m.id, tags);
   });
 
   const coaching = STAGE_COACHING[stage];
@@ -122,7 +221,7 @@ export default function StageDetailDialog({ stage, onClose }: Props) {
             </div>
           </div>
           <p className="font-serif-italic text-muted-foreground mt-4 text-base">
-            "{STAGE_DESC[stage]}."
+            "{STAGE_QUOTE[stage]}"
           </p>
         </div>
 
@@ -133,30 +232,24 @@ export default function StageDetailDialog({ stage, onClose }: Props) {
               <div className="flex items-center justify-between mb-3">
                 <div className="eyebrow">— Engagement <span className="text-muted-foreground/70 normal-case tracking-normal italic ml-2">— synced from PCO</span></div>
                 <div className="font-mono text-[10px] tracking-widest text-muted-foreground">
-                  {ENG_TYPES.filter((t) => engCounts[t.key].size > 0).length} TYPES TRACKED
+                  {chips.length} TYPES TRACKED
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {ENG_TYPES.map((t) => {
-                  const v = engCounts[t.key].size;
-                  if (v === 0) return null;
+                {chips.map((c) => {
+                  const v = c.count(stageMembers, groupsByMember);
                   return (
-                    <div key={t.key} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 p-3">
+                    <div key={c.key} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 p-3">
                       <div className="h-9 w-9 shrink-0 rounded-md flex items-center justify-center font-mono text-[11px] font-bold" style={{ background: `${color}33`, color }}>
-                        {t.key}
+                        {c.key}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-display font-semibold text-sm text-foreground truncate">{t.label}</div>
-                        <div className="font-mono text-[11px] text-muted-foreground"><span className="text-foreground font-semibold">{v}</span> people</div>
+                        <div className="font-display font-semibold text-sm text-foreground truncate">{c.label}</div>
+                        <div className="font-mono text-[11px] text-muted-foreground"><span className="text-foreground font-semibold">{v}</span> {v === 1 ? "person" : "people"}</div>
                       </div>
                     </div>
                   );
                 })}
-                {ENG_TYPES.every((t) => engCounts[t.key].size === 0) && (
-                  <div className="col-span-full text-center text-sm text-muted-foreground italic py-4">
-                    No engagement data tracked at this stage yet.
-                  </div>
-                )}
               </div>
             </section>
 
@@ -169,7 +262,9 @@ export default function StageDetailDialog({ stage, onClose }: Props) {
                 </div>
               </div>
               {here === 0 ? (
-                <p className="text-center text-sm text-muted-foreground italic py-6">No one is at this stage right now.</p>
+                <div className="rounded-xl border border-border/60 bg-background/40 p-6">
+                  <p className="text-center font-serif-italic text-sm text-muted-foreground">{STAGE_EMPTY[stage]}</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {visiblePeople.map((m: any) => {
