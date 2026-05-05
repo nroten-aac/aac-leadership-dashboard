@@ -19,6 +19,7 @@ const TARGET_LISTS = [
   "Member Children",
   "Regular Attender Adults",
   "Regular Attender Children",
+  "Visitors",
 ];
 
 async function pcFetch(path: string, appId: string, secret: string) {
