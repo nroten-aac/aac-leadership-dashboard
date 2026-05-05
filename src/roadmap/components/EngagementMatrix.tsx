@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMembers, dbStageToRoadmap } from "../hooks/useRoadmapData";
+import { useTaggedMemberIds } from "../hooks/useTaggedMembers";
 import { STAGE_NAMES, STAGE_ORDER, type Stage } from "../types";
 
 const ENG_COLS: Array<{ key: string; label: string; match: (g: string) => boolean }> = [
@@ -24,10 +25,12 @@ function useMemberGroups() {
 export default function EngagementMatrix() {
   const { data: members = [] } = useMembers();
   const { data: groups = [] } = useMemberGroups();
+  const { data: taggedIds } = useTaggedMemberIds();
+  const scoped = taggedIds ? members.filter((m: any) => taggedIds.has(m.id)) : members;
 
   // Build stage x engagement matrix
   const stageOf = new Map<string, Stage>();
-  members.forEach((m: any) => stageOf.set(m.id, dbStageToRoadmap(m.discipleship_stage)));
+  scoped.forEach((m: any) => stageOf.set(m.id, dbStageToRoadmap(m.discipleship_stage)));
 
   const counts: Record<Stage, Record<string, Set<string>>> = {} as any;
   STAGE_ORDER.forEach((s) => {
@@ -48,8 +51,8 @@ export default function EngagementMatrix() {
   });
 
   const stageTotals: Record<Stage, number> = { connect: 0, belong: 0, mature: 0, minister: 0, multiply: 0 };
-  members.forEach((m: any) => stageTotals[dbStageToRoadmap(m.discipleship_stage)]++);
-  const total = members.length;
+  scoped.forEach((m: any) => stageTotals[dbStageToRoadmap(m.discipleship_stage)]++);
+  const total = scoped.length;
 
   // Find max cell for highlight
   let maxCell = 0;
