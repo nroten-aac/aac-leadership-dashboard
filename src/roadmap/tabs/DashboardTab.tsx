@@ -26,8 +26,8 @@ export default function DashboardTab() {
       + (pcoListCounts["Regular Attender Adults"] || 0)
       + (pcoListCounts["Regular Attender Children"] || 0)
     : null;
-  // "Exploring connection" = anyone at the Connecting stage (the visitor / outside-in pool)
-  const exploring = counts.connect;
+  // "Exploring connection" = PCO Visitors list (source of truth)
+  const exploring = pcoListCounts ? (pcoListCounts["Visitors"] || 0) : null;
   const total = members.length;
   const stillOnRoad = total - counts.multiply;
   const moves30d = events.filter((e) => e.type === "stage-move" && Date.now() - e.ts < 30 * 86400000).length;
@@ -47,7 +47,7 @@ export default function DashboardTab() {
       </section>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
-        <StatBlock value={exploring} label="People exploring connection" />
+        <StatBlock value={exploring ?? "—"} label="People exploring connection" />
         <StatBlock value={family ?? "—"} label="Members + regular attenders" />
         <StatBlock value={moves30d} label="Stage changes · last 30 days" />
         <StatBlock value={counts.multiply} label="Multiplying disciples" gold />
