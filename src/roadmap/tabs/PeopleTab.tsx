@@ -34,7 +34,7 @@ export default function PeopleTab() {
     const map = new Map<string, StatusKey>();
     const priority: Record<StatusKey, number> = { member: 3, regular: 2, visitor: 1 };
     (groups as any[]).forEach((g) => {
-      const def = STATUS_DEFS.find((s) => s.lists.includes(g.group_name));
+      const def = STATUS_DEFS.find((s) => (s.lists as readonly string[]).includes(g.group_name));
       if (!def) return;
       const existing = map.get(g.member_id);
       if (!existing || priority[def.key] > priority[existing]) map.set(g.member_id, def.key);
