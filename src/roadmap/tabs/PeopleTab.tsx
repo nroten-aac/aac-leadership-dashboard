@@ -225,8 +225,29 @@ export default function PeopleTab() {
         )}
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="eyebrow text-[10px] mr-1">Age</span>
+        {AGE_DEFS.map((def) => {
+          const on = ageFilter.has(def.key);
+          return (
+            <button
+              key={def.key}
+              onClick={() => toggle(ageFilter, def.key, setAgeFilter)}
+              className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ${
+                on ? "border-accent bg-accent/15 text-accent" : "border-border bg-card text-muted-foreground hover:border-accent/40"
+              }`}
+            >
+              {def.label}
+            </button>
+          );
+        })}
+        {ageFilter.size > 0 && (
+          <button onClick={() => setAgeFilter(new Set())} className="text-[10px] text-muted-foreground underline ml-1">clear</button>
+        )}
+      </div>
+
         <div className="text-xs text-muted-foreground">
-          Showing <span className="font-mono text-foreground">{filtered.length}</span> of {members.length}
+          Showing <span className="font-mono text-foreground">{filtered.length}</span> of {statusByMember.size}
         </div>
       </div>
 
