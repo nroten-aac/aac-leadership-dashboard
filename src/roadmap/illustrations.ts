@@ -95,18 +95,28 @@ export const FEATURED_VISUALS: Record<string, string> = {
         '<div class="framework-panel framework-panel--wrong">' +
           '<div class="framework-panel-tag">The Average Pastor</div>' +
           '<div class="framework-panel-illustration">' +
-            '<svg viewBox="0 0 240 220" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pastor at center surrounded by inward arrows">' +
-              '<defs><marker id="arr-wrong" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" stroke="none"/></marker></defs>' +
-              '<circle cx="120" cy="105" r="16"/>' +
-              '<path d="M 102 127 L 120 165 L 138 127"/>' +
-              '<line x1="120" y1="22" x2="120" y2="78" marker-end="url(#arr-wrong)"/>' +
-              '<line x1="190" y1="42" x2="152" y2="82" marker-end="url(#arr-wrong)"/>' +
-              '<line x1="222" y1="105" x2="158" y2="105" marker-end="url(#arr-wrong)"/>' +
-              '<line x1="190" y1="172" x2="148" y2="142" marker-end="url(#arr-wrong)"/>' +
-              '<line x1="120" y1="195" x2="120" y2="170" marker-end="url(#arr-wrong)"/>' +
-              '<line x1="50" y1="172" x2="92" y2="142" marker-end="url(#arr-wrong)"/>' +
-              '<line x1="18" y1="105" x2="82" y2="105" marker-end="url(#arr-wrong)"/>' +
-              '<line x1="50" y1="42" x2="88" y2="82" marker-end="url(#arr-wrong)"/>' +
+            '<svg viewBox="0 0 280 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Car driving backwards">' +
+              '<defs><marker id="arr-back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" stroke="none"/></marker></defs>' +
+              // road
+              '<line x1="10" y1="160" x2="270" y2="160" stroke-width="1.4" opacity="0.45"/>' +
+              '<line x1="20" y1="170" x2="50" y2="170" stroke-width="1.4" opacity="0.4"/>' +
+              '<line x1="70" y1="170" x2="100" y2="170" stroke-width="1.4" opacity="0.4"/>' +
+              '<line x1="120" y1="170" x2="150" y2="170" stroke-width="1.4" opacity="0.4"/>' +
+              '<line x1="170" y1="170" x2="200" y2="170" stroke-width="1.4" opacity="0.4"/>' +
+              '<line x1="220" y1="170" x2="250" y2="170" stroke-width="1.4" opacity="0.4"/>' +
+              // car body (facing right, but moving left = backwards)
+              '<path d="M 90 140 L 105 105 L 175 105 L 195 140 Z"/>' +
+              '<rect x="80" y="138" width="125" height="22" rx="6"/>' +
+              '<line x1="138" y1="105" x2="138" y2="140"/>' +
+              '<circle cx="105" cy="160" r="10"/>' +
+              '<circle cx="180" cy="160" r="10"/>' +
+              // headlight (front of car, on right) facing forward
+              '<circle cx="200" cy="148" r="3" fill="currentColor" stroke="none" opacity="0.9"/>' +
+              // direction of travel: leftward (backwards)
+              '<line x1="75" y1="85" x2="20" y2="85" marker-end="url(#arr-back)" stroke-width="3"/>' +
+              '<text x="48" y="74" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="currentColor" stroke="none" letter-spacing="2.5">REVERSE</text>' +
+              // small "wrong way" indicator over car
+              '<text x="142" y="128" text-anchor="middle" font-family="Gotham, Inter, sans-serif" font-weight="800" font-size="14" fill="currentColor" stroke="none" opacity="0.85">!</text>' +
             '</svg>' +
           '</div>' +
           '<h4 class="framework-panel-label">Backwards-driving</h4>' +
@@ -115,21 +125,28 @@ export const FEATURED_VISUALS: Record<string, string> = {
         '<div class="framework-panel framework-panel--right">' +
           '<div class="framework-panel-tag">God\'s Design</div>' +
           '<div class="framework-panel-illustration">' +
-            '<svg viewBox="0 0 240 220" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pastor on left equipping a team to the right with a forward direction arrow">' +
-              '<defs><marker id="arr-right" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" stroke="none"/></marker></defs>' +
-              '<line x1="30" y1="25" x2="200" y2="25" marker-end="url(#arr-right)" opacity="0.65" stroke-width="2"/>' +
-              '<text x="115" y="18" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="currentColor" stroke="none" letter-spacing="2.5" opacity="0.7">FORWARD</text>' +
-              '<circle cx="50" cy="115" r="14"/>' +
-              '<path d="M 36 134 L 50 165 L 64 134"/>' +
-              '<circle cx="170" cy="75" r="11"/>' +
-              '<path d="M 159 90 L 170 115 L 181 90" stroke-width="2"/>' +
-              '<circle cx="200" cy="120" r="11"/>' +
-              '<path d="M 189 135 L 200 158 L 211 135" stroke-width="2"/>' +
-              '<circle cx="170" cy="165" r="11"/>' +
-              '<path d="M 159 180 L 170 200 L 181 180" stroke-width="2"/>' +
-              '<line x1="64" y1="108" x2="155" y2="78" stroke-width="1.6" stroke-dasharray="4 4" opacity="0.6"/>' +
-              '<line x1="64" y1="115" x2="185" y2="120" stroke-width="1.6" stroke-dasharray="4 4" opacity="0.6"/>' +
-              '<line x1="64" y1="122" x2="155" y2="160" stroke-width="1.6" stroke-dasharray="4 4" opacity="0.6"/>' +
+            '<svg viewBox="0 0 280 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Car driving forward as designed">' +
+              '<defs><marker id="arr-fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" stroke="none"/></marker></defs>' +
+              // road
+              '<line x1="10" y1="160" x2="270" y2="160" stroke-width="1.4" opacity="0.45"/>' +
+              '<line x1="30" y1="170" x2="60" y2="170" stroke-width="1.4" opacity="0.4"/>' +
+              '<line x1="80" y1="170" x2="110" y2="170" stroke-width="1.4" opacity="0.4"/>' +
+              '<line x1="130" y1="170" x2="160" y2="170" stroke-width="1.4" opacity="0.4"/>' +
+              '<line x1="180" y1="170" x2="210" y2="170" stroke-width="1.4" opacity="0.4"/>' +
+              '<line x1="230" y1="170" x2="260" y2="170" stroke-width="1.4" opacity="0.4"/>' +
+              // car body (facing right)
+              '<path d="M 90 140 L 105 105 L 175 105 L 195 140 Z"/>' +
+              '<rect x="80" y="138" width="125" height="22" rx="6"/>' +
+              '<line x1="142" y1="105" x2="142" y2="140"/>' +
+              '<circle cx="100" cy="160" r="10"/>' +
+              '<circle cx="185" cy="160" r="10"/>' +
+              // headlight on right (front), with light beams
+              '<circle cx="205" cy="148" r="3" fill="currentColor" stroke="none"/>' +
+              '<line x1="210" y1="146" x2="230" y2="138" stroke-width="1.4" opacity="0.55"/>' +
+              '<line x1="210" y1="150" x2="232" y2="150" stroke-width="1.4" opacity="0.55"/>' +
+              // direction of travel: forward (right)
+              '<line x1="210" y1="85" x2="265" y2="85" marker-end="url(#arr-fwd)" stroke-width="3"/>' +
+              '<text x="237" y="74" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="currentColor" stroke="none" letter-spacing="2.5">FORWARD</text>' +
             '</svg>' +
           '</div>' +
           '<h4 class="framework-panel-label">Forward-driving</h4>' +
