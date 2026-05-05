@@ -1,7 +1,13 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight, Play } from "lucide-react";
 import { LAWS } from "../seed";
 import { LAW_SVGS } from "../illustrations";
+
+const STATUS_LABEL: Record<string, string> = {
+  "in-progress": "IN PROGRESS",
+  pending: "PENDING",
+  complete: "COMPLETE",
+};
 
 export default function LawDetail() {
   const { n } = useParams<{ n: string }>();
@@ -18,26 +24,63 @@ export default function LawDetail() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12 space-y-10">
-      <Link to="/members/playbook" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-accent transition">
-        <ArrowLeft className="h-4 w-4" /> Back to Playbook
+      <Link
+        to="/members/playbook"
+        className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-4 py-2 font-mono text-[11px] tracking-wider text-muted-foreground hover:text-accent hover:border-accent/40 transition"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" /> ALL 12 LAWS
       </Link>
 
-      <header className="space-y-4">
-        <div className="eyebrow">— Law {law.n} · {law.duration}</div>
-        <div className="flex items-start gap-6">
-          <div className="h-16 w-16 text-accent shrink-0" dangerouslySetInnerHTML={{ __html: LAW_SVGS[law.n] || "" }} />
-          <h1 className="font-display text-5xl md:text-6xl font-black leading-tight">
+      <header className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 items-start">
+        <div className="space-y-5">
+          <div className="eyebrow">
+            LAW {law.n} <span className="text-muted-foreground/50 mx-1">·</span> {STATUS_LABEL[law.status] ?? law.status.toUpperCase()}
+          </div>
+          <h1 className="font-display text-5xl md:text-6xl font-black leading-[1.05]">
             The Law of <em className="font-serif-italic gradient-gold-text font-semibold not-italic-mark">{law.accent}</em>
           </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">{law.subtitle}</p>
         </div>
-        <p className="text-lg text-muted-foreground max-w-3xl">{law.subtitle}</p>
+
+        <div className="relative h-40 w-40 rounded-2xl border border-border/60 bg-gradient-to-br from-card to-card/40 shadow-card p-5 shrink-0">
+          <ArrowRight className="absolute top-4 right-4 h-4 w-4 text-muted-foreground" />
+          <div className="h-full w-full text-accent/80" dangerouslySetInnerHTML={{ __html: LAW_SVGS[law.n] || "" }} />
+        </div>
       </header>
 
+      <div className="rounded-2xl border border-border/60 bg-card/60 px-5 py-4 flex items-center gap-4">
+        <button
+          type="button"
+          className="h-12 w-12 shrink-0 rounded-full bg-accent text-accent-foreground flex items-center justify-center hover:scale-105 transition"
+          aria-label="Play audio"
+        >
+          <Play className="h-5 w-5 fill-current ml-0.5" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="font-display text-sm font-bold">Listen · Chip Ingram</div>
+          <div className="font-mono text-[11px] text-muted-foreground mt-0.5 truncate">
+            The Law of {law.accent} · {law.duration}
+          </div>
+        </div>
+        <a
+          href="#"
+          className="hidden sm:inline-flex items-center gap-2 rounded-full border border-accent/40 px-4 py-2 font-mono text-[10px] tracking-wider text-accent hover:bg-accent/10 transition"
+        >
+          OPEN IN DRIVE →
+        </a>
+      </div>
+
       {law.heroStat && (
-        <section className="rounded-2xl border border-accent/30 bg-accent/5 p-8 text-center">
-          <div className="font-display text-7xl font-black gradient-gold-text">{law.heroStat.number}</div>
-          <div className="eyebrow mt-2">{law.heroStat.label}</div>
-          <p className="font-serif-italic text-lg text-muted-foreground mt-3 max-w-2xl mx-auto">{law.heroStat.text}</p>
+        <section className="rounded-2xl border-l-4 border-l-accent border border-border/60 bg-card/60 p-8 grid grid-cols-1 md:grid-cols-[auto_1fr] gap-x-10 gap-y-3 items-center shadow-card">
+          <div className="font-display text-7xl md:text-8xl font-black gradient-gold-text leading-none tracking-tight">
+            {law.heroStat.number}
+          </div>
+          <div>
+            <div className="eyebrow text-accent">{law.heroStat.label}</div>
+            <p className="font-serif-italic text-lg text-muted-foreground mt-2 leading-relaxed">
+              {law.heroStat.text}
+            </p>
+          </div>
         </section>
       )}
 
