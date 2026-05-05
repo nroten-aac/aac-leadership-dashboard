@@ -4,11 +4,13 @@ import StatBlock from "../components/StatBlock";
 import EngagementMatrix from "../components/EngagementMatrix";
 import StageDetailDialog from "../components/StageDetailDialog";
 import { useMembers, useActivityEvents, dbStageToRoadmap } from "../hooks/useRoadmapData";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import type { Stage } from "../types";
 
 export default function DashboardTab() {
   const { data: members = [] } = useMembers();
   const { data: events = [] } = useActivityEvents(200);
+  const { pcoListCounts } = useDashboardData();
   const [openStage, setOpenStage] = useState<Stage | null>(null);
 
   const counts = useMemo(() => {
@@ -17,10 +19,15 @@ export default function DashboardTab() {
     return c;
   }, [members]);
 
+  // From the PCO source-of-truth lists (synced via fetch-pco-list-counts)
+  const family = pcoListCounts
+    ? (pcoListCounts["Member Adults"] || 0)
+      + (pcoListCounts["Member Children"] || 0)
+      + (pcoListCounts["Regular Attender Adults"] || 0)
+      + (pcoListCounts["Regular Attender Children"] || 0)
+    : null;
   // "Exploring connection" = anyone at the Connecting stage (the visitor / outside-in pool)
   const exploring = counts.connect;
-  // "Family" = members + regular attenders (everyone past Connecting)
-  const family = members.length - counts.connect;
   const total = members.length;
   const stillOnRoad = total - counts.multiply;
   const moves30d = events.filter((e) => e.type === "stage-move" && Date.now() - e.ts < 30 * 86400000).length;
@@ -41,7 +48,7 @@ export default function DashboardTab() {
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
         <StatBlock value={exploring} label="People exploring connection" />
-        <StatBlock value={family} label="Members + regular attenders" />
+        <StatBlock value={family ?? "—"} label="Members + regular attenders" />
         <StatBlock value={moves30d} label="Stage changes · last 30 days" />
         <StatBlock value={counts.multiply} label="Multiplying disciples" gold />
         <StatBlock value={stillOnRoad} label="Still on the road" />
