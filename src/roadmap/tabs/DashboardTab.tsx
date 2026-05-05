@@ -17,8 +17,10 @@ export default function DashboardTab() {
     return c;
   }, [members]);
 
-  const exploring = members.filter((m: any) => m.membership_status === "visitor").length;
-  const family = members.filter((m: any) => m.membership_status === "active" || m.membership_status === "regular_attender").length;
+  // "Exploring connection" = anyone at the Connecting stage (the visitor / outside-in pool)
+  const exploring = counts.connect;
+  // "Family" = members + regular attenders (everyone past Connecting)
+  const family = members.length - counts.connect;
   const total = members.length;
   const stillOnRoad = total - counts.multiply;
   const moves30d = events.filter((e) => e.type === "stage-move" && Date.now() - e.ts < 30 * 86400000).length;
