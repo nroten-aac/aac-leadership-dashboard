@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import TheRoad from "../components/TheRoad";
 import StatBlock from "../components/StatBlock";
+import EngagementMatrix from "../components/EngagementMatrix";
 import { useMembers, useActivityEvents, dbStageToRoadmap } from "../hooks/useRoadmapData";
 import type { Stage } from "../types";
 
@@ -48,6 +49,10 @@ export default function DashboardTab() {
           The pipeline isn't a funnel — it's a road. Connecting → Belonging → Maturing → Ministering → Multiplying. Track movement, not attendance.
         </p>
         <TheRoad counts={counts} total={total} />
+      </section>
+
+      <section>
+        <EngagementMatrix />
       </section>
     </div>
   );

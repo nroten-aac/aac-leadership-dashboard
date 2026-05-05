@@ -1,4 +1,12 @@
 import { Stage, STAGE_NAMES } from "../types";
+import {
+  ConnectingIcon,
+  BelongingIcon,
+  MaturingIcon,
+  MinisteringIcon,
+  MultiplyingIcon,
+} from "@/components/icons/StageIcons";
+import type { ComponentType, SVGProps } from "react";
 
 interface RoadProps {
   counts: Record<Stage, number>;
@@ -7,17 +15,12 @@ interface RoadProps {
 }
 
 // Each stage is a milestone pin along a curved path that climbs valley → summit.
-const STAGES: Array<{ key: Stage; x: number; y: number; icon: string; color: string }> = [
-  { key: "connect",  x: 90,  y: 320, color: "hsl(var(--stage-connect))",
-    icon: '<line x1="0" y1="-14" x2="0" y2="14"/><line x1="-9" y1="-4" x2="9" y2="-4"/>' },
-  { key: "belong",   x: 290, y: 270, color: "hsl(var(--stage-belong))",
-    icon: '<path d="M-12 12 L-12 -2 L0 -14 L12 -2 L12 12 Z"/><line x1="0" y1="-9" x2="0" y2="-4"/>' },
-  { key: "mature",   x: 490, y: 200, color: "hsl(var(--stage-mature))",
-    icon: '<path d="M-13 -8 Q0 -12 13 -8 L13 9 Q0 5 -13 9 Z"/><line x1="0" y1="-10" x2="0" y2="9"/>' },
-  { key: "minister", x: 690, y: 130, color: "hsl(var(--stage-minister))",
-    icon: '<rect x="-13" y="-4" width="26" height="16" rx="1.5"/><rect x="-14" y="-9" width="28" height="6"/><line x1="0" y1="-9" x2="0" y2="12"/><path d="M-5 -9 Q-5 -16 0 -13 Q5 -16 5 -9"/>' },
-  { key: "multiply", x: 890, y: 70,  color: "hsl(var(--stage-multiply))",
-    icon: '<path d="M0 -14 Q-7 -6 -5 2 Q-2 8 0 13 Q2 8 5 2 Q7 -6 0 -14 Z"/>' },
+const STAGES: Array<{ key: Stage; x: number; y: number; color: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }> = [
+  { key: "connect",  x: 90,  y: 320, color: "hsl(var(--stage-connect))",  Icon: ConnectingIcon },
+  { key: "belong",   x: 290, y: 270, color: "hsl(var(--stage-belong))",   Icon: BelongingIcon },
+  { key: "mature",   x: 490, y: 200, color: "hsl(var(--stage-mature))",   Icon: MaturingIcon },
+  { key: "minister", x: 690, y: 130, color: "hsl(var(--stage-minister))", Icon: MinisteringIcon },
+  { key: "multiply", x: 890, y: 70,  color: "hsl(var(--stage-multiply))", Icon: MultiplyingIcon },
 ];
 
 const PATH_D = "M 30 360 C 150 360, 200 320, 290 290 S 430 220, 490 200 S 630 150, 690 130 S 830 90, 920 50";
@@ -65,12 +68,14 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
           const count = counts[s.key] || 0;
           const pct = total ? ((count / total) * 100).toFixed(1) : "0.0";
           const isMultiply = s.key === "multiply";
+          const Icon = s.Icon;
           return (
             <g key={s.key} className="cursor-pointer" onClick={() => onStageClick?.(s.key)}>
               <circle cx={s.x} cy={s.y} r="32" fill="hsl(var(--background))" stroke={s.color} strokeWidth="2.5"
                 className={isMultiply ? "drop-shadow-[0_0_18px_hsl(var(--accent)/0.6)]" : ""} />
-              <g transform={`translate(${s.x}, ${s.y})`} stroke={s.color} strokeWidth="2.2" fill="none"
-                strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: s.icon }} />
+              <g transform={`translate(${s.x - 18}, ${s.y - 18})`} style={{ color: s.color }}>
+                <Icon width={36} height={36} />
+              </g>
               {/* count badge */}
               <circle cx={s.x + 24} cy={s.y - 24} r="11" fill={isMultiply ? "hsl(var(--accent))" : "hsl(var(--card))"} stroke={s.color} strokeWidth="1.5" />
               <text x={s.x + 24} y={s.y - 21} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="10"
