@@ -138,8 +138,8 @@ const BuildingCampaignTracker = () => {
           {/* Funds Available + Campaign Details side by side */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Funds Available */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Funds Available</p>
+            <div className="rounded-2xl border border-border bg-card/40 p-4 shadow-sm">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Funds Available</p>
               <div className="grid grid-cols-2 gap-3">
                 <Card className="bg-accent/10 border-accent/30 col-span-2 ring-2 ring-[hsl(205_79%_40%)]/60 ring-offset-1">
                   <CardContent className="p-4 text-center">
@@ -182,8 +182,8 @@ const BuildingCampaignTracker = () => {
             </div>
 
             {/* Campaign Details */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Campaign Details</p>
+            <div className="rounded-2xl border border-border bg-card/40 p-4 shadow-sm">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Campaign Details</p>
               <div className="grid grid-cols-2 gap-3">
                 {/* Left: Starting Balance + Non-Pledge Giving */}
                 <div className="flex flex-col gap-3 h-full">
