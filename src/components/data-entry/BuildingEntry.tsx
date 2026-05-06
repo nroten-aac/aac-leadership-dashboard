@@ -345,6 +345,115 @@ const BuildingEntry = () => {
 
 export default BuildingEntry;
 
+const BuilderPayoutsRecent = ({
+  editingPoId,
+  setEditingPoId,
+  editPoValues,
+  setEditPoValues,
+}: {
+  editingPoId: string | null;
+  setEditingPoId: (id: string | null) => void;
+  editPoValues: any;
+  setEditPoValues: (v: any) => void;
+}) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: rows = [] } = useQuery({
+    queryKey: ["building_campaign_payouts", "recent"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("building_campaign_payouts")
+        .select("*")
+        .order("payout_date", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const handleUpdate = async (id: string) => {
+    const { error } = await supabase.from("building_campaign_payouts").update(editPoValues).eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    queryClient.invalidateQueries({ queryKey: ["building_campaign_payouts"] });
+    setEditingPoId(null);
+    toast({ title: "Updated" });
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("building_campaign_payouts").delete().eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    queryClient.invalidateQueries({ queryKey: ["building_campaign_payouts"] });
+    toast({ title: "Deleted" });
+  };
+
+  return (
+    <div className="bg-card rounded-2xl shadow-card p-6">
+      <h3 className="font-display font-semibold text-foreground mb-4">Recent Builder Payouts</h3>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No payouts yet.</p>
+      ) : (
+        <div className="overflow-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted">
+              <tr>
+                <th className="text-left px-3 py-2 font-medium text-muted-foreground">Date</th>
+                <th className="text-right px-3 py-2 font-medium text-muted-foreground">Amount</th>
+                <th className="text-left px-3 py-2 font-medium text-muted-foreground">Payee</th>
+                <th className="text-left px-3 py-2 font-medium text-muted-foreground">Description</th>
+                <th className="px-3 py-2 w-20"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {(rows as any[]).map((row) => (
+                <tr key={row.id} className="border-b border-border/30 hover:bg-muted/30">
+                  {editingPoId === row.id ? (
+                    <>
+                      <td className="px-1 py-1"><Input className="h-8 text-sm" type="date" value={editPoValues.payout_date ?? ""} onChange={(e) => setEditPoValues({ ...editPoValues, payout_date: e.target.value })} /></td>
+                      <td className="px-1 py-1"><Input className="h-8 text-sm text-right" type="number" step="0.01" value={editPoValues.amount ?? ""} onChange={(e) => setEditPoValues({ ...editPoValues, amount: Number(e.target.value) })} /></td>
+                      <td className="px-1 py-1"><Input className="h-8 text-sm" value={editPoValues.payee ?? ""} onChange={(e) => setEditPoValues({ ...editPoValues, payee: e.target.value })} /></td>
+                      <td className="px-1 py-1"><Input className="h-8 text-sm" value={editPoValues.description ?? ""} onChange={(e) => setEditPoValues({ ...editPoValues, description: e.target.value })} /></td>
+                      <td className="px-1 py-1 flex gap-1">
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleUpdate(row.id)}><Check className="h-3.5 w-3.5" /></Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingPoId(null)}><X className="h-3.5 w-3.5" /></Button>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-3 py-2 font-medium">{row.payout_date}</td>
+                      <td className="px-3 py-2 text-right">{fmt(row.amount)}</td>
+                      <td className="px-3 py-2">{row.payee || "—"}</td>
+                      <td className="px-3 py-2">{row.description || "—"}</td>
+                      <td className="px-1 py-1 flex gap-0.5">
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingPoId(row.id); setEditPoValues({ payout_date: row.payout_date, amount: row.amount, payee: row.payee, description: row.description }); }}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete payout?</AlertDialogTitle>
+                              <AlertDialogDescription>Remove the {row.payout_date} payout of {fmt(row.amount)}?</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(row.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const BuildingFundRecent = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
