@@ -160,22 +160,7 @@ const BuildingEntry = () => {
         </form>
       </div>
 
-      <RecentEntries
-        table={"building_fund_accounts" as any}
-        title="Recent Building Fund Entries"
-        orderBy={[
-          { column: "year", ascending: false },
-          { column: "month", ascending: false },
-          { column: "created_at", ascending: false },
-        ]}
-        columns={[
-          { key: "month", label: "Month" },
-          { key: "year", label: "Year" },
-          { key: "account_name", label: "Account", render: (v) => ACCOUNT_LABELS[v] || v },
-          { key: "amount", label: "Amount", render: (v) => `$${Number(v).toLocaleString("en-US", { minimumFractionDigits: 2 })}` },
-          { key: "created_at", label: "Added", render: (v) => new Date(v).toLocaleDateString() },
-        ]}
-      />
+      <BuildingFundRecent />
 
       {/* Building Expansion Campaign */}
       <div className="bg-card rounded-2xl shadow-card p-6">
