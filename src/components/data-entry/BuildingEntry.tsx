@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Check, X } from "lucide-react";
-import RecentEntries from "./RecentEntries";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -277,3 +276,101 @@ const BuildingEntry = () => {
 };
 
 export default BuildingEntry;
+
+const BuildingFundRecent = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [yearFilter, setYearFilter] = useState<string>("recent");
+
+  const { data: rows = [] } = useQuery({
+    queryKey: ["building_fund_accounts", "recent-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("building_fund_accounts" as any)
+        .select("*")
+        .order("year", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(1000);
+      if (error) throw error;
+      return (data || []).sort((a: any, b: any) => {
+        if (a.year !== b.year) return b.year - a.year;
+        return MONTHS.indexOf(b.month) - MONTHS.indexOf(a.month);
+      });
+    },
+  });
+
+  const years = Array.from(new Set((rows as any[]).map((r) => r.year))).sort((a: any, b: any) => b - a);
+  const filtered = yearFilter === "recent"
+    ? (rows as any[]).slice(0, 10)
+    : (rows as any[]).filter((r) => String(r.year) === yearFilter);
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("building_fund_accounts" as any).delete().eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    queryClient.invalidateQueries({ queryKey: ["building_fund_accounts"] });
+    toast({ title: "Deleted" });
+  };
+
+  return (
+    <div className="bg-card rounded-2xl shadow-card p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-display font-semibold text-foreground">Recent Building Fund Entries</h3>
+        <Select value={yearFilter} onValueChange={setYearFilter}>
+          <SelectTrigger className="w-[140px] h-8 text-sm"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recent">Recent (10)</SelectItem>
+            {years.map((y: any) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      {filtered.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No entries yet.</p>
+      ) : (
+        <div className="overflow-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted">
+              <tr>
+                <th className="text-left px-3 py-2 font-medium text-muted-foreground">Month</th>
+                <th className="text-left px-3 py-2 font-medium text-muted-foreground">Year</th>
+                <th className="text-left px-3 py-2 font-medium text-muted-foreground">Account</th>
+                <th className="text-right px-3 py-2 font-medium text-muted-foreground">Amount</th>
+                <th className="text-left px-3 py-2 font-medium text-muted-foreground">Added</th>
+                <th className="px-3 py-2 w-12"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row: any) => (
+                <tr key={row.id} className="border-b border-border/30 hover:bg-muted/30">
+                  <td className="px-3 py-2">{row.month}</td>
+                  <td className="px-3 py-2">{row.year}</td>
+                  <td className="px-3 py-2">{ACCOUNT_LABELS[row.account_name] || row.account_name}</td>
+                  <td className="px-3 py-2 text-right">{fmt(row.amount)}</td>
+                  <td className="px-3 py-2">{new Date(row.created_at).toLocaleDateString()}</td>
+                  <td className="px-1 py-1">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete entry?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Remove {ACCOUNT_LABELS[row.account_name] || row.account_name} entry of {fmt(row.amount)} for {row.month} {row.year}?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(row.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
