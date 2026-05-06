@@ -7,7 +7,7 @@ import {
 } from "recharts";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import { Loader2 } from "lucide-react";
+import { Loader2, Link2 } from "lucide-react";
 
 const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const CAMPAIGN_GOAL = 925000;
@@ -141,9 +141,12 @@ const BuildingCampaignTracker = () => {
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Funds Available</p>
               <div className="grid grid-cols-2 gap-3">
-                <Card className="bg-accent/10 border-accent/30 col-span-2">
+                <Card className="bg-accent/10 border-accent/30 col-span-2 ring-2 ring-[hsl(205_79%_40%)]/60 ring-offset-1">
                   <CardContent className="p-4 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">Total Funds Available</p>
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
+                      <p className="text-xs text-muted-foreground">Total Funds Available</p>
+                    </div>
                     <p className="text-lg font-bold text-accent-foreground">{fmt(totalFundsAvailable)}</p>
                   </CardContent>
                 </Card>
@@ -192,9 +195,7 @@ const BuildingCampaignTracker = () => {
                   </Card>
                   <Card className="bg-accent/10 border-accent/30 flex-1">
                     <CardContent className="p-4 text-center flex flex-col items-center justify-center h-full">
-                      <p className="text-xs text-muted-foreground mb-1">
-                        One Time Non-Pledge Gifts
-                      </p>
+                      <p className="text-xs text-muted-foreground mb-1">One Time Non-Pledge Gifts</p>
                       {pledgeLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                       ) : (
@@ -235,11 +236,12 @@ const BuildingCampaignTracker = () => {
                         )}
                       </CardContent>
                     </Card>
-                    <Card className="bg-destructive/5 border-destructive/20 shadow-none">
+                    <Card className="bg-destructive/5 border-destructive/20 shadow-none ring-2 ring-[hsl(205_79%_40%)]/60 ring-offset-1">
                       <CardContent className="p-3 text-center flex flex-col items-center justify-center h-full">
-                        <p className="text-[10px] text-muted-foreground mb-1">
-                          Pledges Not Yet Received
-                        </p>
+                        <div className="flex items-center justify-center gap-1.5 mb-1">
+                          <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
+                          <p className="text-[10px] text-muted-foreground">Pledges Not Yet Received</p>
+                        </div>
                         {pledgeLoading ? (
                           <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                         ) : (
@@ -255,43 +257,7 @@ const BuildingCampaignTracker = () => {
             </div>
           </div>
 
-          {/* Full-width Campaign Gap Summary */}
-          {(() => {
-            const startingBalance = 408510.58;
-            const nonPledgeGiving = pledgeData ? (pledgeData.received_outside_pledges_cents || 0) / 100 : 0;
-            const totalCampaignGiving = pledgeData ? ((pledgeData.received_from_pledges_cents || 0) + (pledgeData.not_yet_received_cents || 0)) / 100 : cumulativeGiving;
-            const totalHavePlanned = startingBalance + nonPledgeGiving + totalCampaignGiving;
-            const remaining = Math.max(0, CAMPAIGN_GOAL - totalHavePlanned);
-            const progressPct = Math.min(100, (totalHavePlanned / CAMPAIGN_GOAL) * 100);
-
-            return (
-              <Card className="mt-4 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Campaign Progress</p>
-                    <p className="text-xs text-muted-foreground">Goal: {fmt(CAMPAIGN_GOAL)}</p>
-                  </div>
-                  <Progress value={progressPct} className="h-3 mb-3" />
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase">Total Have + Planned</p>
-                      <p className="text-lg font-bold text-primary">{fmt(totalHavePlanned)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase">Project Cost</p>
-                      <p className="text-lg font-bold text-foreground">{fmt(CAMPAIGN_GOAL)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase">Remaining Gap</p>
-                      <p className="text-lg font-bold text-destructive">{fmt(remaining)}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })()}
-
-          {/* Builder Payouts */}
+          {/* Builder Payouts (moved up — sits with Campaign Details) */}
           <Card className="mt-2">
             <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base">Builder Payouts</CardTitle>
@@ -331,6 +297,50 @@ const BuildingCampaignTracker = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Full-width Campaign Gap Summary */}
+          {(() => {
+            const pledgesNotYet = pledgeData ? Math.max(0, (pledgeData.not_yet_received_cents || 0) / 100) : 0;
+            const totalHavePlanned = totalFundsAvailable + pledgesNotYet;
+            const remaining = Math.max(0, CAMPAIGN_GOAL - totalHavePlanned);
+            const progressPct = Math.min(100, (totalHavePlanned / CAMPAIGN_GOAL) * 100);
+
+            return (
+              <Card className="mt-4 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Campaign Progress</p>
+                    <p className="text-xs text-muted-foreground">Goal: {fmt(CAMPAIGN_GOAL)}</p>
+                  </div>
+                  <Progress value={progressPct} className="h-3 mb-3" />
+                  <div className="grid grid-cols-4 gap-4 text-center">
+                    <div className="rounded-md ring-2 ring-[hsl(205_79%_40%)]/60 ring-offset-1 p-2 bg-background/40">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
+                        <p className="text-[10px] text-muted-foreground uppercase">Total Have + Planned</p>
+                        <Link2 className="h-3 w-3 text-[hsl(205_79%_40%)]" aria-hidden />
+                      </div>
+                      <p className="text-lg font-bold text-primary">{fmt(totalHavePlanned)}</p>
+                      <p className="text-[9px] text-muted-foreground mt-0.5">Total Funds Available + Pledges Not Yet Received</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Total Paid Out</p>
+                      <p className="text-lg font-bold text-foreground">{fmt(totalPaidOut)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Project Cost</p>
+                      <p className="text-lg font-bold text-foreground">{fmt(CAMPAIGN_GOAL)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Remaining Gap</p>
+                      <p className="text-lg font-bold text-destructive">{fmt(remaining)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
         </div>
       </div>
     </div>
