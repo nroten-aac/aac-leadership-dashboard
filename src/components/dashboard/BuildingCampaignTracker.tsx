@@ -193,7 +193,7 @@ const BuildingCampaignTracker = () => {
                   <Card className="bg-accent/10 border-accent/30 flex-1">
                     <CardContent className="p-4 text-center flex flex-col items-center justify-center h-full">
                       <p className="text-xs text-muted-foreground mb-1">
-                        One Time Non-Pledge Gifts<PcoBadge />
+                        One Time Non-Pledge Gifts
                       </p>
                       {pledgeLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
@@ -210,7 +210,7 @@ const BuildingCampaignTracker = () => {
                 <div className="flex flex-col gap-2 h-full">
                   <div className="text-center rounded-t-lg border border-primary/20 bg-primary/5 px-3 py-2">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                      Total Campaign Giving<PcoBadge />
+                      Total Campaign Giving
                     </p>
                     {pledgeLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
@@ -224,7 +224,7 @@ const BuildingCampaignTracker = () => {
                     <Card className="bg-accent/10 border-accent/30 shadow-none">
                       <CardContent className="p-3 text-center flex flex-col items-center justify-center h-full">
                         <p className="text-[10px] text-muted-foreground mb-1">
-                          Pledges Received<PcoBadge />
+                          Pledges Received
                         </p>
                         {pledgeLoading ? (
                           <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
@@ -238,7 +238,7 @@ const BuildingCampaignTracker = () => {
                     <Card className="bg-destructive/5 border-destructive/20 shadow-none">
                       <CardContent className="p-3 text-center flex flex-col items-center justify-center h-full">
                         <p className="text-[10px] text-muted-foreground mb-1">
-                          Pledges Not Yet Received<PcoBadge />
+                          Pledges Not Yet Received
                         </p>
                         {pledgeLoading ? (
                           <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
