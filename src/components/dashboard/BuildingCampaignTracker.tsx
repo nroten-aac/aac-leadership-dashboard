@@ -7,8 +7,7 @@ import {
 } from "recharts";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Cloud } from "lucide-react";
-import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Loader2 } from "lucide-react";
 
 const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const CAMPAIGN_GOAL = 925000;
@@ -32,22 +31,6 @@ const fmtShort = (v: number) => {
   if (v >= 1000) return `$${(v / 1000).toFixed(0)}K`;
   return `$${v.toFixed(0)}`;
 };
-
-const PcoBadge = () => (
-  <TooltipProvider>
-    <UITooltip>
-      <TooltipTrigger asChild>
-        <span className="inline-flex items-center gap-0.5 ml-1 align-middle text-[9px] font-medium text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full cursor-help">
-          <Cloud className="h-2.5 w-2.5" />
-          PCO
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="text-xs">
-        Live from Planning Center Online
-      </TooltipContent>
-    </UITooltip>
-  </TooltipProvider>
-);
 
 interface PayoutRow {
   id: string;
