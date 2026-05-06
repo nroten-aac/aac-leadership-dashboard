@@ -302,7 +302,7 @@ const BuildingCampaignTracker = () => {
           {(() => {
             const pledgesNotYet = pledgeData ? Math.max(0, (pledgeData.not_yet_received_cents || 0) / 100) : 0;
             const totalHavePlanned = totalFundsAvailable + pledgesNotYet;
-            const remaining = Math.max(0, CAMPAIGN_GOAL - totalHavePlanned);
+            const remaining = Math.max(0, CAMPAIGN_GOAL - totalHavePlanned - totalPaidOut);
             const progressPct = Math.min(100, (totalHavePlanned / CAMPAIGN_GOAL) * 100);
 
             return (
