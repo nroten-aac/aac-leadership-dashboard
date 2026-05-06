@@ -7,6 +7,7 @@ import { Mail, Phone, Home, ArrowRight, Check, Pencil, Trash2, X } from "lucide-
 import { STAGE_NAMES, STAGE_ORDER, STAGE_DESC, type Stage } from "../types";
 import { dbStageToRoadmap } from "../hooks/useRoadmapData";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "@/hooks/use-toast";
 
 const ROADMAP_TO_DB: Record<Stage, string> = {
   connect: "connecting",
@@ -57,9 +58,19 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
 
   const saveNote = useMutation({
     mutationFn: async (value: string) => {
-      await supabase.from("pastoral_notes" as any).upsert({ member_id: member.id, note: value, updated_at: new Date().toISOString() } as any, { onConflict: "member_id" } as any);
+      const { error } = await supabase
+        .from("pastoral_notes" as any)
+        .upsert(
+          { member_id: member.id, note: value, updated_at: new Date().toISOString() } as any,
+          { onConflict: "member_id" } as any
+        );
+      if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["pastoral_note", member?.id] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pastoral_note", member?.id] });
+      toast({ title: "Pastoral note saved" });
+    },
+    onError: (e: any) => toast({ title: "Could not save note", description: e?.message ?? String(e), variant: "destructive" }),
   });
 
   // Stage history
@@ -102,12 +113,18 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
   // Move stage
   const moveStage = useMutation({
     mutationFn: async (target: Stage) => {
-      await supabase.from("members").update({ discipleship_stage: ROADMAP_TO_DB[target], stage_updated_at: new Date().toISOString() } as any).eq("id", member.id);
+      const { error } = await supabase
+        .from("members")
+        .update({ discipleship_stage: ROADMAP_TO_DB[target], stage_updated_at: new Date().toISOString() } as any)
+        .eq("id", member.id);
+      if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_d, target) => {
       qc.invalidateQueries({ queryKey: ["roadmap", "members"] });
       qc.invalidateQueries({ queryKey: ["stage_history", member?.id] });
+      toast({ title: `Moved to ${STAGE_NAMES[target]}` });
     },
+    onError: (e: any) => toast({ title: "Could not move stage", description: e?.message ?? String(e), variant: "destructive" }),
   });
 
   if (!member) return null;
@@ -215,7 +232,7 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
                     }}
                   >
                     <span className="font-mono text-[10px] font-bold">{i + 1}</span>
-                    {reached && !current && (
+                    {reached && (
                       <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 flex items-center justify-center">
                         <Check className="h-2.5 w-2.5 text-background" strokeWidth={3} />
                       </span>
