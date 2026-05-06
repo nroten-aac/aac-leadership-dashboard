@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone, Home, ArrowRight, Check, Pencil, Trash2, X } from "lucide-react";
+import { Mail, Phone, Home, ArrowRight, ArrowLeft, Check, Pencil, Trash2, X } from "lucide-react";
 import { STAGE_NAMES, STAGE_ORDER, STAGE_DESC, type Stage } from "../types";
 import { dbStageToRoadmap } from "../hooks/useRoadmapData";
 import { formatDistanceToNow } from "date-fns";
@@ -38,6 +38,7 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
   const stage: Stage = member ? dbStageToRoadmap(member.discipleship_stage) : "connect";
   const stageIdx = STAGE_ORDER.indexOf(stage);
   const nextStage = STAGE_ORDER[stageIdx + 1];
+  const prevStage = stageIdx > 0 ? STAGE_ORDER[stageIdx - 1] : undefined;
 
   const stageDays = member?.stage_updated_at
     ? Math.floor((Date.now() - new Date(member.stage_updated_at).getTime()) / 86400000)
@@ -198,15 +199,26 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
           </div>
         </div>
 
-        {/* Move to next stage */}
-        {nextStage && (
-          <div className="p-6 border-b border-border/60">
-            <button
-              onClick={() => moveStage.mutate(nextStage)}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 font-mono text-[11px] tracking-wider text-accent-foreground font-bold hover:scale-[1.01] transition shadow-[0_0_30px_hsl(var(--accent)/0.3)]"
-            >
-              MOVE TO {STAGE_NAMES[nextStage].toUpperCase()} <ArrowRight className="h-4 w-4" />
-            </button>
+        {(nextStage || prevStage) && (
+          <div className="p-6 border-b border-border/60 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {prevStage && (
+              <button
+                onClick={() => {
+                  if (confirm(`Move ${member.first_name} back to ${STAGE_NAMES[prevStage]}?`)) moveStage.mutate(prevStage);
+                }}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background/40 px-4 py-3 font-mono text-[11px] tracking-wider text-muted-foreground font-bold hover:text-foreground hover:border-foreground/40 transition"
+              >
+                <ArrowLeft className="h-4 w-4" /> BACK TO {STAGE_NAMES[prevStage].toUpperCase()}
+              </button>
+            )}
+            {nextStage && (
+              <button
+                onClick={() => moveStage.mutate(nextStage)}
+                className={`w-full inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 font-mono text-[11px] tracking-wider text-accent-foreground font-bold hover:scale-[1.01] transition shadow-[0_0_30px_hsl(var(--accent)/0.3)] ${!prevStage ? "sm:col-span-2" : ""}`}
+              >
+                MOVE TO {STAGE_NAMES[nextStage].toUpperCase()} <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
           </div>
         )}
 
