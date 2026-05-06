@@ -161,6 +161,33 @@ export type Database = {
         }
         Relationships: []
       }
+      building_campaign_payouts: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          payee: string | null
+          payout_date: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          payee?: string | null
+          payout_date: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          payee?: string | null
+          payout_date?: string
+        }
+        Relationships: []
+      }
       building_fund_accounts: {
         Row: {
           account_name: string
