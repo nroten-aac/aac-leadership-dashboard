@@ -25,8 +25,8 @@ const FUND_LABELS: Record<string, string> = {
 };
 
 const GivingPieCharts = ({ monthlyGiving }: { monthlyGiving: MonthlyGiving[] }) => {
-  const { currentMonthData, currentMonthLabel, ytdData, ytdLabel } = useMemo(() => {
-    if (!monthlyGiving.length) return { currentMonthData: [], currentMonthLabel: "", ytdData: [], ytdLabel: "" };
+  const { currentMonthData, currentMonthLabel, ytdData, ytdLabel, ytdMonthlyBreakdown } = useMemo(() => {
+    if (!monthlyGiving.length) return { currentMonthData: [], currentMonthLabel: "", ytdData: [], ytdLabel: "", ytdMonthlyBreakdown: [] as { month: string; total: number }[] };
 
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -38,7 +38,7 @@ const GivingPieCharts = ({ monthlyGiving }: { monthlyGiving: MonthlyGiving[] }) 
       return !(g.year === currentYear && gMonthIdx === currentMonthIdx);
     });
 
-    if (!completed.length) return { currentMonthData: [], currentMonthLabel: "", ytdData: [], ytdLabel: "" };
+    if (!completed.length) return { currentMonthData: [], currentMonthLabel: "", ytdData: [], ytdLabel: "", ytdMonthlyBreakdown: [] as { month: string; total: number }[] };
 
     // Find the most recent completed month
     const sorted = [...completed].sort((a, b) => {
@@ -64,6 +64,17 @@ const GivingPieCharts = ({ monthlyGiving }: { monthlyGiving: MonthlyGiving[] }) 
         ytdTotals[g.fund] = (ytdTotals[g.fund] || 0) + g.amount;
       });
 
+    // Per-month totals (all funds) for YTD year
+    const monthTotalsMap: Record<string, number> = {};
+    completed
+      .filter((g) => g.year === latestYear)
+      .forEach((g) => {
+        monthTotalsMap[g.month] = (monthTotalsMap[g.month] || 0) + g.amount;
+      });
+    const ytdMonthlyBreakdown = MONTH_ORDER
+      .filter((m) => monthTotalsMap[m] != null)
+      .map((m) => ({ month: m, total: monthTotalsMap[m] }));
+
     const toData = (totals: Record<string, number>) =>
       Object.entries(totals)
         .filter(([, v]) => v > 0)
@@ -78,10 +89,16 @@ const GivingPieCharts = ({ monthlyGiving }: { monthlyGiving: MonthlyGiving[] }) 
       currentMonthLabel: `${latestMonth.slice(0, 3)} ${latestYear}`,
       ytdData: toData(ytdTotals),
       ytdLabel: `${latestYear} YTD`,
+      ytdMonthlyBreakdown,
     };
   }, [monthlyGiving]);
 
-  const renderPie = (data: { name: string; value: number; color: string }[], title: string, total: number) => (
+  const renderPie = (
+    data: { name: string; value: number; color: string }[],
+    title: string,
+    total: number,
+    breakdown?: { month: string; total: number }[],
+  ) => (
     <div className="bg-card rounded-2xl shadow-card p-6 flex-1 min-w-[280px]">
       <h3 className="font-display font-semibold text-foreground text-sm mb-1">{title}</h3>
       <p className="text-xs text-muted-foreground mb-4">
@@ -90,6 +107,7 @@ const GivingPieCharts = ({ monthlyGiving }: { monthlyGiving: MonthlyGiving[] }) 
       {data.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-12">No data</p>
       ) : (
+        <>
         <div className="flex items-center gap-4">
           <ResponsiveContainer width="60%" height={220}>
             <PieChart>
@@ -133,6 +151,37 @@ const GivingPieCharts = ({ monthlyGiving }: { monthlyGiving: MonthlyGiving[] }) 
             ))}
           </div>
         </div>
+        {breakdown && breakdown.length > 0 && (
+          <div className="mt-5 pt-4 border-t border-border">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              Monthly contributions to total
+            </p>
+            <div className="space-y-1.5">
+              {breakdown.map((m) => {
+                const pct = total > 0 ? (m.total / total) * 100 : 0;
+                return (
+                  <div key={m.month} className="flex items-center gap-2 text-xs">
+                    <span className="w-12 shrink-0 text-muted-foreground">{m.month.slice(0, 3)}</span>
+                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary/70 rounded-full" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="w-24 text-right font-medium tabular-nums text-foreground">
+                      ${m.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                );
+              })}
+              <div className="flex items-center gap-2 text-xs pt-1.5 mt-1 border-t border-border">
+                <span className="w-12 shrink-0 font-semibold">Total</span>
+                <div className="flex-1" />
+                <span className="w-24 text-right font-bold tabular-nums text-primary">
+                  ${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+        </>
       )}
     </div>
   );
@@ -143,7 +192,7 @@ const GivingPieCharts = ({ monthlyGiving }: { monthlyGiving: MonthlyGiving[] }) 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
       {renderPie(currentMonthData, `Giving Breakdown — ${currentMonthLabel}`, currentTotal)}
-      {renderPie(ytdData, `Giving Breakdown — ${ytdLabel}`, ytdTotal)}
+      {renderPie(ytdData, `Giving Breakdown — ${ytdLabel}`, ytdTotal, ytdMonthlyBreakdown)}
     </div>
   );
 };
