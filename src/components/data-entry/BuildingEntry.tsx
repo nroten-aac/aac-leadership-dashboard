@@ -42,6 +42,15 @@ const BuildingEntry = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<any>({});
 
+  // Builder Payouts state
+  const [poDate, setPoDate] = useState("");
+  const [poAmount, setPoAmount] = useState("");
+  const [poPayee, setPoPayee] = useState("");
+  const [poDescription, setPoDescription] = useState("");
+  const [poSaving, setPoSaving] = useState(false);
+  const [editingPoId, setEditingPoId] = useState<string | null>(null);
+  const [editPoValues, setEditPoValues] = useState<any>({});
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!month || !year || !account || !amount) {
@@ -160,6 +169,65 @@ const BuildingEntry = () => {
       </div>
 
       <BuildingFundRecent />
+
+      {/* Builder Payouts */}
+      <div className="bg-card rounded-2xl shadow-card p-6">
+        <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Plus className="h-4 w-4" /> Builder Payouts
+        </h3>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!poDate || !poAmount) {
+              toast({ title: "Missing fields", description: "Date and amount are required.", variant: "destructive" });
+              return;
+            }
+            setPoSaving(true);
+            const { error } = await supabase.from("building_campaign_payouts").insert({
+              payout_date: poDate,
+              amount: parseFloat(poAmount),
+              payee: poPayee || null,
+              description: poDescription || null,
+            });
+            setPoSaving(false);
+            if (error) {
+              toast({ title: "Error", description: error.message, variant: "destructive" });
+              return;
+            }
+            toast({ title: "Saved", description: `Payout of $${poAmount} saved.` });
+            queryClient.invalidateQueries({ queryKey: ["building_campaign_payouts"] });
+            setPoDate(""); setPoAmount(""); setPoPayee(""); setPoDescription("");
+          }}
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 items-end"
+        >
+          <div className="space-y-1.5">
+            <Label>Payout Date</Label>
+            <Input type="date" value={poDate} onChange={(e) => setPoDate(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Amount ($)</Label>
+            <Input type="number" step="0.01" value={poAmount} onChange={(e) => setPoAmount(e.target.value)} placeholder="0.00" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Payee</Label>
+            <Input value={poPayee} onChange={(e) => setPoPayee(e.target.value)} placeholder="Builder name (optional)" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Description</Label>
+            <Input value={poDescription} onChange={(e) => setPoDescription(e.target.value)} placeholder="Optional" />
+          </div>
+          <Button type="submit" disabled={poSaving} className="h-10">
+            {poSaving ? "Saving..." : "Save"}
+          </Button>
+        </form>
+      </div>
+
+      <BuilderPayoutsRecent
+        editingPoId={editingPoId}
+        setEditingPoId={setEditingPoId}
+        editPoValues={editPoValues}
+        setEditPoValues={setEditPoValues}
+      />
 
       {/* Building Expansion Campaign */}
       <div className="bg-card rounded-2xl shadow-card p-6">
