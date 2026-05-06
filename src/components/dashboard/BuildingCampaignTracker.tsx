@@ -7,7 +7,7 @@ import {
 } from "recharts";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import { Loader2 } from "lucide-react";
+import { Loader2, Link2 } from "lucide-react";
 
 const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const CAMPAIGN_GOAL = 925000;
@@ -184,17 +184,21 @@ const BuildingCampaignTracker = () => {
               <div className="grid grid-cols-2 gap-3">
                 {/* Left: Starting Balance + Non-Pledge Giving */}
                 <div className="flex flex-col gap-3 h-full">
-                  <Card className="bg-muted/30 border-muted-foreground/20 flex-1">
+                  <Card className="bg-muted/30 border-muted-foreground/20 flex-1 ring-2 ring-[hsl(205_79%_40%)]/60 ring-offset-1">
                     <CardContent className="p-4 text-center flex flex-col items-center justify-center h-full">
-                      <p className="text-xs text-muted-foreground mb-1">Starting Balance Before Campaign</p>
+                      <div className="flex items-center justify-center gap-1.5 mb-1">
+                        <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
+                        <p className="text-xs text-muted-foreground">Starting Balance Before Campaign</p>
+                      </div>
                       <p className="text-lg font-bold text-foreground">{fmt(408510.58)}</p>
                     </CardContent>
                   </Card>
-                  <Card className="bg-accent/10 border-accent/30 flex-1">
+                  <Card className="bg-accent/10 border-accent/30 flex-1 ring-2 ring-[hsl(205_79%_40%)]/60 ring-offset-1">
                     <CardContent className="p-4 text-center flex flex-col items-center justify-center h-full">
-                      <p className="text-xs text-muted-foreground mb-1">
-                        One Time Non-Pledge Gifts
-                      </p>
+                      <div className="flex items-center justify-center gap-1.5 mb-1">
+                        <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
+                        <p className="text-xs text-muted-foreground">One Time Non-Pledge Gifts</p>
+                      </div>
                       {pledgeLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                       ) : (
@@ -208,10 +212,13 @@ const BuildingCampaignTracker = () => {
 
                 {/* Right: Total Campaign Giving bracket */}
                 <div className="flex flex-col gap-2 h-full">
-                  <div className="text-center rounded-t-lg border border-primary/20 bg-primary/5 px-3 py-2">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                      Total Campaign Giving
-                    </p>
+                  <div className="text-center rounded-t-lg border-2 border-[hsl(205_79%_40%)]/60 bg-primary/5 px-3 py-2">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                        Total Campaign Giving
+                      </p>
+                    </div>
                     {pledgeLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                     ) : (
@@ -220,7 +227,7 @@ const BuildingCampaignTracker = () => {
                       </p>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-2 border-x border-b border-primary/20 rounded-b-lg p-2 bg-primary/[0.02] flex-1">
+                  <div className="grid grid-cols-2 gap-2 border-x-2 border-b-2 border-[hsl(205_79%_40%)]/60 rounded-b-lg p-2 bg-primary/[0.02] flex-1">
                     <Card className="bg-accent/10 border-accent/30 shadow-none">
                       <CardContent className="p-3 text-center flex flex-col items-center justify-center h-full">
                         <p className="text-[10px] text-muted-foreground mb-1">
@@ -255,43 +262,7 @@ const BuildingCampaignTracker = () => {
             </div>
           </div>
 
-          {/* Full-width Campaign Gap Summary */}
-          {(() => {
-            const startingBalance = 408510.58;
-            const nonPledgeGiving = pledgeData ? (pledgeData.received_outside_pledges_cents || 0) / 100 : 0;
-            const totalCampaignGiving = pledgeData ? ((pledgeData.received_from_pledges_cents || 0) + (pledgeData.not_yet_received_cents || 0)) / 100 : cumulativeGiving;
-            const totalHavePlanned = startingBalance + nonPledgeGiving + totalCampaignGiving;
-            const remaining = Math.max(0, CAMPAIGN_GOAL - totalHavePlanned);
-            const progressPct = Math.min(100, (totalHavePlanned / CAMPAIGN_GOAL) * 100);
-
-            return (
-              <Card className="mt-4 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Campaign Progress</p>
-                    <p className="text-xs text-muted-foreground">Goal: {fmt(CAMPAIGN_GOAL)}</p>
-                  </div>
-                  <Progress value={progressPct} className="h-3 mb-3" />
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase">Total Have + Planned</p>
-                      <p className="text-lg font-bold text-primary">{fmt(totalHavePlanned)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase">Project Cost</p>
-                      <p className="text-lg font-bold text-foreground">{fmt(CAMPAIGN_GOAL)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase">Remaining Gap</p>
-                      <p className="text-lg font-bold text-destructive">{fmt(remaining)}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })()}
-
-          {/* Builder Payouts */}
+          {/* Builder Payouts (moved up — sits with Campaign Details) */}
           <Card className="mt-2">
             <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base">Builder Payouts</CardTitle>
@@ -331,6 +302,52 @@ const BuildingCampaignTracker = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Full-width Campaign Gap Summary */}
+          {(() => {
+            const startingBalance = 408510.58;
+            const nonPledgeGiving = pledgeData ? (pledgeData.received_outside_pledges_cents || 0) / 100 : 0;
+            const totalCampaignGiving = pledgeData ? ((pledgeData.received_from_pledges_cents || 0) + (pledgeData.not_yet_received_cents || 0)) / 100 : cumulativeGiving;
+            const totalHavePlanned = startingBalance + nonPledgeGiving + totalCampaignGiving;
+            const remaining = Math.max(0, CAMPAIGN_GOAL - totalHavePlanned);
+            const progressPct = Math.min(100, (totalHavePlanned / CAMPAIGN_GOAL) * 100);
+
+            return (
+              <Card className="mt-4 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Campaign Progress</p>
+                    <p className="text-xs text-muted-foreground">Goal: {fmt(CAMPAIGN_GOAL)}</p>
+                  </div>
+                  <Progress value={progressPct} className="h-3 mb-3" />
+                  <div className="grid grid-cols-4 gap-4 text-center">
+                    <div className="rounded-md ring-2 ring-[hsl(205_79%_40%)]/60 ring-offset-1 p-2 bg-background/40">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
+                        <p className="text-[10px] text-muted-foreground uppercase">Total Have + Planned</p>
+                        <Link2 className="h-3 w-3 text-[hsl(205_79%_40%)]" aria-hidden />
+                      </div>
+                      <p className="text-lg font-bold text-primary">{fmt(totalHavePlanned)}</p>
+                      <p className="text-[9px] text-muted-foreground mt-0.5">Starting Balance + Non-Pledge Gifts + Total Campaign Giving</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Total Paid Out</p>
+                      <p className="text-lg font-bold text-foreground">{fmt(totalPaidOut)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Project Cost</p>
+                      <p className="text-lg font-bold text-foreground">{fmt(CAMPAIGN_GOAL)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Remaining Gap</p>
+                      <p className="text-lg font-bold text-destructive">{fmt(remaining)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
         </div>
       </div>
     </div>
