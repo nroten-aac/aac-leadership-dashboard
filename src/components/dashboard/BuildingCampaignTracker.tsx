@@ -300,10 +300,8 @@ const BuildingCampaignTracker = () => {
 
           {/* Full-width Campaign Gap Summary */}
           {(() => {
-            const startingBalance = 408510.58;
-            const nonPledgeGiving = pledgeData ? (pledgeData.received_outside_pledges_cents || 0) / 100 : 0;
-            const totalCampaignGiving = pledgeData ? ((pledgeData.received_from_pledges_cents || 0) + (pledgeData.not_yet_received_cents || 0)) / 100 : cumulativeGiving;
-            const totalHavePlanned = startingBalance + nonPledgeGiving + totalCampaignGiving;
+            const pledgesNotYet = pledgeData ? Math.max(0, (pledgeData.not_yet_received_cents || 0) / 100) : 0;
+            const totalHavePlanned = totalFundsAvailable + pledgesNotYet;
             const remaining = Math.max(0, CAMPAIGN_GOAL - totalHavePlanned);
             const progressPct = Math.min(100, (totalHavePlanned / CAMPAIGN_GOAL) * 100);
 
@@ -323,7 +321,7 @@ const BuildingCampaignTracker = () => {
                         <Link2 className="h-3 w-3 text-[hsl(205_79%_40%)]" aria-hidden />
                       </div>
                       <p className="text-lg font-bold text-primary">{fmt(totalHavePlanned)}</p>
-                      <p className="text-[9px] text-muted-foreground mt-0.5">Starting Balance + Non-Pledge Gifts + Total Campaign Giving</p>
+                      <p className="text-[9px] text-muted-foreground mt-0.5">Total Funds Available + Pledges Not Yet Received</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-muted-foreground uppercase">Total Paid Out</p>
