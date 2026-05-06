@@ -151,36 +151,6 @@ const GivingPieCharts = ({ monthlyGiving }: { monthlyGiving: MonthlyGiving[] }) 
             ))}
           </div>
         </div>
-        {breakdown && breakdown.length > 0 && (
-          <div className="mt-5 pt-4 border-t border-border">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Monthly contributions to total
-            </p>
-            <div className="space-y-1.5">
-              {breakdown.map((m) => {
-                const pct = total > 0 ? (m.total / total) * 100 : 0;
-                return (
-                  <div key={m.month} className="flex items-center gap-2 text-xs">
-                    <span className="w-12 shrink-0 text-muted-foreground">{m.month.slice(0, 3)}</span>
-                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary/70 rounded-full" style={{ width: `${pct}%` }} />
-                    </div>
-                    <span className="w-24 text-right font-medium tabular-nums text-foreground">
-                      ${m.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                );
-              })}
-              <div className="flex items-center gap-2 text-xs pt-1.5 mt-1 border-t border-border">
-                <span className="w-12 shrink-0 font-semibold">Total</span>
-                <div className="flex-1" />
-                <span className="w-24 text-right font-bold tabular-nums text-primary">
-                  ${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
         </>
       )}
     </div>
