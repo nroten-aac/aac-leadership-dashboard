@@ -7,7 +7,8 @@ import {
 } from "recharts";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import { Loader2 } from "lucide-react";
+import { Loader2, Cloud } from "lucide-react";
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const CAMPAIGN_GOAL = 925000;
@@ -32,6 +33,30 @@ const fmtShort = (v: number) => {
   return `$${v.toFixed(0)}`;
 };
 
+const PcoBadge = () => (
+  <TooltipProvider>
+    <UITooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center gap-0.5 ml-1 align-middle text-[9px] font-medium text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full cursor-help">
+          <Cloud className="h-2.5 w-2.5" />
+          PCO
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs">
+        Live from Planning Center Online
+      </TooltipContent>
+    </UITooltip>
+  </TooltipProvider>
+);
+
+interface PayoutRow {
+  id: string;
+  payout_date: string;
+  amount: number;
+  description: string | null;
+  payee: string | null;
+}
+
 const BuildingCampaignTracker = () => {
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["building_campaign"],
@@ -54,6 +79,20 @@ const BuildingCampaignTracker = () => {
     },
     staleTime: 5 * 60 * 1000,
   });
+
+  const { data: payouts = [] } = useQuery({
+    queryKey: ["building_campaign_payouts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("building_campaign_payouts")
+        .select("*")
+        .order("payout_date", { ascending: false });
+      if (error) throw error;
+      return data as PayoutRow[];
+    },
+  });
+
+  const totalPaidOut = payouts.reduce((s, p) => s + Number(p.amount), 0);
 
   const { chartData, cumulativeGiving, totalFundsAvailable, latestRow } = useMemo(() => {
     let cumulative = 0;
@@ -170,7 +209,9 @@ const BuildingCampaignTracker = () => {
                   </Card>
                   <Card className="bg-accent/10 border-accent/30 flex-1">
                     <CardContent className="p-4 text-center flex flex-col items-center justify-center h-full">
-                      <p className="text-xs text-muted-foreground mb-1">One Time Non-Pledge Gifts</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        One Time Non-Pledge Gifts<PcoBadge />
+                      </p>
                       {pledgeLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                       ) : (
@@ -185,7 +226,9 @@ const BuildingCampaignTracker = () => {
                 {/* Right: Total Campaign Giving bracket */}
                 <div className="flex flex-col gap-2 h-full">
                   <div className="text-center rounded-t-lg border border-primary/20 bg-primary/5 px-3 py-2">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total Campaign Giving</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      Total Campaign Giving<PcoBadge />
+                    </p>
                     {pledgeLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                     ) : (
@@ -197,7 +240,9 @@ const BuildingCampaignTracker = () => {
                   <div className="grid grid-cols-2 gap-2 border-x border-b border-primary/20 rounded-b-lg p-2 bg-primary/[0.02] flex-1">
                     <Card className="bg-accent/10 border-accent/30 shadow-none">
                       <CardContent className="p-3 text-center flex flex-col items-center justify-center h-full">
-                        <p className="text-[10px] text-muted-foreground mb-1">Pledges Received</p>
+                        <p className="text-[10px] text-muted-foreground mb-1">
+                          Pledges Received<PcoBadge />
+                        </p>
                         {pledgeLoading ? (
                           <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                         ) : (
@@ -209,7 +254,9 @@ const BuildingCampaignTracker = () => {
                     </Card>
                     <Card className="bg-destructive/5 border-destructive/20 shadow-none">
                       <CardContent className="p-3 text-center flex flex-col items-center justify-center h-full">
-                        <p className="text-[10px] text-muted-foreground mb-1">Pledges Not Yet Received</p>
+                        <p className="text-[10px] text-muted-foreground mb-1">
+                          Pledges Not Yet Received<PcoBadge />
+                        </p>
                         {pledgeLoading ? (
                           <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                         ) : (
@@ -260,6 +307,47 @@ const BuildingCampaignTracker = () => {
               </Card>
             );
           })()}
+
+          {/* Builder Payouts */}
+          <Card className="mt-2">
+            <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base">Builder Payouts</CardTitle>
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground uppercase">Total Paid Out</p>
+                <p className="text-base font-bold text-primary">{fmt(totalPaidOut)}</p>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {payouts.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No payouts recorded yet.</p>
+              ) : (
+                <div className="overflow-hidden rounded-lg border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/40">
+                      <tr className="text-left text-xs text-muted-foreground">
+                        <th className="px-3 py-2 font-medium">Date</th>
+                        <th className="px-3 py-2 font-medium">Payee</th>
+                        <th className="px-3 py-2 font-medium">Description</th>
+                        <th className="px-3 py-2 font-medium text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payouts.map((p) => (
+                        <tr key={p.id} className="border-t">
+                          <td className="px-3 py-2">
+                            {new Date(p.payout_date + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                          </td>
+                          <td className="px-3 py-2">{p.payee || "—"}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{p.description || "—"}</td>
+                          <td className="px-3 py-2 text-right font-semibold">{fmt(Number(p.amount))}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
