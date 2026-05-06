@@ -141,9 +141,12 @@ const BuildingCampaignTracker = () => {
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Funds Available</p>
               <div className="grid grid-cols-2 gap-3">
-                <Card className="bg-accent/10 border-accent/30 col-span-2">
+                <Card className="bg-accent/10 border-accent/30 col-span-2 ring-2 ring-[hsl(205_79%_40%)]/60 ring-offset-1">
                   <CardContent className="p-4 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">Total Funds Available</p>
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
+                      <p className="text-xs text-muted-foreground">Total Funds Available</p>
+                    </div>
                     <p className="text-lg font-bold text-accent-foreground">{fmt(totalFundsAvailable)}</p>
                   </CardContent>
                 </Card>
@@ -184,21 +187,15 @@ const BuildingCampaignTracker = () => {
               <div className="grid grid-cols-2 gap-3">
                 {/* Left: Starting Balance + Non-Pledge Giving */}
                 <div className="flex flex-col gap-3 h-full">
-                  <Card className="bg-muted/30 border-muted-foreground/20 flex-1 ring-2 ring-[hsl(205_79%_40%)]/60 ring-offset-1">
+                  <Card className="bg-muted/30 border-muted-foreground/20 flex-1">
                     <CardContent className="p-4 text-center flex flex-col items-center justify-center h-full">
-                      <div className="flex items-center justify-center gap-1.5 mb-1">
-                        <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
-                        <p className="text-xs text-muted-foreground">Starting Balance Before Campaign</p>
-                      </div>
+                      <p className="text-xs text-muted-foreground mb-1">Starting Balance Before Campaign</p>
                       <p className="text-lg font-bold text-foreground">{fmt(408510.58)}</p>
                     </CardContent>
                   </Card>
-                  <Card className="bg-accent/10 border-accent/30 flex-1 ring-2 ring-[hsl(205_79%_40%)]/60 ring-offset-1">
+                  <Card className="bg-accent/10 border-accent/30 flex-1">
                     <CardContent className="p-4 text-center flex flex-col items-center justify-center h-full">
-                      <div className="flex items-center justify-center gap-1.5 mb-1">
-                        <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
-                        <p className="text-xs text-muted-foreground">One Time Non-Pledge Gifts</p>
-                      </div>
+                      <p className="text-xs text-muted-foreground mb-1">One Time Non-Pledge Gifts</p>
                       {pledgeLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                       ) : (
@@ -212,13 +209,10 @@ const BuildingCampaignTracker = () => {
 
                 {/* Right: Total Campaign Giving bracket */}
                 <div className="flex flex-col gap-2 h-full">
-                  <div className="text-center rounded-t-lg border-2 border-[hsl(205_79%_40%)]/60 bg-primary/5 px-3 py-2">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                        Total Campaign Giving
-                      </p>
-                    </div>
+                  <div className="text-center rounded-t-lg border border-primary/20 bg-primary/5 px-3 py-2">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      Total Campaign Giving
+                    </p>
                     {pledgeLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                     ) : (
@@ -227,7 +221,7 @@ const BuildingCampaignTracker = () => {
                       </p>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-2 border-x-2 border-b-2 border-[hsl(205_79%_40%)]/60 rounded-b-lg p-2 bg-primary/[0.02] flex-1">
+                  <div className="grid grid-cols-2 gap-2 border-x border-b border-primary/20 rounded-b-lg p-2 bg-primary/[0.02] flex-1">
                     <Card className="bg-accent/10 border-accent/30 shadow-none">
                       <CardContent className="p-3 text-center flex flex-col items-center justify-center h-full">
                         <p className="text-[10px] text-muted-foreground mb-1">
@@ -242,11 +236,12 @@ const BuildingCampaignTracker = () => {
                         )}
                       </CardContent>
                     </Card>
-                    <Card className="bg-destructive/5 border-destructive/20 shadow-none">
+                    <Card className="bg-destructive/5 border-destructive/20 shadow-none ring-2 ring-[hsl(205_79%_40%)]/60 ring-offset-1">
                       <CardContent className="p-3 text-center flex flex-col items-center justify-center h-full">
-                        <p className="text-[10px] text-muted-foreground mb-1">
-                          Pledges Not Yet Received
-                        </p>
+                        <div className="flex items-center justify-center gap-1.5 mb-1">
+                          <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
+                          <p className="text-[10px] text-muted-foreground">Pledges Not Yet Received</p>
+                        </div>
                         {pledgeLoading ? (
                           <Loader2 className="h-4 w-4 animate-spin mx-auto mt-1" />
                         ) : (
