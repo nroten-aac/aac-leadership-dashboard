@@ -172,19 +172,31 @@ const DashboardHeader = () => {
     setSyncing(true);
     toast.info("Syncing from Planning Center...");
     try {
-      const [att, giv] = await Promise.all([
+      const [att, giv, ppl, counts, pledges] = await Promise.all([
         supabase.functions.invoke("import-pco-attendance", { body: { weeks: 4 } }),
         supabase.functions.invoke("import-pco-giving", { body: { months: 3 } }),
+        supabase.functions.invoke("import-planning-center-people", { body: {} }),
+        supabase.functions.invoke("fetch-pco-list-counts", { body: {} }),
+        supabase.functions.invoke("fetch-pco-pledges", { body: {} }),
       ]);
       const errs: string[] = [];
       if (att.error) errs.push(`Attendance: ${att.error.message ?? att.error}`);
       if (giv.error) errs.push(`Giving: ${giv.error.message ?? giv.error}`);
-      if (errs.length === 2) throw new Error(errs.join(" | "));
-      if (errs.length === 1) toast.warning(`Partial sync — ${errs[0]}`);
+      if (ppl.error) errs.push(`People: ${ppl.error.message ?? ppl.error}`);
+      if (counts.error) errs.push(`List counts: ${counts.error.message ?? counts.error}`);
+      if (pledges.error) errs.push(`Pledges: ${pledges.error.message ?? pledges.error}`);
+      if (errs.length === 5) throw new Error(errs.join(" | "));
+      if (errs.length > 0) toast.warning(`Partial sync — ${errs.join(" | ")}`);
       else toast.success("Sync complete");
       queryClient.invalidateQueries({ queryKey: ["attendance"] });
       queryClient.invalidateQueries({ queryKey: ["monthly_giving"] });
       queryClient.invalidateQueries({ queryKey: ["donations"] });
+      queryClient.invalidateQueries({ queryKey: ["members"] });
+      queryClient.invalidateQueries({ queryKey: ["member_groups"] });
+      queryClient.invalidateQueries({ queryKey: ["pcoListCounts"] });
+      queryClient.invalidateQueries({ queryKey: ["pco-list-counts"] });
+      queryClient.invalidateQueries({ queryKey: ["pcoPledges"] });
+      queryClient.invalidateQueries({ queryKey: ["pco-pledges"] });
     } catch (e: any) {
       toast.error(`Sync failed: ${e.message ?? e}`);
     } finally {
