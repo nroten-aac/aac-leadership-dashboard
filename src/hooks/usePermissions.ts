@@ -101,10 +101,21 @@ export function useInvitations() {
     },
   });
 
+  const revokeInvite = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("invitations").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invitations"] });
+    },
+  });
+
   return {
     invitations: invitations ?? [],
     allUsers: allUsers ?? { profiles: [], roles: [], permissions: [] },
     isLoading,
     sendInvite,
+    revokeInvite,
   };
 }
