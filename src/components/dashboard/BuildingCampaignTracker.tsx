@@ -301,9 +301,8 @@ const BuildingCampaignTracker = () => {
           {/* Full-width Campaign Gap Summary */}
           {(() => {
             const pledgesNotYet = pledgeData ? Math.max(0, (pledgeData.not_yet_received_cents || 0) / 100) : 0;
-            const totalHavePlanned = totalFundsAvailable + pledgesNotYet;
-            const remaining = Math.max(0, CAMPAIGN_GOAL - totalHavePlanned - totalPaidOut);
-            const progressPct = Math.min(100, (totalHavePlanned / CAMPAIGN_GOAL) * 100);
+            const remaining = Math.max(0, CAMPAIGN_GOAL - totalFundsAvailable - pledgesNotYet - totalPaidOut);
+            const progressPct = Math.min(100, ((totalFundsAvailable + pledgesNotYet + totalPaidOut) / CAMPAIGN_GOAL) * 100);
 
             return (
               <Card className="mt-4 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
@@ -313,26 +312,43 @@ const BuildingCampaignTracker = () => {
                     <p className="text-xs text-muted-foreground">Goal: {fmt(CAMPAIGN_GOAL)}</p>
                   </div>
                   <Progress value={progressPct} className="h-3 mb-3" />
-                  <div className="grid grid-cols-4 gap-4 text-center">
-                    <div className="rounded-md ring-2 ring-[hsl(205_79%_40%)]/60 ring-offset-1 p-2 bg-background/40">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-[hsl(205_79%_40%)]" aria-hidden />
-                        <p className="text-[10px] text-muted-foreground uppercase">Total Have + Planned</p>
-                        <Link2 className="h-3 w-3 text-[hsl(205_79%_40%)]" aria-hidden />
-                      </div>
-                      <p className="text-lg font-bold text-primary">{fmt(totalHavePlanned)}</p>
-                      <p className="text-[9px] text-muted-foreground mt-0.5">Total Funds Available + Pledges Not Yet Received</p>
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-center items-stretch">
+                    {/* What we have */}
+                    <div className="rounded-md p-3 bg-background/40 border border-border">
+                      <p className="text-[10px] text-muted-foreground uppercase">Total Funds Available</p>
+                      <p className="text-lg font-bold text-primary">{fmt(totalFundsAvailable)}</p>
                     </div>
-                    <div>
+                    <div className="rounded-md p-3 bg-background/40 border border-border">
                       <p className="text-[10px] text-muted-foreground uppercase">Total Paid Out</p>
                       <p className="text-lg font-bold text-foreground">{fmt(totalPaidOut)}</p>
                     </div>
-                    <div>
+                    <div className="rounded-md p-3 bg-background/40 border border-border">
                       <p className="text-[10px] text-muted-foreground uppercase">Project Cost</p>
                       <p className="text-lg font-bold text-foreground">{fmt(CAMPAIGN_GOAL)}</p>
                     </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase">Remaining Gap</p>
+                    {/* Divider */}
+                    <div className="hidden md:block md:col-span-2">
+                      <div className="rounded-md p-3 bg-destructive/5 border border-destructive/20 h-full">
+                        <p className="text-[10px] text-destructive/80 uppercase tracking-wide mb-2 font-semibold">Still Outstanding</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase">Pledges Not Yet Received</p>
+                            <p className="text-lg font-bold text-destructive">{fmt(pledgesNotYet)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase">Remaining Gap to Fundraise</p>
+                            <p className="text-lg font-bold text-destructive">{fmt(remaining)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Mobile fallback for outstanding cards */}
+                    <div className="md:hidden rounded-md p-3 bg-destructive/5 border border-destructive/20">
+                      <p className="text-[10px] text-muted-foreground uppercase">Pledges Not Yet Received</p>
+                      <p className="text-lg font-bold text-destructive">{fmt(pledgesNotYet)}</p>
+                    </div>
+                    <div className="md:hidden rounded-md p-3 bg-destructive/5 border border-destructive/20">
+                      <p className="text-[10px] text-muted-foreground uppercase">Remaining Gap to Fundraise</p>
                       <p className="text-lg font-bold text-destructive">{fmt(remaining)}</p>
                     </div>
                   </div>
