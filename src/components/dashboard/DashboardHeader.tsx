@@ -76,43 +76,91 @@ const handlePrint = async () => {
   }
 
   const isSinglePage = pages.length === 1;
-  const win = window.open("", "_blank");
-  if (!win) return;
-  win.document.write(`
-    <html><head><title>Dashboard</title><style>
-      * { margin: 0; padding: 0; }
-      html, body { width: 100%; height: 100%; }
+
+  // Use a hidden iframe for printing — works reliably on Safari/macOS
+  // (window.open + window.print can be blocked or close before print on Safari).
+  const html = `
+    <!doctype html>
+    <html><head><meta charset="utf-8"><title>Dashboard</title><style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; background: #fff; }
       img { display: block; }
       .page-break { page-break-after: always; break-after: page; }
-      ${isSinglePage ? `
-        img { width: 100%; height: auto; max-height: 100vh; object-fit: contain; }
-      ` : `
-        img { width: 100%; height: auto; }
-      `}
+      ${isSinglePage
+        ? `img { width: 100%; height: auto; max-height: 100vh; object-fit: contain; }`
+        : `img { width: 100%; height: auto; }`}
       @media print {
         @page { margin: 0; size: auto; }
-        body { margin: 0; }
-        ${isSinglePage ? `
-          img { width: 100vw; max-height: 100vh; object-fit: contain; }
-        ` : `
-          img { width: 100vw; }
-        `}
+        body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        ${isSinglePage
+          ? `img { width: 100vw; max-height: 100vh; object-fit: contain; }`
+          : `img { width: 100vw; }`}
       }
     </style></head><body>
       ${pages.map((src, i) =>
-        `<div class="${i < pages.length - 1 ? 'page-break' : ''}"><img src="${src}" /></div>`
+        `<div class="${i < pages.length - 1 ? "page-break" : ""}"><img src="${src}" /></div>`
       ).join("")}
-      <script>
-        var imgs = document.querySelectorAll("img");
-        var loaded = 0;
-        imgs.forEach(function(img) {
-          img.onload = function() { loaded++; if (loaded === imgs.length) { window.print(); window.close(); } };
-          if (img.complete) { loaded++; if (loaded === imgs.length) { window.print(); window.close(); } }
-        });
-      </script>
     </body></html>
-  `);
-  win.document.close();
+  `;
+
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  iframe.setAttribute("aria-hidden", "true");
+  document.body.appendChild(iframe);
+
+  const cleanup = () => {
+    setTimeout(() => {
+      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+    }, 1000);
+  };
+
+  const triggerPrint = async () => {
+    const win = iframe.contentWindow;
+    const doc = iframe.contentDocument;
+    if (!win || !doc) {
+      toast.error("Could not open print dialog");
+      cleanup();
+      return;
+    }
+    // Wait for all images inside the iframe to finish loading
+    const imgs = Array.from(doc.images);
+    await Promise.all(
+      imgs.map((img) =>
+        img.complete
+          ? Promise.resolve()
+          : new Promise<void>((res) => {
+              img.onload = () => res();
+              img.onerror = () => res();
+            })
+      )
+    );
+    try {
+      win.focus();
+      win.print();
+    } catch (e) {
+      toast.error("Print failed");
+    }
+    win.onafterprint = cleanup;
+    // Fallback cleanup in case onafterprint doesn't fire (Safari)
+    setTimeout(cleanup, 60000);
+  };
+
+  iframe.onload = triggerPrint;
+  // Write the HTML into the iframe
+  const idoc = iframe.contentDocument;
+  if (!idoc) {
+    toast.error("Could not open print dialog");
+    cleanup();
+    return;
+  }
+  idoc.open();
+  idoc.write(html);
+  idoc.close();
 };
 
 const DashboardHeader = () => {
