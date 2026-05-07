@@ -7,7 +7,7 @@ import {
 } from "recharts";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Link2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const CAMPAIGN_GOAL = 925000;
