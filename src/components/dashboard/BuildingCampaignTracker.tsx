@@ -6,7 +6,6 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend,
 } from "recharts";
 import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
 import { Loader2 } from "lucide-react";
 
 const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -311,7 +310,46 @@ const BuildingCampaignTracker = () => {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Campaign Progress</p>
                     <p className="text-xs text-muted-foreground">Goal: {fmt(CAMPAIGN_GOAL)}</p>
                   </div>
-                  <Progress value={progressPct} className="h-3 mb-3" />
+                  {(() => {
+                    const fundsPct = (totalFundsAvailable / CAMPAIGN_GOAL) * 100;
+                    const paidPct = (totalPaidOut / CAMPAIGN_GOAL) * 100;
+                    const outstandingPct = Math.max(0, ((pledgesNotYet + remaining) / CAMPAIGN_GOAL) * 100);
+                    return (
+                      <>
+                        <div className="h-4 w-full rounded-full overflow-hidden bg-muted flex mb-2">
+                          <div
+                            className="h-full bg-[hsl(140_55%_42%)]"
+                            style={{ width: `${fundsPct}%` }}
+                            title={`Funds Available: ${fmt(totalFundsAvailable)}`}
+                          />
+                          <div
+                            className="h-full bg-[hsl(38_92%_50%)]"
+                            style={{ width: `${paidPct}%` }}
+                            title={`Paid Out: ${fmt(totalPaidOut)}`}
+                          />
+                          <div
+                            className="h-full bg-[hsl(0_72%_55%)]"
+                            style={{ width: `${outstandingPct}%` }}
+                            title={`Still Outstanding: ${fmt(pledgesNotYet + remaining)}`}
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center mb-3 text-[10px] text-muted-foreground">
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-[hsl(140_55%_42%)]" />
+                            <span>Funds Available</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-[hsl(38_92%_50%)]" />
+                            <span>Paid Out</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-[hsl(0_72%_55%)]" />
+                            <span>Still Outstanding (Pledges Not Yet + Gap)</span>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-center items-stretch">
                     <div className="rounded-md p-3 bg-background/40 border border-border">
                       <p className="text-[10px] text-muted-foreground uppercase">Project Cost</p>
