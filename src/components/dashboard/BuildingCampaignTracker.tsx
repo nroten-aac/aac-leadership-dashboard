@@ -313,7 +313,10 @@ const BuildingCampaignTracker = () => {
                   </div>
                   <Progress value={progressPct} className="h-3 mb-3" />
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-center items-stretch">
-                    {/* What we have */}
+                    <div className="rounded-md p-3 bg-background/40 border border-border">
+                      <p className="text-[10px] text-muted-foreground uppercase">Project Cost</p>
+                      <p className="text-lg font-bold text-foreground">{fmt(CAMPAIGN_GOAL)}</p>
+                    </div>
                     <div className="rounded-md p-3 bg-background/40 border border-border">
                       <p className="text-[10px] text-muted-foreground uppercase">Total Funds Available</p>
                       <p className="text-lg font-bold text-primary">{fmt(totalFundsAvailable)}</p>
@@ -322,14 +325,13 @@ const BuildingCampaignTracker = () => {
                       <p className="text-[10px] text-muted-foreground uppercase">Total Paid Out</p>
                       <p className="text-lg font-bold text-foreground">{fmt(totalPaidOut)}</p>
                     </div>
-                    <div className="rounded-md p-3 bg-background/40 border border-border">
-                      <p className="text-[10px] text-muted-foreground uppercase">Project Cost</p>
-                      <p className="text-lg font-bold text-foreground">{fmt(CAMPAIGN_GOAL)}</p>
-                    </div>
                     {/* Divider */}
                     <div className="hidden md:block md:col-span-2">
                       <div className="rounded-md p-3 bg-destructive/5 border border-destructive/20 h-full">
-                        <p className="text-[10px] text-destructive/80 uppercase tracking-wide mb-2 font-semibold">Still Outstanding</p>
+                        <div className="flex items-baseline justify-between mb-2">
+                          <p className="text-[10px] text-destructive/80 uppercase tracking-wide font-semibold">Still Outstanding</p>
+                          <p className="text-sm font-bold text-destructive">{fmt(pledgesNotYet + remaining)}</p>
+                        </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <p className="text-[10px] text-muted-foreground uppercase">Pledges Not Yet Received</p>
@@ -343,6 +345,10 @@ const BuildingCampaignTracker = () => {
                       </div>
                     </div>
                     {/* Mobile fallback for outstanding cards */}
+                    <div className="md:hidden rounded-md p-3 bg-destructive/10 border border-destructive/30">
+                      <p className="text-[10px] text-destructive/80 uppercase font-semibold">Still Outstanding (Total)</p>
+                      <p className="text-lg font-bold text-destructive">{fmt(pledgesNotYet + remaining)}</p>
+                    </div>
                     <div className="md:hidden rounded-md p-3 bg-destructive/5 border border-destructive/20">
                       <p className="text-[10px] text-muted-foreground uppercase">Pledges Not Yet Received</p>
                       <p className="text-lg font-bold text-destructive">{fmt(pledgesNotYet)}</p>
