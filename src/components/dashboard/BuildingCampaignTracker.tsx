@@ -311,21 +311,16 @@ const BuildingCampaignTracker = () => {
                     <p className="text-xs text-muted-foreground">Goal: {fmt(CAMPAIGN_GOAL)}</p>
                   </div>
                   {(() => {
-                    const fundsPct = (totalFundsAvailable / CAMPAIGN_GOAL) * 100;
-                    const paidPct = (totalPaidOut / CAMPAIGN_GOAL) * 100;
+                    const collected = totalFundsAvailable + totalPaidOut;
+                    const collectedPct = Math.min(100, (collected / CAMPAIGN_GOAL) * 100);
                     const outstandingPct = Math.max(0, ((pledgesNotYet + remaining) / CAMPAIGN_GOAL) * 100);
                     return (
                       <>
                         <div className="h-4 w-full rounded-full overflow-hidden bg-muted flex mb-2">
                           <div
                             className="h-full bg-[hsl(140_55%_42%)]"
-                            style={{ width: `${fundsPct}%` }}
-                            title={`Funds Available: ${fmt(totalFundsAvailable)}`}
-                          />
-                          <div
-                            className="h-full bg-[hsl(38_92%_50%)]"
-                            style={{ width: `${paidPct}%` }}
-                            title={`Paid Out: ${fmt(totalPaidOut)}`}
+                            style={{ width: `${collectedPct}%` }}
+                            title={`Collected: ${fmt(collected)}`}
                           />
                           <div
                             className="h-full bg-[hsl(0_72%_55%)]"
@@ -336,11 +331,7 @@ const BuildingCampaignTracker = () => {
                         <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center mb-3 text-[10px] text-muted-foreground">
                           <div className="flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-[hsl(140_55%_42%)]" />
-                            <span>Funds Available</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="h-2 w-2 rounded-full bg-[hsl(38_92%_50%)]" />
-                            <span>Paid Out</span>
+                            <span>Collected (Funds Available + Paid Out)</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-[hsl(0_72%_55%)]" />
