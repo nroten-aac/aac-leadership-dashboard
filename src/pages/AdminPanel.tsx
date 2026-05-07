@@ -9,13 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { UserPlus, Shield, Users, Mail, Check, Clock, X } from "lucide-react";
+import { UserPlus, Shield, Users, Mail, Check, Clock, X, Trash2, RotateCw } from "lucide-react";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 
 const AdminPanel = () => {
   const { isAdmin, isLoading: roleLoading } = useUserRole();
-  const { invitations, allUsers, isLoading, sendInvite } = useInvitations();
+  const { invitations, allUsers, isLoading, sendInvite, revokeInvite } = useInvitations();
   const [email, setEmail] = useState("");
   const [selectedTabs, setSelectedTabs] = useState<string[]>(ALL_TABS.map((t) => t.id));
   const [role, setRole] = useState("viewer");
@@ -61,6 +61,30 @@ const AdminPanel = () => {
       setRole("viewer");
     } catch (err: any) {
       toast.error(err.message || "Failed to send invitation");
+    }
+  };
+
+  const handleRevoke = async (id: string, inviteEmail: string) => {
+    if (!confirm(`Revoke invitation for ${inviteEmail}?`)) return;
+    try {
+      await revokeInvite.mutateAsync(id);
+      toast.success(`Invitation for ${inviteEmail} revoked`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to revoke invitation");
+    }
+  };
+
+  const handleResend = async (inv: any) => {
+    try {
+      await revokeInvite.mutateAsync(inv.id);
+      await sendInvite.mutateAsync({
+        email: inv.email,
+        allowed_tabs: inv.allowed_tabs || [],
+        role: "viewer",
+      });
+      toast.success(`Invitation re-sent to ${inv.email}`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to re-send invitation");
     }
   };
 
@@ -218,12 +242,37 @@ const AdminPanel = () => {
                         </p>
                       </div>
                     </div>
-                    <Badge
-                      variant={inv.status === "accepted" ? "default" : "outline"}
-                      className="text-xs capitalize"
-                    >
-                      {inv.status}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={inv.status === "accepted" ? "default" : "outline"}
+                        className="text-xs capitalize"
+                      >
+                        {inv.status}
+                      </Badge>
+                      {inv.status === "pending" && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleResend(inv)}
+                            disabled={sendInvite.isPending || revokeInvite.isPending}
+                            title="Revoke and re-send"
+                          >
+                            <RotateCw className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRevoke(inv.id, inv.email)}
+                            disabled={revokeInvite.isPending}
+                            title="Revoke invitation"
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
