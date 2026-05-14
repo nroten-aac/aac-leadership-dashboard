@@ -224,6 +224,12 @@ serve(async (req) => {
       if (!createdAt) continue;
       const dateStr = createdAt.split("T")[0];
 
+      // Only import children's check-ins that fall on a Sunday.
+      // PCO sometimes has stray volunteer/back-dated check-ins on weekdays
+      // which would otherwise create orphan attendance rows.
+      const dow = new Date(dateStr + "T12:00:00").getUTCDay();
+      if (dow !== 0) continue;
+
       const locRel = ci.relationships?.locations?.data || [];
       // A check-in may have multiple locations; use the first matching mapped one
       let category: string | null = null;
