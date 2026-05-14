@@ -233,7 +233,7 @@ const AttendanceChart = ({ attendance }: AttendanceChartProps) => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div>
           <h3 className="font-display font-semibold text-foreground">
-            Weekly Attendance{isComparisonMode ? " (Monthly Avg)" : ""}
+            Weekly Sunday Attendance{isComparisonMode ? " (Monthly Avg)" : ""}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             {isComparisonMode ? "Average weekly attendance per month" : "Combined adjusted total (both services)"}
