@@ -12,8 +12,8 @@ const DashboardSidebar = () => {
   const location = useLocation();
 
   const allNavItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/", tabId: "dashboard" },
-    { icon: Users, label: "Shepherding", path: "/members", tabId: "members" },
+    { icon: SheepIcon, label: "Shepherding", path: "/members", tabId: "members" },
+    { icon: LayoutDashboard, label: "Summary Overview", path: "/", tabId: "dashboard" },
     { icon: DollarSign, label: "Giving", path: "/giving", tabId: "giving" },
     { icon: ClipboardEdit, label: "Data Entry", path: "/data-entry", tabId: "data-entry" },
     { icon: Calendar, label: "Attendance", path: "/attendance", tabId: "attendance" },
