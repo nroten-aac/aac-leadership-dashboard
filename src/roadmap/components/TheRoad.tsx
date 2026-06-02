@@ -22,11 +22,19 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
 
   // Venn rhythms (simultaneous, lifelong) — centered around (920, 260)
   const vcx = 920, vcy = 260, vr = 78;
+  // Icons are pushed outward from the venn center by `iconOffset` so they
+  // don't crowd the shared center where the cross lives.
+  const iconOffset = 34;
+  const offset = (cx: number, cy: number) => {
+    const dx = cx - vcx, dy = cy - vcy;
+    const len = Math.hypot(dx, dy) || 1;
+    return { ix: cx + (dx / len) * iconOffset, iy: cy + (dy / len) * iconOffset };
+  };
   const rhythms = [
     { key: "minister" as Stage, cx: vcx,      cy: vcy - 44, color: "hsl(var(--stage-minister))", Icon: MinisteringIcon, label: "Ministering", sub: "Serving His body.",  labelY: vcy - 150 },
     { key: "mature"   as Stage, cx: vcx - 56, cy: vcy + 30, color: "hsl(var(--stage-mature))",   Icon: MaturingIcon,    label: "Maturing",    sub: "Growing in Christ.", labelY: vcy + 160, labelX: vcx - 90 },
     { key: "multiply" as Stage, cx: vcx + 56, cy: vcy + 30, color: "hsl(var(--stage-multiply))", Icon: MultiplyingIcon, label: "Multiplying", sub: "Making disciples.",  labelY: vcy + 160, labelX: vcx + 90 },
-  ];
+  ].map((r) => ({ ...r, ...offset(r.cx, r.cy) }));
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-b from-card to-background p-6 shadow-card">
