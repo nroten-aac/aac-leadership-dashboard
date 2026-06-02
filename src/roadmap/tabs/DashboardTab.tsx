@@ -22,7 +22,17 @@ export default function DashboardTab() {
 
   const counts = useMemo(() => {
     const c: Record<Stage, number> = { connect: 0, belong: 0, mature: 0, minister: 0, multiply: 0 };
-    scopedMembers.forEach((m: any) => { c[dbStageToRoadmap(m.discipleship_stage)]++; });
+    scopedMembers.forEach((m: any) => {
+      const phase = (m.phase || "connecting") as string;
+      if (phase === "connecting") c.connect++;
+      else if (phase === "belonging") c.belong++;
+      else {
+        const rs: string[] = Array.isArray(m.rhythms) ? m.rhythms : [];
+        if (rs.includes("maturing")) c.mature++;
+        if (rs.includes("ministering")) c.minister++;
+        if (rs.includes("multiplying")) c.multiply++;
+      }
+    });
     return c;
   }, [scopedMembers]);
 
