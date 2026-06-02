@@ -22,11 +22,19 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
 
   // Venn rhythms (simultaneous, lifelong) — centered around (920, 260)
   const vcx = 920, vcy = 260, vr = 78;
+  // Icons are pushed outward from the venn center by `iconOffset` so they
+  // don't crowd the shared center where the cross lives.
+  const iconOffset = 34;
+  const offset = (cx: number, cy: number) => {
+    const dx = cx - vcx, dy = cy - vcy;
+    const len = Math.hypot(dx, dy) || 1;
+    return { ix: cx + (dx / len) * iconOffset, iy: cy + (dy / len) * iconOffset };
+  };
   const rhythms = [
     { key: "minister" as Stage, cx: vcx,      cy: vcy - 44, color: "hsl(var(--stage-minister))", Icon: MinisteringIcon, label: "Ministering", sub: "Serving His body.",  labelY: vcy - 150 },
     { key: "mature"   as Stage, cx: vcx - 56, cy: vcy + 30, color: "hsl(var(--stage-mature))",   Icon: MaturingIcon,    label: "Maturing",    sub: "Growing in Christ.", labelY: vcy + 160, labelX: vcx - 90 },
     { key: "multiply" as Stage, cx: vcx + 56, cy: vcy + 30, color: "hsl(var(--stage-multiply))", Icon: MultiplyingIcon, label: "Multiplying", sub: "Making disciples.",  labelY: vcy + 160, labelX: vcx + 90 },
-  ];
+  ].map((r) => ({ ...r, ...offset(r.cx, r.cy) }));
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-b from-card to-background p-6 shadow-card">
@@ -97,14 +105,14 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
           const labelX = (r as any).labelX ?? r.cx;
           return (
             <g key={r.key} className="cursor-pointer" onClick={() => onStageClick?.(r.key)}>
-              <g transform={`translate(${r.cx - 16}, ${r.cy - 16})`} style={{ color: r.color }}>
+              <g transform={`translate(${r.ix - 16}, ${r.iy - 16})`} style={{ color: r.color }}>
                 <Icon width={32} height={32} />
               </g>
               {/* count badge */}
-              <circle cx={r.cx + 22} cy={r.cy - 22} r="11"
+              <circle cx={r.ix + 18} cy={r.iy - 18} r="10"
                 fill={isMultiply ? "hsl(var(--accent))" : "hsl(var(--card))"}
                 stroke={r.color} strokeWidth="1.5" />
-              <text x={r.cx + 22} y={r.cy - 18} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="10" fontWeight="700"
+              <text x={r.ix + 18} y={r.iy - 14} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="10" fontWeight="700"
                 fill={isMultiply ? "hsl(var(--accent-foreground))" : "hsl(var(--foreground))"}>{count}</text>
               {/* label */}
               <text x={labelX} y={r.labelY} textAnchor="middle" fontFamily="Outfit, sans-serif" fontSize="18" fontWeight="700" fill="hsl(var(--foreground))">{r.label}</text>
@@ -112,6 +120,15 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
             </g>
           );
         })}
+
+        {/* Christ at the center — where all three rhythms meet */}
+        <g transform={`translate(${vcx}, ${vcy})`}>
+          <circle r="22" fill="hsl(var(--background))" stroke="hsl(var(--accent))" strokeWidth="1.5"
+            className="drop-shadow-[0_0_14px_hsl(var(--accent)/0.55)]" />
+          {/* cross */}
+          <path d="M-2.5 -13 h5 v9 h9 v5 h-9 v12 h-5 v-12 h-9 v-5 h9 z"
+            fill="hsl(var(--accent))" />
+        </g>
       </svg>
 
       <p className="mt-4 text-sm text-muted-foreground">
