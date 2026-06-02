@@ -6,7 +6,6 @@ import {
   MinisteringIcon,
   MultiplyingIcon,
 } from "@/components/icons/StageIcons";
-import type { ComponentType, SVGProps } from "react";
 
 interface RoadProps {
   counts: Record<Stage, number>;
@@ -14,25 +13,28 @@ interface RoadProps {
   onStageClick?: (stage: Stage) => void;
 }
 
-// Each stage is a milestone pin along a curved path that climbs valley → summit.
-const STAGES: Array<{ key: Stage; x: number; y: number; color: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }> = [
-  { key: "connect",  x: 90,  y: 320, color: "hsl(var(--stage-connect))",  Icon: ConnectingIcon },
-  { key: "belong",   x: 290, y: 270, color: "hsl(var(--stage-belong))",   Icon: BelongingIcon },
-  { key: "mature",   x: 490, y: 200, color: "hsl(var(--stage-mature))",   Icon: MaturingIcon },
-  { key: "minister", x: 690, y: 130, color: "hsl(var(--stage-minister))", Icon: MinisteringIcon },
-  { key: "multiply", x: 890, y: 70,  color: "hsl(var(--stage-multiply))", Icon: MultiplyingIcon },
-];
-
-const PATH_D = "M 30 360 C 150 360, 200 320, 290 290 S 430 220, 490 200 S 630 150, 690 130 S 830 90, 920 50";
-
 export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
+  // Threshold milestones (linear, crossed once)
+  const thresholds = [
+    { key: "connect" as Stage, x: 200, y: 240, color: "hsl(var(--stage-connect))", Icon: ConnectingIcon, num: "01", sub: "Outside Christ → in Christ → baptized" },
+    { key: "belong"  as Stage, x: 440, y: 240, color: "hsl(var(--stage-belong))",  Icon: BelongingIcon,  num: "02", sub: "A two-way commitment — member ↔ church" },
+  ];
+
+  // Venn rhythms (simultaneous, lifelong) — centered around (920, 260)
+  const vcx = 920, vcy = 260, vr = 78;
+  const rhythms = [
+    { key: "minister" as Stage, cx: vcx,      cy: vcy - 44, color: "hsl(var(--stage-minister))", Icon: MinisteringIcon, label: "Ministering", sub: "Serving His body.",  labelY: vcy - 150 },
+    { key: "mature"   as Stage, cx: vcx - 56, cy: vcy + 30, color: "hsl(var(--stage-mature))",   Icon: MaturingIcon,    label: "Maturing",    sub: "Growing in Christ.", labelY: vcy + 160, labelX: vcx - 90 },
+    { key: "multiply" as Stage, cx: vcx + 56, cy: vcy + 30, color: "hsl(var(--stage-multiply))", Icon: MultiplyingIcon, label: "Multiplying", sub: "Making disciples.",  labelY: vcy + 160, labelX: vcx + 90 },
+  ];
+
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-b from-card to-background p-6 shadow-card">
       <div className="mb-4 flex items-end justify-between gap-4 flex-wrap">
         <div>
           <div className="eyebrow mb-1">The Road · Live</div>
           <h3 className="font-display text-xl font-semibold text-foreground">
-            Every soul's road — from <em className="font-serif-italic text-secondary">Connecting</em> to <em className="font-serif-italic text-accent">Multiplying</em>.
+            Two thresholds, crossed once. <em className="font-serif-italic text-accent">Three rhythms, lived forever.</em>
           </h3>
         </div>
         <div className="flex gap-2">
@@ -40,60 +42,80 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
         </div>
       </div>
 
-      <svg viewBox="0 0 950 400" className="w-full h-auto" role="img" aria-label="The discipleship road from Connecting to Multiplying">
-        {/* Subtle valley → summit ground */}
+      <svg viewBox="0 0 1180 520" className="w-full h-auto" role="img" aria-label="Two thresholds and three rhythms of discipleship">
         <defs>
-          <linearGradient id="road-glow" x1="0" x2="1" y1="1" y2="0">
-            <stop offset="0%" stopColor="hsl(var(--stage-connect))" stopOpacity="0.05" />
-            <stop offset="100%" stopColor="hsl(var(--stage-multiply))" stopOpacity="0.18" />
-          </linearGradient>
-          <linearGradient id="road-base" x1="0" x2="1">
-            <stop offset="0%" stopColor="hsl(var(--prussian))" />
-            <stop offset="100%" stopColor="hsl(var(--sky))" />
-          </linearGradient>
+          <marker id="arrow-end" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="hsl(var(--accent))" />
+          </marker>
         </defs>
 
-        <rect x="0" y="0" width="950" height="400" fill="url(#road-glow)" />
+        {/* Section headers */}
+        <text x="320" y="50" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" letterSpacing="3" fontWeight="700" fill="hsl(var(--accent))">TWO THRESHOLDS — CROSSED ONCE</text>
+        <text x="920" y="50" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" letterSpacing="3" fontWeight="700" fill="hsl(var(--accent))">THREE RHYTHMS — LIFELONG</text>
 
-        {/* Star above summit */}
-        <path d="M895 25 l4 8 l9 1 l-7 6 l2 9 l-8 -5 l-8 5 l2 -9 l-7 -6 l9 -1 z"
-          fill="hsl(var(--accent))" opacity="0.95" />
+        {/* Dashed connector across thresholds, arrow into rhythms */}
+        <path d="M 90 240 L 760 240" stroke="hsl(var(--accent))" strokeWidth="1.8" strokeDasharray="6 8" fill="none" opacity="0.7" markerEnd="url(#arrow-end)" />
 
-        {/* The road */}
-        <path d={PATH_D} stroke="url(#road-base)" strokeWidth="22" fill="none" strokeLinecap="round" opacity="0.55" />
-        <path d={PATH_D} stroke="hsl(var(--accent))" strokeWidth="2.4" fill="none" strokeLinecap="round"
-          strokeDasharray="10 14" className="road-dashed" opacity="0.85" />
+        {/* Divider between sections */}
+        <line x1="640" y1="90" x2="640" y2="430" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="2 6" opacity="0.5" />
 
-        {STAGES.map((s) => {
+        {/* Thresholds */}
+        {thresholds.map((s) => {
           const count = counts[s.key] || 0;
-          const pct = total ? ((count / total) * 100).toFixed(1) : "0.0";
-          const isMultiply = s.key === "multiply";
           const Icon = s.Icon;
           return (
             <g key={s.key} className="cursor-pointer" onClick={() => onStageClick?.(s.key)}>
-              <circle cx={s.x} cy={s.y} r="32" fill="hsl(var(--background))" stroke={s.color} strokeWidth="2.5"
-                className={isMultiply ? "drop-shadow-[0_0_18px_hsl(var(--accent)/0.6)]" : ""} />
-              <g transform={`translate(${s.x - 18}, ${s.y - 18})`} style={{ color: s.color }}>
-                <Icon width={36} height={36} />
+              <circle cx={s.x} cy={s.y} r="44" fill="hsl(var(--background))" stroke={s.color} strokeWidth="2" />
+              <g transform={`translate(${s.x - 22}, ${s.y - 22})`} style={{ color: s.color }}>
+                <Icon width={44} height={44} />
+              </g>
+              {/* number badge */}
+              <circle cx={s.x + 34} cy={s.y - 34} r="14" fill="hsl(var(--accent))" />
+              <text x={s.x + 34} y={s.y - 30} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="11" fontWeight="800" fill="hsl(var(--accent-foreground))">{s.num}</text>
+              {/* count badge */}
+              <circle cx={s.x - 34} cy={s.y - 34} r="13" fill="hsl(var(--card))" stroke={s.color} strokeWidth="1.5" />
+              <text x={s.x - 34} y={s.y - 30} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="11" fontWeight="700" fill="hsl(var(--foreground))">{count}</text>
+              {/* label */}
+              <text x={s.x} y={s.y + 78} textAnchor="middle" fontFamily="Outfit, sans-serif" fontSize="20" fontWeight="700" fill="hsl(var(--foreground))">{STAGE_NAMES[s.key]}</text>
+              <text x={s.x} y={s.y + 100} textAnchor="middle" fontFamily="Georgia, serif" fontStyle="italic" fontSize="12" fill="hsl(var(--accent))">{s.sub}</text>
+            </g>
+          );
+        })}
+
+        {/* Venn circles (rhythms) */}
+        {rhythms.map((r) => (
+          <circle key={`v-${r.key}`} cx={r.cx} cy={r.cy} r={vr}
+            fill={r.color} fillOpacity="0.08"
+            stroke={r.color} strokeWidth="1.6" opacity="0.95" />
+        ))}
+
+        {/* Rhythms — icons, counts, labels */}
+        {rhythms.map((r) => {
+          const count = counts[r.key] || 0;
+          const Icon = r.Icon;
+          const isMultiply = r.key === "multiply";
+          const labelX = (r as any).labelX ?? r.cx;
+          return (
+            <g key={r.key} className="cursor-pointer" onClick={() => onStageClick?.(r.key)}>
+              <g transform={`translate(${r.cx - 16}, ${r.cy - 16})`} style={{ color: r.color }}>
+                <Icon width={32} height={32} />
               </g>
               {/* count badge */}
-              <circle cx={s.x + 24} cy={s.y - 24} r="11" fill={isMultiply ? "hsl(var(--accent))" : "hsl(var(--card))"} stroke={s.color} strokeWidth="1.5" />
-              <text x={s.x + 24} y={s.y - 21} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="10"
-                fill={isMultiply ? "hsl(var(--accent-foreground))" : "hsl(var(--foreground))"} fontWeight="700">{count}</text>
-              {/* label card */}
-              <rect x={s.x - 48} y={s.y + 44} width="96" height="34" rx="6"
-                fill="hsl(var(--card))" stroke="hsl(var(--border))" />
-              <text x={s.x} y={s.y + 58} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="9"
-                letterSpacing="2" fill={s.color} fontWeight="700">{STAGE_NAMES[s.key].toUpperCase()}</text>
-              <text x={s.x} y={s.y + 71} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="9"
-                fill="hsl(var(--muted-foreground))">{pct}% · {count} here</text>
+              <circle cx={r.cx + 22} cy={r.cy - 22} r="11"
+                fill={isMultiply ? "hsl(var(--accent))" : "hsl(var(--card))"}
+                stroke={r.color} strokeWidth="1.5" />
+              <text x={r.cx + 22} y={r.cy - 18} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="10" fontWeight="700"
+                fill={isMultiply ? "hsl(var(--accent-foreground))" : "hsl(var(--foreground))"}>{count}</text>
+              {/* label */}
+              <text x={labelX} y={r.labelY} textAnchor="middle" fontFamily="Outfit, sans-serif" fontSize="18" fontWeight="700" fill="hsl(var(--foreground))">{r.label}</text>
+              <text x={labelX} y={r.labelY + 20} textAnchor="middle" fontFamily="Georgia, serif" fontStyle="italic" fontSize="12" fill="hsl(var(--accent))">{r.sub}</text>
             </g>
           );
         })}
       </svg>
 
       <p className="mt-4 text-sm text-muted-foreground">
-        <span className="text-accent font-medium">Click any milestone</span> to see who's there and how they're engaging.
+        <span className="text-accent font-medium">Click any stage</span> to see who's there and how they're engaging.
       </p>
     </div>
   );
