@@ -238,67 +238,132 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
           </div>
         </div>
 
-        {(nextStage || prevStage) && (
-          <div className="p-6 border-b border-border/60 grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {prevStage && (
-              <button
-                onClick={() => {
-                  if (confirm(`Move ${member.first_name} back to ${STAGE_NAMES[prevStage]}?`)) moveStage.mutate(prevStage);
-                }}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background/40 px-4 py-3 font-mono text-[11px] tracking-wider text-muted-foreground font-bold hover:text-foreground hover:border-foreground/40 transition"
-              >
-                <ArrowLeft className="h-4 w-4" /> BACK TO {STAGE_NAMES[prevStage].toUpperCase()}
-              </button>
-            )}
-            {nextStage && (
-              <button
-                onClick={() => moveStage.mutate(nextStage)}
-                className={`w-full inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 font-mono text-[11px] tracking-wider text-accent-foreground font-bold hover:scale-[1.01] transition shadow-[0_0_30px_hsl(var(--accent)/0.3)] ${!prevStage ? "sm:col-span-2" : ""}`}
-              >
-                MOVE TO {STAGE_NAMES[nextStage].toUpperCase()} <ArrowRight className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Reassign stage */}
+        {/* Primary action — phase-aware */}
         <div className="p-6 border-b border-border/60">
-          <div className="eyebrow mb-3">Reassign stage</div>
-          <div className="grid grid-cols-5 gap-1">
-            {STAGE_ORDER.map((s, i) => {
-              const reached = i <= stageIdx;
-              const current = i === stageIdx;
+          <div className="eyebrow mb-3">Where are they?</div>
+
+          {/* Phase pills (exclusive) */}
+          <div className="grid grid-cols-3 gap-1.5 mb-4">
+            {(["connecting", "belonging", "rhythms"] as Phase[]).map((p) => {
+              const active = phase === p;
+              const swatch =
+                p === "connecting" ? "connect" : p === "belonging" ? "belong" : "multiply";
               return (
                 <button
-                  key={s}
-                  onClick={() => moveStage.mutate(s)}
-                  className="flex flex-col items-center gap-1 group"
-                  title={STAGE_NAMES[s]}
+                  key={p}
+                  onClick={() => !active && setPhase(p)}
+                  disabled={savePhase.isPending}
+                  className={`rounded-xl border px-2 py-2 font-mono text-[10px] uppercase tracking-wider transition ${
+                    active ? "border-transparent text-background font-bold" : "border-border bg-background/40 text-muted-foreground hover:text-foreground hover:border-foreground/40"
+                  }`}
+                  style={
+                    active
+                      ? { background: `hsl(var(--stage-${swatch}))`, color: "hsl(var(--background))" }
+                      : undefined
+                  }
                 >
-                  <div className={`relative h-10 w-10 rounded-full border-2 flex items-center justify-center transition ${current ? "scale-110" : "group-hover:scale-105"}`}
-                    style={{
-                      borderColor: `hsl(var(--stage-${s}) ${reached ? "" : "/ 0.3"})`,
-                      background: current ? `hsl(var(--stage-${s}) / 0.2)` : "transparent",
-                      color: `hsl(var(--stage-${s}))`,
-                    }}
-                  >
-                    <span className="font-mono text-[10px] font-bold">{i + 1}</span>
-                    {reached && (
-                      <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 flex items-center justify-center">
-                        <Check className="h-2.5 w-2.5 text-background" strokeWidth={3} />
-                      </span>
-                    )}
-                  </div>
-                  <span className="font-mono text-[8px] uppercase tracking-wider text-muted-foreground truncate w-full text-center">
-                    {STAGE_NAMES[s].slice(0, 8)}
-                  </span>
+                  {PHASE_LABEL[p]}
                 </button>
               );
             })}
           </div>
-          <p className="font-mono text-[10px] text-muted-foreground mt-3 text-center">
-            <span className="text-foreground font-bold">{stageIdx + 1} of 5</span> stages reached · tap any stage to reassign
-          </p>
+
+          {/* Phase-specific next step */}
+          {phase === "connecting" && (
+            <button
+              onClick={() => setPhase("belonging")}
+              disabled={savePhase.isPending}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 font-mono text-[11px] tracking-wider text-accent-foreground font-bold hover:scale-[1.01] transition shadow-[0_0_30px_hsl(var(--accent)/0.3)]"
+            >
+              MOVE TO BELONGING <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
+
+          {phase === "belonging" && (
+            <>
+              <p className="font-mono text-[10px] text-muted-foreground mb-2">
+                Tap one or more rhythms to mark how they're growing. They can live in all three at once.
+              </p>
+              <div className="grid grid-cols-1 gap-1.5">
+                {(Object.keys(RHYTHM_META) as Rhythm[]).map((r) => {
+                  const meta = RHYTHM_META[r];
+                  return (
+                    <button
+                      key={r}
+                      onClick={() => toggleRhythm(r)}
+                      disabled={savePhase.isPending}
+                      className="flex items-center justify-between rounded-xl border border-border bg-background/40 px-3 py-2.5 text-left hover:border-foreground/40 transition"
+                    >
+                      <div>
+                        <div className="font-display font-bold text-sm" style={{ color: `hsl(var(--stage-${meta.stage}))` }}>
+                          {meta.label}
+                        </div>
+                        <div className="font-serif-italic text-[11px] text-muted-foreground">{meta.sub}</div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {phase === "rhythms" && (
+            <>
+              <p className="font-mono text-[10px] text-muted-foreground mb-2">
+                Toggle any combination — a person can be growing in all three at once.
+              </p>
+              <div className="grid grid-cols-1 gap-1.5">
+                {(Object.keys(RHYTHM_META) as Rhythm[]).map((r) => {
+                  const meta = RHYTHM_META[r];
+                  const on = currentRhythms.includes(r);
+                  return (
+                    <button
+                      key={r}
+                      onClick={() => toggleRhythm(r)}
+                      disabled={savePhase.isPending}
+                      className={`flex items-center justify-between rounded-xl border px-3 py-2.5 text-left transition ${
+                        on ? "border-transparent" : "border-border bg-background/40 hover:border-foreground/40"
+                      }`}
+                      style={
+                        on
+                          ? {
+                              background: `hsl(var(--stage-${meta.stage}) / 0.18)`,
+                              borderColor: `hsl(var(--stage-${meta.stage}) / 0.5)`,
+                            }
+                          : undefined
+                      }
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className="h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0"
+                          style={{ borderColor: `hsl(var(--stage-${meta.stage}))`, background: on ? `hsl(var(--stage-${meta.stage}))` : "transparent" }}
+                        >
+                          {on && <Check className="h-3 w-3 text-background" strokeWidth={3} />}
+                        </span>
+                        <div>
+                          <div className="font-display font-bold text-sm" style={{ color: `hsl(var(--stage-${meta.stage}))` }}>
+                            {meta.label}
+                          </div>
+                          <div className="font-serif-italic text-[11px] text-muted-foreground">{meta.sub}</div>
+                        </div>
+                      </div>
+                      {on && currentRhythms.length === 3 && (
+                        <Sparkles className="h-4 w-4 text-accent" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setPhase("belonging")}
+                disabled={savePhase.isPending}
+                className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background/40 px-4 py-2 font-mono text-[10px] tracking-wider text-muted-foreground hover:text-foreground hover:border-foreground/40 transition"
+              >
+                <ArrowLeft className="h-4 w-4" /> RETURN TO BELONGING
+              </button>
+            </>
+          )}
         </div>
 
         {/* Pastoral note */}
