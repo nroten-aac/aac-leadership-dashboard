@@ -42,10 +42,13 @@ const STATUS_STYLE = {
 export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams, discLabel, status }: Props) {
   const qc = useQueryClient();
   const open = !!member;
+  const phase: Phase = (member?.phase as Phase) || "connecting";
+  const currentRhythms: Rhythm[] = useMemo(
+    () => (Array.isArray(member?.rhythms) ? (member.rhythms as Rhythm[]) : []),
+    [member?.rhythms]
+  );
+  // For legacy header chip / history coloring we still derive a primary stage
   const stage: Stage = member ? dbStageToRoadmap(member.discipleship_stage) : "connect";
-  const stageIdx = STAGE_ORDER.indexOf(stage);
-  const nextStage = STAGE_ORDER[stageIdx + 1];
-  const prevStage = stageIdx > 0 ? STAGE_ORDER[stageIdx - 1] : undefined;
 
   const stageDays = member?.stage_updated_at
     ? Math.floor((Date.now() - new Date(member.stage_updated_at).getTime()) / 86400000)
@@ -118,22 +121,51 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["stage_history", member?.id] }),
   });
 
-  // Move stage
-  const moveStage = useMutation({
-    mutationFn: async (target: Stage) => {
-      const { error } = await supabase
-        .from("members")
-        .update({ discipleship_stage: ROADMAP_TO_DB[target], stage_updated_at: new Date().toISOString() } as any)
-        .eq("id", member.id);
+  // Save phase + rhythms (source of truth — discipleship_stage auto-syncs via DB trigger)
+  const savePhase = useMutation({
+    mutationFn: async ({ phase: p, rhythms: r }: { phase: Phase; rhythms: Rhythm[] }) => {
+      const payload: any = {
+        phase: p,
+        rhythms: p === "rhythms" ? r : [],
+        stage_updated_at: new Date().toISOString(),
+      };
+      const { error } = await supabase.from("members").update(payload).eq("id", member.id);
       if (error) throw error;
     },
-    onSuccess: (_d, target) => {
+    onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: ["roadmap", "members"] });
       qc.invalidateQueries({ queryKey: ["stage_history", member?.id] });
-      toast({ title: `Moved to ${STAGE_NAMES[target]}` });
+      qc.invalidateQueries({ queryKey: ["shepherding-members"] });
+      const label =
+        vars.phase === "rhythms"
+          ? `Now in rhythms: ${vars.rhythms.map((r) => RHYTHM_META[r].label).join(", ")}`
+          : `Moved to ${PHASE_LABEL[vars.phase]}`;
+      toast({ title: label });
     },
-    onError: (e: any) => toast({ title: "Could not move stage", description: e?.message ?? String(e), variant: "destructive" }),
+    onError: (e: any) =>
+      toast({ title: "Could not update", description: e?.message ?? String(e), variant: "destructive" }),
   });
+
+  const toggleRhythm = (r: Rhythm) => {
+    const next = currentRhythms.includes(r)
+      ? currentRhythms.filter((x) => x !== r)
+      : [...currentRhythms, r];
+    if (next.length === 0) {
+      // dropping the last rhythm sends them back to Belonging
+      savePhase.mutate({ phase: "belonging", rhythms: [] });
+    } else {
+      savePhase.mutate({ phase: "rhythms", rhythms: next });
+    }
+  };
+
+  const setPhase = (p: Phase) => {
+    if (p === "rhythms") {
+      // Entering rhythms with no selection isn't valid — default to maturing
+      savePhase.mutate({ phase: "rhythms", rhythms: currentRhythms.length ? currentRhythms : ["maturing"] });
+    } else {
+      savePhase.mutate({ phase: p, rhythms: [] });
+    }
+  };
 
   if (!member) return null;
   const initials = `${member.first_name?.[0] || ""}${member.last_name?.[0] || ""}`;
