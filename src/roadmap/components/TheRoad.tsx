@@ -105,14 +105,14 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
           const labelX = (r as any).labelX ?? r.cx;
           return (
             <g key={r.key} className="cursor-pointer" onClick={() => onStageClick?.(r.key)}>
-              <g transform={`translate(${r.cx - 16}, ${r.cy - 16})`} style={{ color: r.color }}>
+              <g transform={`translate(${r.ix - 16}, ${r.iy - 16})`} style={{ color: r.color }}>
                 <Icon width={32} height={32} />
               </g>
               {/* count badge */}
-              <circle cx={r.cx + 22} cy={r.cy - 22} r="11"
+              <circle cx={r.ix + 18} cy={r.iy - 18} r="10"
                 fill={isMultiply ? "hsl(var(--accent))" : "hsl(var(--card))"}
                 stroke={r.color} strokeWidth="1.5" />
-              <text x={r.cx + 22} y={r.cy - 18} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="10" fontWeight="700"
+              <text x={r.ix + 18} y={r.iy - 14} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="10" fontWeight="700"
                 fill={isMultiply ? "hsl(var(--accent-foreground))" : "hsl(var(--foreground))"}>{count}</text>
               {/* label */}
               <text x={labelX} y={r.labelY} textAnchor="middle" fontFamily="Outfit, sans-serif" fontSize="18" fontWeight="700" fill="hsl(var(--foreground))">{r.label}</text>
@@ -120,6 +120,15 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
             </g>
           );
         })}
+
+        {/* Christ at the center — where all three rhythms meet */}
+        <g transform={`translate(${vcx}, ${vcy})`}>
+          <circle r="22" fill="hsl(var(--background))" stroke="hsl(var(--accent))" strokeWidth="1.5"
+            className="drop-shadow-[0_0_14px_hsl(var(--accent)/0.55)]" />
+          {/* cross */}
+          <path d="M-2.5 -13 h5 v9 h9 v5 h-9 v12 h-5 v-12 h-9 v-5 h9 z"
+            fill="hsl(var(--accent))" />
+        </g>
       </svg>
 
       <p className="mt-4 text-sm text-muted-foreground">
