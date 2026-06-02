@@ -499,8 +499,10 @@ export type Database = {
           membership_status: string
           notes: string | null
           pco_id: string | null
+          phase: string
           phone: string | null
           photo_url: string | null
+          rhythms: string[]
           stage_updated_at: string
           updated_at: string
         }
@@ -520,8 +522,10 @@ export type Database = {
           membership_status?: string
           notes?: string | null
           pco_id?: string | null
+          phase?: string
           phone?: string | null
           photo_url?: string | null
+          rhythms?: string[]
           stage_updated_at?: string
           updated_at?: string
         }
@@ -541,8 +545,10 @@ export type Database = {
           membership_status?: string
           notes?: string | null
           pco_id?: string | null
+          phase?: string
           phone?: string | null
           photo_url?: string | null
+          rhythms?: string[]
           stage_updated_at?: string
           updated_at?: string
         }

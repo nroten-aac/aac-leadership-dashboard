@@ -102,7 +102,19 @@ export default function PeopleTab() {
       // Only show people categorized as Member, Regular, or Visitor
       if (!statusByMember.has(m.id)) return false;
       if (!`${m.first_name} ${m.last_name}`.toLowerCase().includes(ql)) return false;
-      if (stageFilter.size && !stageFilter.has(dbStageToRoadmap(m.discipleship_stage))) return false;
+      if (stageFilter.size) {
+        const phase = (m.phase || "connecting") as string;
+        const rhythms: string[] = Array.isArray(m.rhythms) ? m.rhythms : [];
+        const matches = [...stageFilter].some((s) => {
+          if (s === "connect")  return phase === "connecting";
+          if (s === "belong")   return phase === "belonging";
+          if (s === "mature")   return phase === "rhythms" && rhythms.includes("maturing");
+          if (s === "minister") return phase === "rhythms" && rhythms.includes("ministering");
+          if (s === "multiply") return phase === "rhythms" && rhythms.includes("multiplying");
+          return false;
+        });
+        if (!matches) return false;
+      }
       if (statusFilter.size) {
         const s = statusByMember.get(m.id);
         if (!s || !statusFilter.has(s)) return false;
