@@ -1,20 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone, Home, ArrowRight, ArrowLeft, Check, Pencil, Trash2, X } from "lucide-react";
+import { Mail, Phone, Home, ArrowRight, ArrowLeft, Check, Pencil, Trash2, X, Sparkles } from "lucide-react";
 import { STAGE_NAMES, STAGE_ORDER, STAGE_DESC, type Stage } from "../types";
 import { dbStageToRoadmap } from "../hooks/useRoadmapData";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 
-const ROADMAP_TO_DB: Record<Stage, string> = {
-  connect: "connecting",
-  belong: "belonging",
-  mature: "maturing",
-  minister: "ministering",
-  multiply: "multiplying",
+type Phase = "connecting" | "belonging" | "rhythms";
+type Rhythm = "maturing" | "ministering" | "multiplying";
+
+const PHASE_LABEL: Record<Phase, string> = {
+  connecting: "Connecting",
+  belonging: "Belonging",
+  rhythms: "Rhythms",
+};
+
+const RHYTHM_META: Record<Rhythm, { label: string; stage: Stage; sub: string }> = {
+  maturing:    { label: "Maturing",    stage: "mature",   sub: "Growing in Christ" },
+  ministering: { label: "Ministering", stage: "minister", sub: "Serving His body" },
+  multiplying: { label: "Multiplying", stage: "multiply", sub: "Making disciples" },
 };
 
 interface Props {
