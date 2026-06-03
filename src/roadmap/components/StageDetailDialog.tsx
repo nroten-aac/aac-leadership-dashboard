@@ -480,12 +480,22 @@ export default function StageDetailDialog({ stage, onClose, members, statusByMem
                                   disabled={updateMilestone.isPending}
                                   title={`${on ? "Remove from" : "Add to"} ${STAGE_NAMES[s]}`}
                                   className={`h-5 min-w-[20px] px-1 rounded-md font-mono text-[9px] font-bold border transition ${
-                                    on ? "text-background" : "text-muted-foreground hover:text-foreground"
-                                  } ${isThis ? "ring-1 ring-offset-1 ring-offset-background" : ""}`}
+                                    isThis ? "ring-1 ring-offset-1 ring-offset-background" : ""
+                                  }`}
                                   style={
                                     on
-                                      ? { background: `hsl(var(--stage-${s}))`, borderColor: `hsl(var(--stage-${s}))`, ...(isThis ? { ['--tw-ring-color' as any]: `hsl(var(--stage-${s}))` } : {}) }
-                                      : { borderColor: `hsl(var(--stage-${s}) / 0.4)`, color: `hsl(var(--stage-${s}))`, ...(isThis ? { ['--tw-ring-color' as any]: `hsl(var(--stage-${s}))` } : {}) }
+                                      ? {
+                                          background: `hsl(var(--stage-${s}))`,
+                                          borderColor: `hsl(var(--stage-${s}))`,
+                                          color: "hsl(var(--background))",
+                                          ...(isThis ? { ['--tw-ring-color' as any]: `hsl(var(--stage-${s}))` } : {}),
+                                        }
+                                      : {
+                                          background: `hsl(var(--stage-${s}) / 0.14)`,
+                                          borderColor: `hsl(var(--stage-${s}) / 0.55)`,
+                                          color: `hsl(var(--stage-${s}))`,
+                                          ...(isThis ? { ['--tw-ring-color' as any]: `hsl(var(--stage-${s}))` } : {}),
+                                        }
                                   }
                                 >
                                   {STAGE_SHORT[s]}
