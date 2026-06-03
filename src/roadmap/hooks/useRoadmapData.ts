@@ -119,6 +119,41 @@ export function useMembers() {
   });
 }
 
+// ---------------- Member statuses (Member / Regular Attender / Visitor) ----------------
+// Derived from member_groups rows whose group_type = 'membership'. Visitors are not
+// currently synced into members/member_groups (only the PCO list count is available),
+// but we keep the key so visitors can be supported once they sync.
+export type MemberStatus = "member" | "regular" | "visitor";
+
+const STATUS_LISTS: Record<MemberStatus, string[]> = {
+  member:  ["Member Adults", "Member Children"],
+  regular: ["Regular Attender Adults", "Regular Attender Children"],
+  visitor: ["Visitors"],
+};
+
+export function useMemberStatuses() {
+  return useQuery({
+    queryKey: ["roadmap", "member-statuses"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("member_groups")
+        .select("member_id, group_name, group_type")
+        .eq("group_type", "membership");
+      const priority: Record<MemberStatus, number> = { member: 3, regular: 2, visitor: 1 };
+      const map = new Map<string, MemberStatus>();
+      (data || []).forEach((g: any) => {
+        const key = (Object.keys(STATUS_LISTS) as MemberStatus[]).find((k) =>
+          STATUS_LISTS[k].includes(g.group_name)
+        );
+        if (!key) return;
+        const cur = map.get(g.member_id);
+        if (!cur || priority[key] > priority[cur]) map.set(g.member_id, key);
+      });
+      return map;
+    },
+  });
+}
+
 // ---------------- Laws (seed merged with overrides) ----------------
 export function useLaws(): Law[] {
   const { data: statusMap = {} } = useLawStatusOverrides();
