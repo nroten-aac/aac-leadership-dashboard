@@ -1,11 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { useMembers, dbStageToRoadmap } from "../hooks/useRoadmapData";
-import { STAGE_NAMES, type Stage } from "../types";
+import { dbStageToRoadmap, type MemberStatus } from "../hooks/useRoadmapData";
+import { STAGE_NAMES, STAGE_ORDER, type Stage } from "../types";
 import { STAGE_ICONS } from "@/components/icons/StageIcons";
-import { Link } from "react-router-dom";
+import { Plus, X, Search } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 // Per-stage engagement chip definitions. Each chip's `count` receives the stage's
 // member rows + their group memberships and returns the number of people that fit.
@@ -146,6 +149,36 @@ const STAGE_KEY_TO_DB: Record<Stage, keyof typeof STAGE_ICONS> = {
   multiply: "multiplying",
 };
 
+// Single-letter shorthand for the per-person milestone pill row.
+const STAGE_SHORT: Record<Stage, string> = {
+  connect: "C",
+  belong:  "B",
+  mature:  "M",
+  minister: "Mi",
+  multiply: "Mu",
+};
+
+const STATUS_STYLE: Record<MemberStatus, { label: string; color: string }> = {
+  member:  { label: "Member",  color: "hsl(199 89% 60%)" },
+  regular: { label: "Regular", color: "hsl(258 80% 72%)" },
+  visitor: { label: "Visitor", color: "hsl(38 92% 60%)"  },
+};
+
+// Compute the set of milestones a person is currently in given their phase/rhythms.
+function activeStages(m: any): Set<Stage> {
+  const set = new Set<Stage>();
+  const phase = (m.phase || "connecting") as string;
+  if (phase === "connecting") set.add("connect");
+  else if (phase === "belonging") set.add("belong");
+  else {
+    const rs: string[] = Array.isArray(m.rhythms) ? m.rhythms : [];
+    if (rs.includes("maturing")) set.add("mature");
+    if (rs.includes("ministering")) set.add("minister");
+    if (rs.includes("multiplying")) set.add("multiply");
+  }
+  return set;
+}
+
 function useMemberGroups() {
   return useQuery({
     queryKey: ["roadmap", "member-groups"],
@@ -159,16 +192,82 @@ function useMemberGroups() {
 interface Props {
   stage: Stage | null;
   onClose: () => void;
+  members: any[];
+  statusByMember: Map<string, MemberStatus>;
 }
 
-export default function StageDetailDialog({ stage, onClose }: Props) {
-  const { data: members = [] } = useMembers();
+export default function StageDetailDialog({ stage, onClose, members, statusByMember }: Props) {
   const { data: groups = [] } = useMemberGroups();
+  const qc = useQueryClient();
+  const [adding, setAdding] = useState(false);
+  const [search, setSearch] = useState("");
+
+  // Mutation: assign or remove a person from a given milestone.
+  // The DB trigger sync_discipleship_phase keeps discipleship_stage in sync.
+  const updateMilestone = useMutation({
+    mutationFn: async ({
+      memberId,
+      target,
+      action,
+      current,
+    }: {
+      memberId: string;
+      target: Stage;
+      action: "add" | "remove";
+      current: any;
+    }) => {
+      const curRhythms: string[] = Array.isArray(current.rhythms) ? current.rhythms : [];
+      let phase: "connecting" | "belonging" | "rhythms";
+      let rhythms: string[] = [];
+
+      if (action === "add") {
+        if (target === "connect") { phase = "connecting"; }
+        else if (target === "belong") { phase = "belonging"; }
+        else {
+          phase = "rhythms";
+          const key = target === "mature" ? "maturing" : target === "minister" ? "ministering" : "multiplying";
+          const base = (current.phase === "rhythms") ? curRhythms : [];
+          rhythms = Array.from(new Set([...base, key]));
+        }
+      } else {
+        // remove
+        if (target === "connect") { phase = "belonging"; } // advance off connecting
+        else if (target === "belong") { phase = "connecting"; } // step back
+        else {
+          const key = target === "mature" ? "maturing" : target === "minister" ? "ministering" : "multiplying";
+          const next = curRhythms.filter((r) => r !== key);
+          if (next.length === 0) { phase = "belonging"; rhythms = []; }
+          else { phase = "rhythms"; rhythms = next; }
+        }
+      }
+
+      const { error } = await supabase
+        .from("members")
+        .update({ phase, rhythms, stage_updated_at: new Date().toISOString() } as any)
+        .eq("id", memberId);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["roadmap", "members"] });
+      qc.invalidateQueries({ queryKey: ["shepherding-members"] });
+      toast({
+        title:
+          vars.action === "add"
+            ? `Added to ${STAGE_NAMES[vars.target]}`
+            : `Removed from ${STAGE_NAMES[vars.target]}`,
+      });
+    },
+    onError: (e: any) =>
+      toast({ title: "Could not update", description: e?.message ?? String(e), variant: "destructive" }),
+  });
 
   if (!stage) return null;
 
   const Icon = STAGE_ICONS[STAGE_KEY_TO_DB[stage]];
-  const stageMembers = members.filter((m: any) => dbStageToRoadmap(m.discipleship_stage) === stage);
+  // Use the live phase/rhythms model so people who are in *multiple* rhythm
+  // milestones appear in each one.
+  const stageMembers = members.filter((m: any) => activeStages(m).has(stage));
+  const otherMembers = members.filter((m: any) => !activeStages(m).has(stage));
   const total = members.length;
   const here = stageMembers.length;
   const pct = total ? ((here / total) * 100).toFixed(1) : "0.0";
@@ -198,7 +297,14 @@ export default function StageDetailDialog({ stage, onClose }: Props) {
   });
 
   const coaching = STAGE_COACHING[stage];
-  const visiblePeople = stageMembers.slice(0, 50);
+  const visiblePeople = stageMembers.slice(0, 100);
+
+  const ql = search.trim().toLowerCase();
+  const addCandidates = otherMembers
+    .filter((m: any) =>
+      !ql || `${m.first_name ?? ""} ${m.last_name ?? ""}`.toLowerCase().includes(ql)
+    )
+    .slice(0, 50);
 
   return (
     <Dialog open={!!stage} onOpenChange={(o) => !o && onClose()}>
@@ -257,10 +363,68 @@ export default function StageDetailDialog({ stage, onClose }: Props) {
             <section>
               <div className="flex items-center justify-between mb-3">
                 <div className="eyebrow">— People at this stage</div>
-                <div className="font-mono text-[10px] tracking-widest text-muted-foreground">
-                  {here} TOTAL AT THIS STAGE
+                <div className="flex items-center gap-3">
+                  <div className="font-mono text-[10px] tracking-widest text-muted-foreground">
+                    {here} AT THIS STAGE
+                  </div>
+                  <button
+                    onClick={() => { setAdding((v) => !v); setSearch(""); }}
+                    className="inline-flex items-center gap-1 rounded-full border border-accent/50 bg-accent/10 text-accent px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider hover:bg-accent/20 transition"
+                  >
+                    {adding ? (<><X className="h-3 w-3" /> Close</>) : (<><Plus className="h-3 w-3" /> Add</>)}
+                  </button>
                 </div>
               </div>
+
+              {/* Add panel — search across all filtered family members not in this milestone */}
+              {adding && (
+                <div className="mb-4 rounded-xl border border-accent/30 bg-accent/5 p-3">
+                  <div className="relative mb-2">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      autoFocus
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder={`Find someone to add to ${STAGE_NAMES[stage]}…`}
+                      className="pl-8 bg-background/60 border-border h-9"
+                    />
+                  </div>
+                  <div className="max-h-56 overflow-y-auto space-y-1">
+                    {addCandidates.length === 0 && (
+                      <div className="text-center text-xs text-muted-foreground italic py-4">
+                        {ql ? "No matches." : "Start typing to find someone…"}
+                      </div>
+                    )}
+                    {addCandidates.map((m: any) => {
+                      const status = statusByMember.get(m.id);
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() =>
+                            updateMilestone.mutate({ memberId: m.id, target: stage, action: "add", current: m })
+                          }
+                          disabled={updateMilestone.isPending}
+                          className="flex w-full items-center gap-2 rounded-lg border border-border/40 bg-background/60 px-2 py-1.5 hover:border-accent/60 transition text-left"
+                        >
+                          <Plus className="h-3.5 w-3.5 text-accent shrink-0" />
+                          <span className="font-display text-sm text-foreground truncate flex-1">
+                            {m.first_name} {m.last_name}
+                          </span>
+                          {status && (
+                            <span
+                              className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border"
+                              style={{ color: STATUS_STYLE[status].color, borderColor: STATUS_STYLE[status].color + "66" }}
+                            >
+                              {STATUS_STYLE[status].label}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {here === 0 ? (
                 <div className="rounded-xl border border-border/60 bg-background/40 p-6">
                   <p className="text-center font-serif-italic text-sm text-muted-foreground">{STAGE_EMPTY[stage]}</p>
@@ -273,6 +437,8 @@ export default function StageDetailDialog({ stage, onClose }: Props) {
                     const sub = m.household_name
                       ? `${m.household_name}${tags.length ? " · " + tags.join(" + ") : ""}`
                       : tags.length ? tags.join(" + ") : "—";
+                    const active = activeStages(m);
+                    const status = statusByMember.get(m.id);
                     return (
                       <div key={m.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 p-3">
                         {m.photo_url ? (
@@ -283,21 +449,67 @@ export default function StageDetailDialog({ stage, onClose }: Props) {
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <div className="font-display font-semibold text-sm text-foreground truncate">{m.first_name} {m.last_name}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="font-display font-semibold text-sm text-foreground truncate">{m.first_name} {m.last_name}</div>
+                            {status && (
+                              <span
+                                className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border shrink-0"
+                                style={{ color: STATUS_STYLE[status].color, borderColor: STATUS_STYLE[status].color + "66" }}
+                              >
+                                {STATUS_STYLE[status].label}
+                              </span>
+                            )}
+                          </div>
                           <div className="font-mono text-[11px] text-muted-foreground truncate">{sub}</div>
+                          {/* Milestone indicators — click to toggle membership in any milestone */}
+                          <div className="flex items-center gap-1 mt-1.5">
+                            {STAGE_ORDER.map((s) => {
+                              const on = active.has(s);
+                              const isThis = s === stage;
+                              return (
+                                <button
+                                  key={s}
+                                  onClick={() =>
+                                    updateMilestone.mutate({
+                                      memberId: m.id,
+                                      target: s,
+                                      action: on ? "remove" : "add",
+                                      current: m,
+                                    })
+                                  }
+                                  disabled={updateMilestone.isPending}
+                                  title={`${on ? "Remove from" : "Add to"} ${STAGE_NAMES[s]}`}
+                                  className={`h-5 min-w-[20px] px-1 rounded-md font-mono text-[9px] font-bold border transition ${
+                                    on ? "text-background" : "text-muted-foreground hover:text-foreground"
+                                  } ${isThis ? "ring-1 ring-offset-1 ring-offset-background" : ""}`}
+                                  style={
+                                    on
+                                      ? { background: `hsl(var(--stage-${s}))`, borderColor: `hsl(var(--stage-${s}))`, ...(isThis ? { ['--tw-ring-color' as any]: `hsl(var(--stage-${s}))` } : {}) }
+                                      : { borderColor: `hsl(var(--stage-${s}) / 0.4)`, color: `hsl(var(--stage-${s}))`, ...(isThis ? { ['--tw-ring-color' as any]: `hsl(var(--stage-${s}))` } : {}) }
+                                  }
+                                >
+                                  {STAGE_SHORT[s]}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
-                        <div className="flex gap-1 shrink-0">
-                          {tags.slice(0, 3).map((t) => (
-                            <span key={t} className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border border-border/60 bg-background/60 text-muted-foreground">{t}</span>
-                          ))}
-                        </div>
+                        <button
+                          onClick={() =>
+                            updateMilestone.mutate({ memberId: m.id, target: stage, action: "remove", current: m })
+                          }
+                          disabled={updateMilestone.isPending}
+                          title={`Remove from ${STAGE_NAMES[stage]}`}
+                          className="shrink-0 h-7 w-7 rounded-full border border-border/60 bg-background/60 flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/60 transition"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     );
                   })}
                   {here > visiblePeople.length && (
                     <div className="text-center text-xs text-muted-foreground italic pt-3 border-t border-dashed border-border/40">
-                      + {here - visiblePeople.length} more synced from PCO ·{" "}
-                      <Link to="/members/people" className="text-accent hover:underline" onClick={onClose}>See full list in People tab</Link>
+                      + {here - visiblePeople.length} more · refine the filter at the top of the dashboard to narrow this list.
                     </div>
                   )}
                 </div>
