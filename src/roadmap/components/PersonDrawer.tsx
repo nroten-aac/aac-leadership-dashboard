@@ -328,8 +328,8 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
                       style={
                         on
                           ? {
-                              background: `hsl(var(--stage-${meta.stage}) / 0.18)`,
-                              borderColor: `hsl(var(--stage-${meta.stage}) / 0.5)`,
+                              background: `hsl(var(--stage-${meta.stage}) / 0.35)`,
+                              borderColor: `hsl(var(--stage-${meta.stage}) / 0.7)`,
                             }
                           : undefined
                       }
