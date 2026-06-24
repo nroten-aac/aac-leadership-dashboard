@@ -328,20 +328,23 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
                       style={{
                         background: on
                           ? `hsl(var(--stage-${meta.stage}) / 0.28)`
-                          : `hsl(var(--stage-${meta.stage}) / 0.08)`,
+                          : `hsl(var(--stage-${meta.stage}) / 0.03)`,
                         borderColor: on
                           ? `hsl(var(--stage-${meta.stage}))`
-                          : `hsl(var(--stage-${meta.stage}) / 0.55)`,
+                          : `hsl(var(--stage-${meta.stage}) / 0.25)`,
                         boxShadow: on
                           ? `0 0 0 1px hsl(var(--stage-${meta.stage}) / 0.4), 0 8px 24px -12px hsl(var(--stage-${meta.stage}) / 0.6)`
                           : undefined,
+                        opacity: on ? 1 : 0.65,
                       }}
                     >
                       <div className="flex items-center gap-2.5">
                         <span
                           className="h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0"
                           style={{
-                            borderColor: `hsl(var(--stage-${meta.stage}))`,
+                            borderColor: on
+                              ? `hsl(var(--stage-${meta.stage}))`
+                              : `hsl(var(--stage-${meta.stage}) / 0.5)`,
                             background: on ? `hsl(var(--stage-${meta.stage}))` : "transparent",
                           }}
                         >
