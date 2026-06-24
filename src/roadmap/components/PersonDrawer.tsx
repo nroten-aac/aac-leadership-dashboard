@@ -172,7 +172,7 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto border-border p-0 dark bg-background text-foreground">
+      <SheetContent className="roadmap-dark w-full sm:max-w-md overflow-y-auto border-border p-0 bg-background text-foreground">
         {/* Header */}
         <div className="p-6 border-b border-border/60">
           <div className="flex items-start gap-4">
