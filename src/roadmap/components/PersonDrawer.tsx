@@ -337,9 +337,12 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
                       <div className="flex items-center gap-2.5">
                         <span
                           className="h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0"
-                          style={{ borderColor: `hsl(var(--stage-${meta.stage}))`, background: on ? `hsl(var(--stage-${meta.stage}))` : "transparent" }}
+                          style={{
+                            borderColor: `hsl(var(--stage-${meta.stage}))`,
+                            background: on ? `hsl(var(--stage-${meta.stage}))` : "transparent",
+                          }}
                         >
-                          {on && <Check className="h-3 w-3 text-background" strokeWidth={3} />}
+                          {on && <Check className="h-3.5 w-3.5 text-white drop-shadow" strokeWidth={3.5} />}
                         </span>
                         <div>
                           <div className="font-display font-bold text-sm" style={{ color: `hsl(var(--stage-${meta.stage}))` }}>
