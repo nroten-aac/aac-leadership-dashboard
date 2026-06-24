@@ -39,6 +39,11 @@ export const STATUS_STYLE: Record<StatusKey, { label: string; dot: string; bg: s
 export default function PeopleTab() {
   const { data: members = [] } = useMembers();
   const [selected, setSelected] = useState<any | null>(null);
+  // Keep the drawer in sync with the latest member data after mutations.
+  const liveSelected = useMemo(
+    () => (selected ? (members as any[]).find((m) => m.id === selected.id) ?? selected : null),
+    [selected, members]
+  );
   const { data: groups = [] } = useQuery({
     queryKey: ["member_groups", "all"],
     queryFn: async () => {
@@ -347,10 +352,10 @@ export default function PeopleTab() {
       </div>
 
       <PersonDrawer
-        member={selected}
+        member={liveSelected}
         onOpenChange={(open) => !open && setSelected(null)}
-        discKeys={selected ? Array.from(discByMember.get(selected.id) || []) : []}
-        volTeams={selected ? Array.from(volunteerByMember.get(selected.id) || []) : []}
+        discKeys={liveSelected ? Array.from(discByMember.get(liveSelected.id) || []) : []}
+        volTeams={liveSelected ? Array.from(volunteerByMember.get(liveSelected.id) || []) : []}
         discLabel={(k) => DISCIPLESHIP_DEFS.find((d) => d.key === k)?.label ?? k}
         status={selected ? statusByMember.get(selected.id) ?? null : null}
       />
