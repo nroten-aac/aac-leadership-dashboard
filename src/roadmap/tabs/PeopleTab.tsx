@@ -302,7 +302,7 @@ export default function PeopleTab() {
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="font-display font-semibold truncate">{m.first_name} {m.last_name}</div>
+                  <div className="font-display font-semibold truncate pr-16">{m.first_name} {m.last_name}</div>
                   <div className="font-mono text-[10px] uppercase tracking-wider"
                     style={{ color: `hsl(var(--stage-${stage}))` }}>
                     {STAGE_NAMES[stage]}
