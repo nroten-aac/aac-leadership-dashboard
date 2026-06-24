@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMembers, dbStageToRoadmap } from "../hooks/useRoadmapData";
 import { STAGE_NAMES, type Stage } from "../types";
 import { Input } from "@/components/ui/input";
-import { Mail, Phone, Home, Sparkles } from "lucide-react";
+import { Mail, Phone, Home, Sparkles, BadgeCheck } from "lucide-react";
 import PersonDrawer from "../components/PersonDrawer";
 
 const STAGES: Stage[] = ["connect", "belong", "mature", "minister", "multiply"];
@@ -281,6 +281,7 @@ export default function PeopleTab() {
           const statusStyle = status ? STATUS_STYLE[status] : null;
           const rhythmsArr: string[] = Array.isArray(m.rhythms) ? m.rhythms : [];
           const allRhythms = m.phase === "rhythms" && ["maturing","ministering","multiplying"].every((r) => rhythmsArr.includes(r));
+          const isMember = status === "member";
           return (
             <div key={m.id} onClick={() => setSelected(m)} className="group relative rounded-xl border border-border/60 bg-card p-4 hover:border-accent/40 transition cursor-pointer flex flex-col gap-3">
               {allRhythms && (
@@ -299,21 +300,31 @@ export default function PeopleTab() {
                 </span>
               )}
               <div className="flex items-start gap-3">
-                {m.photo_url ? (
-                  <img src={m.photo_url} alt={`${m.first_name} ${m.last_name}`}
-                    className="h-12 w-12 rounded-full object-cover ring-2"
-                    style={{ ['--tw-ring-color' as any]: `hsl(var(--stage-${stage}) / 0.5)` }} />
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full font-mono text-xs font-bold shrink-0"
-                    style={{ background: `hsl(var(--stage-${stage}) / 0.2)`, color: `hsl(var(--stage-${stage}))` }}>
-                    {initials}
-                  </div>
-                )}
+                <div className="relative shrink-0">
+                  {m.photo_url ? (
+                    <img src={m.photo_url} alt={`${m.first_name} ${m.last_name}`}
+                      className={`h-12 w-12 rounded-full object-cover ${isMember ? "ring-2 ring-amber-400" : "ring-2"}`}
+                      style={isMember ? undefined : { ['--tw-ring-color' as any]: `hsl(var(--stage-${stage}) / 0.5)` }} />
+                  ) : (
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-full font-mono text-xs font-bold ${isMember ? "ring-2 ring-amber-400" : ""}`}
+                      style={{ background: `hsl(var(--stage-${stage}) / 0.2)`, color: `hsl(var(--stage-${stage}))` }}>
+                      {initials}
+                    </div>
+                  )}
+                  {isMember && (
+                    <BadgeCheck
+                      className="absolute -bottom-0.5 -right-0.5 h-4 w-4 text-amber-400 fill-background"
+                      strokeWidth={2.5}
+                      aria-label="Covenant member"
+                    />
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-display font-semibold truncate pr-16">{m.first_name} {m.last_name}</div>
                   <div className="font-mono text-[10px] uppercase tracking-wider"
                     style={{ color: `hsl(var(--stage-${stage}))` }}>
                     {STAGE_NAMES[stage]}
+                    {isMember && <span className="ml-1.5 text-amber-400">✦ MEMBER</span>}
                     {stageDays !== null && <span className="text-muted-foreground ml-2 normal-case tracking-normal">· {stageDays}d</span>}
                   </div>
                   {m.household_name && (
