@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMembers, dbStageToRoadmap } from "../hooks/useRoadmapData";
 import { STAGE_NAMES, type Stage } from "../types";
 import { Input } from "@/components/ui/input";
-import { Mail, Phone, Home } from "lucide-react";
+import { Mail, Phone, Home, Sparkles } from "lucide-react";
 import PersonDrawer from "../components/PersonDrawer";
 
 const STAGES: Stage[] = ["connect", "belong", "mature", "minister", "multiply"];
@@ -279,8 +279,16 @@ export default function PeopleTab() {
           const volTeams = Array.from(volunteerByMember.get(m.id) || []);
           const status = statusByMember.get(m.id);
           const statusStyle = status ? STATUS_STYLE[status] : null;
+          const rhythmsArr: string[] = Array.isArray(m.rhythms) ? m.rhythms : [];
+          const allRhythms = m.phase === "rhythms" && ["maturing","ministering","multiplying"].every((r) => rhythmsArr.includes(r));
           return (
             <div key={m.id} onClick={() => setSelected(m)} className="group relative rounded-xl border border-border/60 bg-card p-4 hover:border-accent/40 transition cursor-pointer flex flex-col gap-3">
+              {allRhythms && (
+                <Sparkles
+                  className="absolute top-2 left-2 h-4 w-4 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]"
+                  aria-label="Active in all three rhythms"
+                />
+              )}
               {statusStyle && (
                 <span
                   className={`absolute top-2 right-2 inline-flex items-center gap-1 rounded-full border ${statusStyle.border} ${statusStyle.bg} ${statusStyle.text} px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider`}
