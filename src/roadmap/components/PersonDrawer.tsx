@@ -327,11 +327,14 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
                       }`}
                       style={{
                         background: on
-                          ? `hsl(var(--stage-${meta.stage}) / 0.18)`
-                          : `hsl(var(--stage-${meta.stage}) / 0.06)`,
+                          ? `hsl(var(--stage-${meta.stage}) / 0.28)`
+                          : `hsl(var(--stage-${meta.stage}) / 0.08)`,
                         borderColor: on
                           ? `hsl(var(--stage-${meta.stage}))`
-                          : `hsl(var(--stage-${meta.stage}) / 0.45)`,
+                          : `hsl(var(--stage-${meta.stage}) / 0.55)`,
+                        boxShadow: on
+                          ? `0 0 0 1px hsl(var(--stage-${meta.stage}) / 0.4), 0 8px 24px -12px hsl(var(--stage-${meta.stage}) / 0.6)`
+                          : undefined,
                       }}
                     >
                       <div className="flex items-center gap-2.5">
