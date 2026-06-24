@@ -323,20 +323,20 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
                       onClick={() => toggleRhythm(r)}
                       disabled={savePhase.isPending}
                       className={`flex items-center justify-between rounded-xl border px-3 py-2.5 text-left transition ${
-                        on ? "border-transparent" : "border-border bg-background/40 hover:border-foreground/40"
+                        on ? "border-2" : "border border-border bg-background/40 hover:border-foreground/40"
                       }`}
                       style={
                         on
                           ? {
-                              background: `hsl(var(--stage-${meta.stage}) / 0.35)`,
-                              borderColor: `hsl(var(--stage-${meta.stage}) / 0.7)`,
+                              background: `hsl(var(--stage-${meta.stage}) / 0.15)`,
+                              borderColor: `hsl(var(--stage-${meta.stage}))`,
                             }
                           : undefined
                       }
                     >
                       <div className="flex items-center gap-2.5">
                         <span
-                          className="h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0"
+                          className="h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0"
                           style={{ borderColor: `hsl(var(--stage-${meta.stage}))`, background: on ? `hsl(var(--stage-${meta.stage}))` : "transparent" }}
                         >
                           {on && <Check className="h-3 w-3 text-background" strokeWidth={3} />}
