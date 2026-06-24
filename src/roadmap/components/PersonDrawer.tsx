@@ -322,17 +322,17 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
                       key={r}
                       onClick={() => toggleRhythm(r)}
                       disabled={savePhase.isPending}
-                      className={`flex items-center justify-between rounded-xl border px-3 py-2.5 text-left transition ${
-                        on ? "border-2" : "border border-border bg-background/40 hover:border-foreground/40"
+                      className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-left transition ${
+                        on ? "border-2" : "border hover:brightness-125"
                       }`}
-                      style={
-                        on
-                          ? {
-                              background: `hsl(var(--stage-${meta.stage}) / 0.15)`,
-                              borderColor: `hsl(var(--stage-${meta.stage}))`,
-                            }
-                          : undefined
-                      }
+                      style={{
+                        background: on
+                          ? `hsl(var(--stage-${meta.stage}) / 0.18)`
+                          : `hsl(var(--stage-${meta.stage}) / 0.06)`,
+                        borderColor: on
+                          ? `hsl(var(--stage-${meta.stage}))`
+                          : `hsl(var(--stage-${meta.stage}) / 0.45)`,
+                      }}
                     >
                       <div className="flex items-center gap-2.5">
                         <span
