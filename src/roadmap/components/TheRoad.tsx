@@ -17,7 +17,7 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
   // Threshold milestones (linear, crossed once)
   const thresholds = [
     { key: "connect" as Stage, x: 200, y: 240, color: "hsl(var(--stage-connect))", Icon: ConnectingIcon, num: "01", sub: "Outside Christ → in Christ → baptized" },
-    { key: "belong"  as Stage, x: 440, y: 240, color: "hsl(var(--stage-belong))",  Icon: BelongingIcon,  num: "02", sub: "A two-way commitment — member ↔ church" },
+    { key: "belong"  as Stage, x: 560, y: 240, color: "hsl(var(--stage-belong))",  Icon: BelongingIcon,  num: "02", sub: "A two-way commitment — member ↔ church" },
   ];
 
   // Venn rhythms (simultaneous, lifelong) — centered around (920, 260)
@@ -64,8 +64,9 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
         {/* Dashed connector across thresholds, arrow into rhythms */}
         <path d="M 90 240 L 760 240" stroke="hsl(var(--accent))" strokeWidth="1.8" strokeDasharray="6 8" fill="none" opacity="0.7" markerEnd="url(#arrow-end)" />
 
-        {/* Divider between sections */}
-        <line x1="640" y1="90" x2="640" y2="430" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="2 6" opacity="0.5" />
+        {/* Two threshold dividers */}
+        <line x1="380" y1="90" x2="380" y2="430" stroke="hsl(var(--accent))" strokeWidth="1" strokeDasharray="3 7" opacity="0.45" />
+        <line x1="720" y1="90" x2="720" y2="430" stroke="hsl(var(--accent))" strokeWidth="1" strokeDasharray="3 7" opacity="0.45" />
 
         {/* Thresholds */}
         {thresholds.map((s) => {
