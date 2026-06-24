@@ -281,7 +281,10 @@ export default function PeopleTab() {
           const statusStyle = status ? STATUS_STYLE[status] : null;
           const rhythmsArr: string[] = Array.isArray(m.rhythms) ? m.rhythms : [];
           const allRhythms = m.phase === "rhythms" && ["maturing","ministering","multiplying"].every((r) => rhythmsArr.includes(r));
-          const isMember = status === "member";
+          const inRhythms = m.phase === "rhythms";
+          // Only surface the member marker for those who haven't yet stepped into a rhythm —
+          // members already active in rhythms don't need the extra tag.
+          const isMember = status === "member" && !inRhythms;
           return (
             <div key={m.id} onClick={() => setSelected(m)} className="group relative rounded-xl border border-border/60 bg-card p-4 hover:border-accent/40 transition cursor-pointer flex flex-col gap-3">
               {allRhythms && (
