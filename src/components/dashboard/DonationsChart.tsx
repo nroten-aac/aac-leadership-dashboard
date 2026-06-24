@@ -290,6 +290,8 @@ const DonationsChart = ({ monthlyGiving, defaultFunds, defaultYearFilter }: Dona
             <YAxis
               tick={{ fontSize: 13, fill: "hsl(var(--muted-foreground))" }}
               tickFormatter={(v) => `$${v >= 1000 ? (v / 1000).toFixed(0) + "k" : v}`}
+              domain={[0, (dataMax: number) => Math.ceil((dataMax + 1) / 5000) * 5000]}
+              allowDecimals={false}
             />
             <Tooltip
               contentStyle={{
