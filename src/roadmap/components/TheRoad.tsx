@@ -31,7 +31,7 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
     return { ix: cx + (dx / len) * iconOffset, iy: cy + (dy / len) * iconOffset };
   };
   const rhythms = [
-    { key: "minister" as Stage, cx: vcx,      cy: vcy - 44, color: "hsl(var(--stage-minister))", Icon: MinisteringIcon, label: "Ministering", sub: "Serving His body.",  labelY: vcy - 150 },
+    { key: "minister" as Stage, cx: vcx,      cy: vcy - 44, color: "hsl(var(--stage-minister))", Icon: MinisteringIcon, label: "Ministering", sub: "Serving using spiritual gifts.",  labelY: vcy - 150 },
     { key: "mature"   as Stage, cx: vcx - 56, cy: vcy + 30, color: "hsl(var(--stage-mature))",   Icon: MaturingIcon,    label: "Maturing",    sub: "Growing in Christ.", labelY: vcy + 160, labelX: vcx - 90 },
     { key: "multiply" as Stage, cx: vcx + 56, cy: vcy + 30, color: "hsl(var(--stage-multiply))", Icon: MultiplyingIcon, label: "Multiplying", sub: "Making disciples.",  labelY: vcy + 160, labelX: vcx + 90 },
   ].map((r) => ({ ...r, ...offset(r.cx, r.cy) }));
