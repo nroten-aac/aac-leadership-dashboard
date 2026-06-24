@@ -20,7 +20,7 @@ const PHASE_LABEL: Record<Phase, string> = {
 
 const RHYTHM_META: Record<Rhythm, { label: string; stage: Stage; sub: string }> = {
   maturing:    { label: "Maturing",    stage: "mature",   sub: "Growing in Christ" },
-  ministering: { label: "Ministering", stage: "minister", sub: "Serving His body" },
+  ministering: { label: "Ministering", stage: "minister", sub: "Serving using spiritual gifts" },
   multiplying: { label: "Multiplying", stage: "multiply", sub: "Making disciples" },
 };
 
