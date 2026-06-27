@@ -136,9 +136,27 @@ serve(async (req) => {
             .update({ status: "accepted", accepted_at: new Date().toISOString() })
             .eq("id", invitation.id);
 
+          // Send a password recovery email so the existing user can (re)set their password and sign in
+          const redirectTo = `${req.headers.get("origin") || supabaseUrl}/reset-password`;
+          let emailSent = false;
+          let emailError: string | null = null;
+          const { error: resetErr } = await adminClient.auth.resetPasswordForEmail(email, {
+            redirectTo,
+          });
+          if (resetErr) {
+            emailError = resetErr.message;
+            console.error("invite-user: resetPasswordForEmail error", resetErr.message);
+          } else {
+            emailSent = true;
+          }
+
           return new Response(JSON.stringify({
-            message: "User already exists — permissions updated",
+            message: emailSent
+              ? "User already exists — permissions updated and password reset email sent"
+              : `User already exists — permissions updated, but reset email failed: ${emailError}`,
             invitation,
+            existing_user: true,
+            reset_email_sent: emailSent,
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
