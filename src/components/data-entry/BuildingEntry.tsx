@@ -251,16 +251,8 @@ const BuildingEntry = () => {
             <Input type="number" step="0.01" value={expCd0668} onChange={e => setExpCd0668(e.target.value)} placeholder="Optional" />
           </div>
           <div className="space-y-1.5">
-            <Label>CD-1941 ($)</Label>
-            <Input type="number" step="0.01" value={expCd1941} onChange={e => setExpCd1941(e.target.value)} placeholder="Optional" />
-          </div>
-          <div className="space-y-1.5">
             <Label>Money Market ($)</Label>
             <Input type="number" step="0.01" value={expMM} onChange={e => setExpMM(e.target.value)} placeholder="Optional" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>CD-2029 ($)</Label>
-            <Input type="number" step="0.01" value={expCd2029} onChange={e => setExpCd2029(e.target.value)} placeholder="Optional" />
           </div>
           <Button type="submit" disabled={expSaving} className="h-10">
             {expSaving ? "Saving..." : "Save"}
