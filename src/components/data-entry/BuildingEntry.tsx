@@ -282,9 +282,7 @@ const BuildingEntry = () => {
                     <>
                       <td className="px-1 py-1"><Input className="h-8 text-sm text-right" type="number" step="0.01" value={editValues.monthly_giving_deposits ?? ""} onChange={e => setEditValues({ ...editValues, monthly_giving_deposits: Number(e.target.value) })} /></td>
                       <td className="px-1 py-1"><Input className="h-8 text-sm text-right" type="number" step="0.01" value={editValues.cd_0668 ?? ""} onChange={e => setEditValues({ ...editValues, cd_0668: e.target.value ? Number(e.target.value) : null })} /></td>
-                      <td className="px-1 py-1"><Input className="h-8 text-sm text-right" type="number" step="0.01" value={editValues.cd_1941 ?? ""} onChange={e => setEditValues({ ...editValues, cd_1941: e.target.value ? Number(e.target.value) : null })} /></td>
                       <td className="px-1 py-1"><Input className="h-8 text-sm text-right" type="number" step="0.01" value={editValues.money_market ?? ""} onChange={e => setEditValues({ ...editValues, money_market: e.target.value ? Number(e.target.value) : null })} /></td>
-                      <td className="px-1 py-1"><Input className="h-8 text-sm text-right" type="number" step="0.01" value={editValues.cd_2029 ?? ""} onChange={e => setEditValues({ ...editValues, cd_2029: e.target.value ? Number(e.target.value) : null })} /></td>
                       <td className="px-1 py-1 flex gap-1">
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleExpUpdate(row.id)}><Check className="h-3.5 w-3.5" /></Button>
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingId(null)}><X className="h-3.5 w-3.5" /></Button>
