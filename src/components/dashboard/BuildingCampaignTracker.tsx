@@ -17,9 +17,7 @@ interface CampaignRow {
   year: number;
   monthly_giving_deposits: number;
   cd_0668: number | null;
-  cd_1941: number | null;
   money_market: number | null;
-  cd_2029: number | null;
 }
 
 const fmt = (v: number | null | undefined) =>
@@ -80,7 +78,7 @@ const BuildingCampaignTracker = () => {
     let cumulative = 0;
     const chartData = rows.map((r) => {
       cumulative += Number(r.monthly_giving_deposits);
-      const accountFunds = (Number(r.money_market) || 0) + (Number(r.cd_0668) || 0) + (Number(r.cd_1941) || 0) + (Number(r.cd_2029) || 0);
+      const accountFunds = (Number(r.money_market) || 0) + (Number(r.cd_0668) || 0);
       return {
         label: `${r.month.slice(0, 3)} ${r.year}`,
         cumulativeGiving: cumulative,
@@ -89,7 +87,7 @@ const BuildingCampaignTracker = () => {
     });
     const last = rows[rows.length - 1];
     const totalFundsAvailable = last
-      ? (Number(last.money_market) || 0) + (Number(last.cd_0668) || 0) + (Number(last.cd_1941) || 0) + (Number(last.cd_2029) || 0)
+      ? (Number(last.money_market) || 0) + (Number(last.cd_0668) || 0)
       : 0;
     return { chartData, cumulativeGiving: cumulative, totalFundsAvailable, latestRow: last };
   }, [rows]);
@@ -126,7 +124,7 @@ const BuildingCampaignTracker = () => {
                     <Tooltip formatter={(val: number) => fmt(val)} />
                     <Legend />
                     <ReferenceLine y={CAMPAIGN_GOAL} stroke="hsl(0 70% 50%)" strokeDasharray="6 3" label={{ value: `Goal: ${fmtShort(CAMPAIGN_GOAL)}`, position: "right", fontSize: 11, fill: "hsl(0 70% 50%)" }} />
-                    <Area type="monotone" dataKey="accountFunds" name="Account Funds (MM + CDs)" stroke="hsl(140 50% 38%)" fill="url(#gradTotalFunds)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="accountFunds" name="Account Funds (MM + CD-0668)" stroke="hsl(140 50% 38%)" fill="url(#gradTotalFunds)" strokeWidth={2} />
                     <Area type="monotone" dataKey="cumulativeGiving" name="Cumulative Pledged Giving" stroke="hsl(205 79% 20%)" fill="url(#gradCumGiving)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -161,18 +159,6 @@ const BuildingCampaignTracker = () => {
                       <CardContent className="p-4 text-center">
                         <p className="text-xs text-muted-foreground mb-1">CD-0668</p>
                         <p className="text-sm font-semibold">{fmt(latestRow.cd_0668)}</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">CD-1941</p>
-                        <p className="text-sm font-semibold">{fmt(latestRow.cd_1941)}</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">CD-2029</p>
-                        <p className="text-sm font-semibold">{fmt(latestRow.cd_2029)}</p>
                       </CardContent>
                     </Card>
                   </>

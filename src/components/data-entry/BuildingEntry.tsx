@@ -10,12 +10,10 @@ import { Plus, Pencil, Trash2, Check, X } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const ACCOUNTS = ["money_market", "cd_0668", "cd_2029", "cd_1941"];
+const ACCOUNTS = ["money_market", "cd_0668"];
 const ACCOUNT_LABELS: Record<string, string> = {
   money_market: "Money Market Account",
   cd_0668: "CD-0668",
-  cd_2029: "CD-2029",
-  cd_1941: "CD-1941",
 };
 
 const fmt = (v: number | null | undefined) =>
@@ -35,9 +33,7 @@ const BuildingEntry = () => {
   const [expYear, setExpYear] = useState(new Date().getFullYear().toString());
   const [expGiving, setExpGiving] = useState("");
   const [expCd0668, setExpCd0668] = useState("");
-  const [expCd1941, setExpCd1941] = useState("");
   const [expMM, setExpMM] = useState("");
-  const [expCd2029, setExpCd2029] = useState("");
   const [expSaving, setExpSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<any>({});
@@ -87,9 +83,7 @@ const BuildingEntry = () => {
       year: parseInt(expYear),
       monthly_giving_deposits: parseFloat(expGiving) || 0,
       cd_0668: expCd0668 ? parseFloat(expCd0668) : null,
-      cd_1941: expCd1941 ? parseFloat(expCd1941) : null,
       money_market: expMM ? parseFloat(expMM) : null,
-      cd_2029: expCd2029 ? parseFloat(expCd2029) : null,
     });
     setExpSaving(false);
     if (error) {
@@ -98,7 +92,7 @@ const BuildingEntry = () => {
     }
     toast({ title: "Saved", description: `Building expansion entry for ${expMonth} ${expYear} saved.` });
     queryClient.invalidateQueries({ queryKey: ["building_campaign"] });
-    setExpGiving(""); setExpCd0668(""); setExpCd1941(""); setExpMM(""); setExpCd2029("");
+    setExpGiving(""); setExpCd0668(""); setExpMM("");
   };
 
   const { data: expRows = [] } = useQuery({
@@ -257,16 +251,8 @@ const BuildingEntry = () => {
             <Input type="number" step="0.01" value={expCd0668} onChange={e => setExpCd0668(e.target.value)} placeholder="Optional" />
           </div>
           <div className="space-y-1.5">
-            <Label>CD-1941 ($)</Label>
-            <Input type="number" step="0.01" value={expCd1941} onChange={e => setExpCd1941(e.target.value)} placeholder="Optional" />
-          </div>
-          <div className="space-y-1.5">
             <Label>Money Market ($)</Label>
             <Input type="number" step="0.01" value={expMM} onChange={e => setExpMM(e.target.value)} placeholder="Optional" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>CD-2029 ($)</Label>
-            <Input type="number" step="0.01" value={expCd2029} onChange={e => setExpCd2029(e.target.value)} placeholder="Optional" />
           </div>
           <Button type="submit" disabled={expSaving} className="h-10">
             {expSaving ? "Saving..." : "Save"}
@@ -284,9 +270,7 @@ const BuildingEntry = () => {
                 <th className="text-left px-3 py-2 font-medium text-muted-foreground">Month</th>
                 <th className="text-right px-3 py-2 font-medium text-muted-foreground">Giving</th>
                 <th className="text-right px-3 py-2 font-medium text-muted-foreground">CD-0668</th>
-                <th className="text-right px-3 py-2 font-medium text-muted-foreground">CD-1941</th>
                 <th className="text-right px-3 py-2 font-medium text-muted-foreground">Money Mkt</th>
-                <th className="text-right px-3 py-2 font-medium text-muted-foreground">CD-2029</th>
                 <th className="px-3 py-2 w-20"></th>
               </tr>
             </thead>
@@ -298,9 +282,7 @@ const BuildingEntry = () => {
                     <>
                       <td className="px-1 py-1"><Input className="h-8 text-sm text-right" type="number" step="0.01" value={editValues.monthly_giving_deposits ?? ""} onChange={e => setEditValues({ ...editValues, monthly_giving_deposits: Number(e.target.value) })} /></td>
                       <td className="px-1 py-1"><Input className="h-8 text-sm text-right" type="number" step="0.01" value={editValues.cd_0668 ?? ""} onChange={e => setEditValues({ ...editValues, cd_0668: e.target.value ? Number(e.target.value) : null })} /></td>
-                      <td className="px-1 py-1"><Input className="h-8 text-sm text-right" type="number" step="0.01" value={editValues.cd_1941 ?? ""} onChange={e => setEditValues({ ...editValues, cd_1941: e.target.value ? Number(e.target.value) : null })} /></td>
                       <td className="px-1 py-1"><Input className="h-8 text-sm text-right" type="number" step="0.01" value={editValues.money_market ?? ""} onChange={e => setEditValues({ ...editValues, money_market: e.target.value ? Number(e.target.value) : null })} /></td>
-                      <td className="px-1 py-1"><Input className="h-8 text-sm text-right" type="number" step="0.01" value={editValues.cd_2029 ?? ""} onChange={e => setEditValues({ ...editValues, cd_2029: e.target.value ? Number(e.target.value) : null })} /></td>
                       <td className="px-1 py-1 flex gap-1">
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleExpUpdate(row.id)}><Check className="h-3.5 w-3.5" /></Button>
                         <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingId(null)}><X className="h-3.5 w-3.5" /></Button>
@@ -310,11 +292,9 @@ const BuildingEntry = () => {
                     <>
                       <td className="px-3 py-2 text-right">{fmt(row.monthly_giving_deposits)}</td>
                       <td className="px-3 py-2 text-right">{fmt(row.cd_0668)}</td>
-                      <td className="px-3 py-2 text-right">{fmt(row.cd_1941)}</td>
                       <td className="px-3 py-2 text-right">{fmt(row.money_market)}</td>
-                      <td className="px-3 py-2 text-right">{fmt(row.cd_2029)}</td>
                       <td className="px-1 py-1 flex gap-0.5">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingId(row.id); setEditValues({ monthly_giving_deposits: row.monthly_giving_deposits, cd_0668: row.cd_0668, cd_1941: row.cd_1941, money_market: row.money_market, cd_2029: row.cd_2029 }); }}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingId(row.id); setEditValues({ monthly_giving_deposits: row.monthly_giving_deposits, cd_0668: row.cd_0668, money_market: row.money_market }); }}><Pencil className="h-3.5 w-3.5" /></Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
