@@ -78,7 +78,7 @@ const BuildingCampaignTracker = () => {
     let cumulative = 0;
     const chartData = rows.map((r) => {
       cumulative += Number(r.monthly_giving_deposits);
-      const accountFunds = (Number(r.money_market) || 0) + (Number(r.cd_0668) || 0) + (Number(r.cd_1941) || 0) + (Number(r.cd_2029) || 0);
+      const accountFunds = (Number(r.money_market) || 0) + (Number(r.cd_0668) || 0);
       return {
         label: `${r.month.slice(0, 3)} ${r.year}`,
         cumulativeGiving: cumulative,
@@ -87,7 +87,7 @@ const BuildingCampaignTracker = () => {
     });
     const last = rows[rows.length - 1];
     const totalFundsAvailable = last
-      ? (Number(last.money_market) || 0) + (Number(last.cd_0668) || 0) + (Number(last.cd_1941) || 0) + (Number(last.cd_2029) || 0)
+      ? (Number(last.money_market) || 0) + (Number(last.cd_0668) || 0)
       : 0;
     return { chartData, cumulativeGiving: cumulative, totalFundsAvailable, latestRow: last };
   }, [rows]);
