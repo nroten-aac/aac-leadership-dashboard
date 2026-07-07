@@ -10,12 +10,10 @@ import { Plus, Pencil, Trash2, Check, X } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const ACCOUNTS = ["money_market", "cd_0668", "cd_2029", "cd_1941"];
+const ACCOUNTS = ["money_market", "cd_0668"];
 const ACCOUNT_LABELS: Record<string, string> = {
   money_market: "Money Market Account",
   cd_0668: "CD-0668",
-  cd_2029: "CD-2029",
-  cd_1941: "CD-1941",
 };
 
 const fmt = (v: number | null | undefined) =>
