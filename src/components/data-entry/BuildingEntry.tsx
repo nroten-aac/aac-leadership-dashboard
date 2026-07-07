@@ -294,7 +294,7 @@ const BuildingEntry = () => {
                       <td className="px-3 py-2 text-right">{fmt(row.cd_0668)}</td>
                       <td className="px-3 py-2 text-right">{fmt(row.money_market)}</td>
                       <td className="px-1 py-1 flex gap-0.5">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingId(row.id); setEditValues({ monthly_giving_deposits: row.monthly_giving_deposits, cd_0668: row.cd_0668, cd_1941: row.cd_1941, money_market: row.money_market, cd_2029: row.cd_2029 }); }}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingId(row.id); setEditValues({ monthly_giving_deposits: row.monthly_giving_deposits, cd_0668: row.cd_0668, money_market: row.money_market }); }}><Pencil className="h-3.5 w-3.5" /></Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
