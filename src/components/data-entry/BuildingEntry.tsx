@@ -83,9 +83,7 @@ const BuildingEntry = () => {
       year: parseInt(expYear),
       monthly_giving_deposits: parseFloat(expGiving) || 0,
       cd_0668: expCd0668 ? parseFloat(expCd0668) : null,
-      cd_1941: expCd1941 ? parseFloat(expCd1941) : null,
       money_market: expMM ? parseFloat(expMM) : null,
-      cd_2029: expCd2029 ? parseFloat(expCd2029) : null,
     });
     setExpSaving(false);
     if (error) {
@@ -94,7 +92,7 @@ const BuildingEntry = () => {
     }
     toast({ title: "Saved", description: `Building expansion entry for ${expMonth} ${expYear} saved.` });
     queryClient.invalidateQueries({ queryKey: ["building_campaign"] });
-    setExpGiving(""); setExpCd0668(""); setExpCd1941(""); setExpMM(""); setExpCd2029("");
+    setExpGiving(""); setExpCd0668(""); setExpMM("");
   };
 
   const { data: expRows = [] } = useQuery({
