@@ -17,9 +17,7 @@ interface CampaignRow {
   year: number;
   monthly_giving_deposits: number;
   cd_0668: number | null;
-  cd_1941: number | null;
   money_market: number | null;
-  cd_2029: number | null;
 }
 
 const fmt = (v: number | null | undefined) =>
