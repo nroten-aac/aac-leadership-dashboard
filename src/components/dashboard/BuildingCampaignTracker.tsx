@@ -151,7 +151,7 @@ const BuildingCampaignTracker = () => {
                   <>
                     <Card>
                       <CardContent className="p-4 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">Money Market</p>
+                        <p className="text-xs text-muted-foreground mb-1">Money Market-Building Fund</p>
                         <p className="text-sm font-semibold">{fmt(latestRow.money_market)}</p>
                       </CardContent>
                     </Card>
