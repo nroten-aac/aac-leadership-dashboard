@@ -270,9 +270,7 @@ const BuildingEntry = () => {
                 <th className="text-left px-3 py-2 font-medium text-muted-foreground">Month</th>
                 <th className="text-right px-3 py-2 font-medium text-muted-foreground">Giving</th>
                 <th className="text-right px-3 py-2 font-medium text-muted-foreground">CD-0668</th>
-                <th className="text-right px-3 py-2 font-medium text-muted-foreground">CD-1941</th>
                 <th className="text-right px-3 py-2 font-medium text-muted-foreground">Money Mkt</th>
-                <th className="text-right px-3 py-2 font-medium text-muted-foreground">CD-2029</th>
                 <th className="px-3 py-2 w-20"></th>
               </tr>
             </thead>
