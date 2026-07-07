@@ -161,18 +161,6 @@ const BuildingCampaignTracker = () => {
                         <p className="text-sm font-semibold">{fmt(latestRow.cd_0668)}</p>
                       </CardContent>
                     </Card>
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">CD-1941</p>
-                        <p className="text-sm font-semibold">{fmt(latestRow.cd_1941)}</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">CD-2029</p>
-                        <p className="text-sm font-semibold">{fmt(latestRow.cd_2029)}</p>
-                      </CardContent>
-                    </Card>
                   </>
                 )}
               </div>
