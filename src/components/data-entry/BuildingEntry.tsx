@@ -33,9 +33,7 @@ const BuildingEntry = () => {
   const [expYear, setExpYear] = useState(new Date().getFullYear().toString());
   const [expGiving, setExpGiving] = useState("");
   const [expCd0668, setExpCd0668] = useState("");
-  const [expCd1941, setExpCd1941] = useState("");
   const [expMM, setExpMM] = useState("");
-  const [expCd2029, setExpCd2029] = useState("");
   const [expSaving, setExpSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<any>({});
