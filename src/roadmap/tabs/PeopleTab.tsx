@@ -22,6 +22,13 @@ const AGE_DEFS = [
 ] as const;
 type AgeKey = typeof AGE_DEFS[number]["key"];
 
+const GENDER_DEFS = [
+  { key: "male", label: "Male" },
+  { key: "female", label: "Female" },
+  { key: "other", label: "Other" },
+] as const;
+type GenderKey = typeof GENDER_DEFS[number]["key"];
+
 const DISCIPLESHIP_DEFS = [
   { key: "LG", label: "Life Groups", match: (g: string) => g === "Life Groups" },
   { key: "BS", label: "Bible Studies", match: (g: string) => g.toLowerCase().includes("bible") },
@@ -94,6 +101,7 @@ export default function PeopleTab() {
   const [discFilter, setDiscFilter] = useState<Set<DiscKey>>(new Set());
   const [volFilter, setVolFilter] = useState<Set<string>>(new Set());
   const [ageFilter, setAgeFilter] = useState<Set<AgeKey>>(new Set());
+  const [genderFilter, setGenderFilter] = useState<Set<GenderKey>>(new Set());
 
   const toggle = <T,>(set: Set<T>, val: T, setter: (s: Set<T>) => void) => {
     const next = new Set(set);
@@ -136,9 +144,40 @@ export default function PeopleTab() {
         const a = ageByMember.get(m.id) ?? "adult";
         if (!ageFilter.has(a)) return false;
       }
+      if (genderFilter.size) {
+        const g = (m.gender || "").toLowerCase();
+        const key: GenderKey = g === "male" ? "male" : g === "female" ? "female" : "other";
+        if (!genderFilter.has(key)) return false;
+      }
       return true;
     });
-  }, [members, q, stageFilter, statusFilter, discFilter, volFilter, ageFilter, statusByMember, ageByMember, discByMember, volunteerByMember]);
+  }, [members, q, stageFilter, statusFilter, discFilter, volFilter, ageFilter, genderFilter, statusByMember, ageByMember, discByMember, volunteerByMember]);
+
+  const exportCsv = () => {
+    const headers = ["First Name","Last Name","Email","Phone","Gender","Household","Status","Age","Stage","Discipleship","Serving"];
+    const rows = filtered.map((m: any) => {
+      const status = statusByMember.get(m.id);
+      const age = ageByMember.get(m.id) ?? "adult";
+      const stage = dbStageToRoadmap(m.discipleship_stage);
+      const disc = Array.from(discByMember.get(m.id) || []).join("; ");
+      const vol = Array.from(volunteerByMember.get(m.id) || []).join("; ");
+      return [m.first_name||"", m.last_name||"", m.email||"", m.phone||"", m.gender||"", m.household_name||"", status||"", age, STAGE_NAMES[stage], disc, vol];
+    });
+    const esc = (v: string) => {
+      const s = String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    };
+    const csv = [headers, ...rows].map(r => r.map(esc).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `people_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 space-y-10">
@@ -263,8 +302,38 @@ export default function PeopleTab() {
         )}
       </div>
 
-        <div className="text-xs text-muted-foreground">
-          Showing <span className="font-mono text-foreground">{filtered.length}</span> of {statusByMember.size}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="eyebrow text-[10px] mr-1">Gender</span>
+        {GENDER_DEFS.map((def) => {
+          const on = genderFilter.has(def.key);
+          return (
+            <button
+              key={def.key}
+              onClick={() => toggle(genderFilter, def.key, setGenderFilter)}
+              className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ${
+                on ? "border-accent bg-accent/15 text-accent" : "border-border bg-card text-muted-foreground hover:border-accent/40"
+              }`}
+            >
+              {def.label}
+            </button>
+          );
+        })}
+        {genderFilter.size > 0 && (
+          <button onClick={() => setGenderFilter(new Set())} className="text-[10px] text-muted-foreground underline ml-1">clear</button>
+        )}
+      </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-xs text-muted-foreground">
+            Showing <span className="font-mono text-foreground">{filtered.length}</span> of {statusByMember.size}
+          </div>
+          <button
+            onClick={exportCsv}
+            disabled={filtered.length === 0}
+            className="rounded-full border border-accent/40 bg-accent/10 hover:bg-accent/20 text-accent px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Export CSV ({filtered.length})
+          </button>
         </div>
       </div>
 
