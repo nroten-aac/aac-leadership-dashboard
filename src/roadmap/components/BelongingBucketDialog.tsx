@@ -19,9 +19,10 @@ interface Props {
   bucket: BelongingBucket | null;
   members: any[];
   onClose: () => void;
+  onSelectPerson?: (m: any) => void;
 }
 
-export default function BelongingBucketDialog({ bucket, members, onClose }: Props) {
+export default function BelongingBucketDialog({ bucket, members, onClose, onSelectPerson }: Props) {
   if (!bucket) return null;
   const isMember = bucket === "member";
   const color = isMember ? MEMBER_COLOR : REGULAR_COLOR;
@@ -30,21 +31,15 @@ export default function BelongingBucketDialog({ bucket, members, onClose }: Prop
   const noRhythm = members.filter((m) => !isInRhythm(m));
 
   const intro = isMember
-    ? "Already through both doorways. The next move is a rhythm — Maturing, Ministering, or Multiplying."
+    ? "Members who haven't yet stepped into a rhythm — Maturing, Ministering, or Multiplying. The next pastoral move is activation."
     : "Not yet through the membership doorway. The next move depends on where they are.";
 
-  const rhythmHeader = isMember
-    ? "In a rhythm — healthy, keep investing"
-    : "In a rhythm — invite to membership";
-
-  const noRhythmHeader = isMember
-    ? "No rhythm yet — activate them"
-    : "No rhythm yet — deepen connection";
-
   const chip = (m: any, opts: { dashed?: boolean; ring?: boolean }) => (
-    <span
+    <button
       key={m.id}
-      className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[12px] text-foreground"
+      type="button"
+      onClick={() => onSelectPerson?.(m)}
+      className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[12px] text-foreground hover:brightness-125 hover:-translate-y-px transition"
       style={{
         border: opts.dashed ? `1.5px dashed ${color}` : `1.5px solid ${color}`,
         background: "hsl(var(--background) / 0.4)",
@@ -61,7 +56,7 @@ export default function BelongingBucketDialog({ bucket, members, onClose }: Prop
         }}
       />
       {displayName(m)}
-    </span>
+    </button>
   );
 
   return (
@@ -74,16 +69,8 @@ export default function BelongingBucketDialog({ bucket, members, onClose }: Prop
             <span className="text-muted-foreground/70 font-mono text-lg">· {members.length}</span>
           </h2>
           <p className="font-serif-italic text-muted-foreground mt-2">{intro}</p>
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: color, border: `1.5px solid ${color}` }} />
-              Solid = in a rhythm
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ border: `1.5px dashed ${color}` }} />
-              Dashed = needs to move
-            </span>
-            {!isMember && (
+          {!isMember && (
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <span
                   className="h-2.5 w-2.5 rounded-full"
@@ -94,36 +81,56 @@ export default function BelongingBucketDialog({ bucket, members, onClose }: Prop
                 />
                 Violet ring = invite to membership
               </span>
-            )}
-          </div>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ border: `1.5px dashed ${color}` }} />
+                Dashed = no rhythm yet · deepen connection
+              </span>
+            </div>
+          )}
         </div>
         <ScrollArea className="max-h-[65vh]">
           <div className="p-6 space-y-6">
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <div className="eyebrow">— {rhythmHeader}</div>
-                <div className="font-mono text-[10px] text-muted-foreground">{inRhythm.length}</div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {inRhythm.length === 0 && (
-                  <span className="text-[11px] text-muted-foreground/70">No one here.</span>
-                )}
-                {inRhythm.map((m) => chip(m, { ring: !isMember }))}
-              </div>
-            </section>
-
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <div className="eyebrow">— {noRhythmHeader}</div>
-                <div className="font-mono text-[10px] text-muted-foreground">{noRhythm.length}</div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {noRhythm.length === 0 && (
-                  <span className="text-[11px] text-muted-foreground/70">No one here.</span>
-                )}
-                {noRhythm.map((m) => chip(m, { dashed: true }))}
-              </div>
-            </section>
+            {isMember ? (
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="eyebrow">— No rhythm yet · activate them</div>
+                  <div className="font-mono text-[10px] text-muted-foreground">{noRhythm.length}</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {noRhythm.length === 0 && (
+                    <span className="text-[11px] text-muted-foreground/70">Every member is already in a rhythm. Keep investing.</span>
+                  )}
+                  {noRhythm.map((m) => chip(m, { dashed: true }))}
+                </div>
+              </section>
+            ) : (
+              <>
+                <section>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="eyebrow">— In a rhythm · invite to membership</div>
+                    <div className="font-mono text-[10px] text-muted-foreground">{inRhythm.length}</div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {inRhythm.length === 0 && (
+                      <span className="text-[11px] text-muted-foreground/70">No one here.</span>
+                    )}
+                    {inRhythm.map((m) => chip(m, { ring: true }))}
+                  </div>
+                </section>
+                <section>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="eyebrow">— No rhythm yet · deepen connection</div>
+                    <div className="font-mono text-[10px] text-muted-foreground">{noRhythm.length}</div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {noRhythm.length === 0 && (
+                      <span className="text-[11px] text-muted-foreground/70">No one here.</span>
+                    )}
+                    {noRhythm.map((m) => chip(m, { dashed: true }))}
+                  </div>
+                </section>
+              </>
+            )}
           </div>
         </ScrollArea>
       </DialogContent>
