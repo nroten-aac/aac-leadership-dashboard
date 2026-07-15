@@ -9,6 +9,7 @@ export const ALL_TABS = [
   { id: "attendance", label: "Attendance" },
   { id: "giving", label: "Giving" },
   { id: "discipleship", label: "Discipleship" },
+  { id: "projects", label: "Projects" },
 ] as const;
 
 export type TabId = (typeof ALL_TABS)[number]["id"];
