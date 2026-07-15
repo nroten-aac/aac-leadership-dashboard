@@ -16,7 +16,7 @@ interface RoadProps {
 }
 
 const MEMBER_COLOR = "hsl(199 89% 60%)";
-const REGULAR_COLOR = "hsl(258 80% 72%)";
+const REGULAR_COLOR = "hsl(210 80% 40%)";
 
 export default function TheRoad({
   counts,
