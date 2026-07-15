@@ -117,7 +117,7 @@ export default function TheRoad({
             <title>Members — click to see who's here</title>
             <circle cx={belCx} cy={memY} r={belR}
               fill="hsl(var(--background))" fillOpacity="0.9"
-              stroke={MEMBER_COLOR} strokeWidth="2.2" />
+              stroke={MEMBER_COLOR} strokeWidth="2.5" />
             <text x={belCx} y={memY - 8} textAnchor="middle"
               fontFamily="JetBrains Mono, monospace" fontSize="16" fontWeight="800" fill={MEMBER_COLOR}>
               {memCount}
@@ -132,7 +132,7 @@ export default function TheRoad({
             <title>Regular Attenders — click to see who's here</title>
             <circle cx={belCx} cy={regY} r={belR}
               fill="hsl(var(--background))" fillOpacity="0.9"
-              stroke={REGULAR_COLOR} strokeWidth="2.2" strokeDasharray="5 4" />
+              stroke={REGULAR_COLOR} strokeWidth="2.5" strokeDasharray="5 4" />
             <text x={belCx} y={regY + 20} textAnchor="middle"
               fontFamily="JetBrains Mono, monospace" fontSize="16" fontWeight="800" fill={REGULAR_COLOR}>
               {regCount}
@@ -150,8 +150,8 @@ export default function TheRoad({
           <circle cx={belCx + belR + 22} cy={memY - belR + 6} r="14" fill="hsl(var(--accent))" />
           <text x={belCx + belR + 22} y={memY - belR + 10} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="11" fontWeight="800" fill="hsl(var(--accent-foreground))">02</text>
           {/* main label + subtitle */}
-          <text x={belCx} y={belCy + 96} textAnchor="middle" fontFamily="Outfit, sans-serif" fontSize="20" fontWeight="700" fill="hsl(var(--foreground))">Belonging</text>
-          <text x={belCx} y={belCy + 118} textAnchor="middle" fontFamily="Georgia, serif" fontStyle="italic" fontSize="12" fill="hsl(var(--accent))">A two-way commitment — member ↔ church</text>
+          <text x={belCx} y={belCy + 104} textAnchor="middle" fontFamily="Outfit, sans-serif" fontSize="20" fontWeight="700" fill="hsl(var(--foreground))">Belonging</text>
+          <text x={belCx} y={belCy + 126} textAnchor="middle" fontFamily="Georgia, serif" fontStyle="italic" fontSize="12" fill="hsl(var(--accent))">A two-way commitment — member ↔ church</text>
         </g>
 
         {/* Venn circles (rhythms) */}
