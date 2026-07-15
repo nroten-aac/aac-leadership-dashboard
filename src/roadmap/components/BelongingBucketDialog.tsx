@@ -96,7 +96,7 @@ export default function BelongingBucketDialog({ bucket, members, onClose, onSele
                   <div className="eyebrow">— No rhythm yet · activate them</div>
                   <div className="font-mono text-[10px] text-muted-foreground">{noRhythm.length}</div>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 rounded-xl border border-border/60 bg-background/40 p-3">
                   {noRhythm.length === 0 && (
                     <span className="text-[11px] text-muted-foreground/70">Every member is already in a rhythm. Keep investing.</span>
                   )}
@@ -110,7 +110,7 @@ export default function BelongingBucketDialog({ bucket, members, onClose, onSele
                     <div className="eyebrow">— In a rhythm · invite to membership</div>
                     <div className="font-mono text-[10px] text-muted-foreground">{inRhythm.length}</div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 rounded-xl border border-border/60 bg-background/40 p-3">
                     {inRhythm.length === 0 && (
                       <span className="text-[11px] text-muted-foreground/70">No one here.</span>
                     )}
@@ -122,7 +122,7 @@ export default function BelongingBucketDialog({ bucket, members, onClose, onSele
                     <div className="eyebrow">— No rhythm yet · deepen connection</div>
                     <div className="font-mono text-[10px] text-muted-foreground">{noRhythm.length}</div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 rounded-xl border border-border/60 bg-background/40 p-3">
                     {noRhythm.length === 0 && (
                       <span className="text-[11px] text-muted-foreground/70">No one here.</span>
                     )}

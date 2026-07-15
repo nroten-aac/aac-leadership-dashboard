@@ -383,7 +383,7 @@ export default function StageDetailDialog({ stage, onClose, members, statusByMem
                   <p className="text-center font-serif-italic text-sm text-muted-foreground">{STAGE_EMPTY[stage]}</p>
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 rounded-xl border border-border/60 bg-background/40 p-3">
                   {visiblePeople.map((m: any) => (
                     <div key={m.id} className="relative group">
                       <button
