@@ -64,6 +64,13 @@
     --shadow-card-hover: 0 10px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
     --shadow-soft: 0 2px 12px 0 rgb(0 0 0 / 0.06);
     --shadow-gold-glow: 0 0 24px hsl(49 86% 46% / 0.25);
+
+    /* Roadmap stage colors — also needed in root because dialogs are portaled outside .roadmap-dark */
+    --stage-connect: 210 12% 50%;
+    --stage-belong: 205 58% 47%;
+    --stage-mature: 160 84% 39%;
+    --stage-minister: 258 90% 66%;
+    --stage-multiply: 49 86% 47%;
   }
 
   .dark {
