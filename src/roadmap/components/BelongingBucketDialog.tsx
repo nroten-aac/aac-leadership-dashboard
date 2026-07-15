@@ -3,7 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const MEMBER_COLOR = "hsl(199 89% 60%)";
 const REGULAR_COLOR = "hsl(210 80% 40%)";
-const RING = "hsl(280 85% 68%)";
+const RING = REGULAR_COLOR;
 
 export type BelongingBucket = "member" | "regular";
 
