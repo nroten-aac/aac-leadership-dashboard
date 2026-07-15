@@ -1,9 +1,12 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import TheRoad from "../components/TheRoad";
 import StatBlock from "../components/StatBlock";
 import EngagementMatrix from "../components/EngagementMatrix";
 import StageDetailDialog from "../components/StageDetailDialog";
 import BelongingBucketDialog, { type BelongingBucket } from "../components/BelongingBucketDialog";
+import PersonDrawer from "../components/PersonDrawer";
 import {
   useMembers,
   useActivityEvents,
@@ -20,6 +23,13 @@ const STATUS_FILTERS: { key: MemberStatus; label: string; color: string }[] = [
   { key: "visitor", label: "Visitors",          color: "hsl(38 92% 60%)"  },
 ];
 
+const DISCIPLESHIP_DEFS = [
+  { key: "LG", label: "Life Groups", match: (g: string) => g === "Life Groups" },
+  { key: "BS", label: "Bible Studies", match: (g: string) => g.toLowerCase().includes("bible") },
+  { key: "PT", label: "PT Mentorship", match: (g: string) => g === "PT Mentorship" },
+  { key: "DG", label: "Discipleship Groups", match: (g: string) => g === "Discipleship Groups" },
+] as const;
+
 export default function DashboardTab() {
   const { data: members = [] } = useMembers();
   const { data: events = [] } = useActivityEvents(200);
@@ -28,8 +38,46 @@ export default function DashboardTab() {
   const { data: statusByMember } = useMemberStatuses();
   const [openStage, setOpenStage] = useState<Stage | null>(null);
   const [belongBucket, setBelongBucket] = useState<BelongingBucket | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<any | null>(null);
   const [statusFilter, setStatusFilter] = useState<Set<MemberStatus>>(
     () => new Set(["member", "regular", "visitor"])
+  );
+
+  // Group memberships fuel the PersonDrawer's discipleship/volunteer sections.
+  const { data: groups = [] } = useQuery({
+    queryKey: ["member_groups", "all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("member_groups")
+        .select("member_id, group_name, group_type");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { discByMember, volunteerByMember } = useMemo(() => {
+    const disc = new Map<string, Set<string>>();
+    const vol = new Map<string, Set<string>>();
+    (groups as any[]).forEach((g) => {
+      if (g.group_type === "volunteer") {
+        const set = vol.get(g.member_id) ?? new Set<string>();
+        set.add(g.group_name);
+        vol.set(g.member_id, set);
+      }
+      const def = DISCIPLESHIP_DEFS.find((d) => d.match(g.group_name));
+      if (def) {
+        const set = disc.get(g.member_id) ?? new Set<string>();
+        set.add(def.key);
+        disc.set(g.member_id, set);
+      }
+    });
+    return { discByMember: disc, volunteerByMember: vol };
+  }, [groups]);
+
+  // Keep the drawer in sync with the freshest member row after mutations.
+  const liveSelected = useMemo(
+    () => (selectedPerson ? (members as any[]).find((m) => m.id === selectedPerson.id) ?? selectedPerson : null),
+    [selectedPerson, members]
   );
 
   const scopedMembers = useMemo(
@@ -171,12 +219,23 @@ export default function DashboardTab() {
         onClose={() => setOpenStage(null)}
         members={familyMembers}
         statusByMember={statusByMember ?? new Map()}
+        onSelectPerson={setSelectedPerson}
       />
 
       <BelongingBucketDialog
         bucket={belongBucket}
         members={belongBucket ? belongingBucketMembers[belongBucket] : []}
         onClose={() => setBelongBucket(null)}
+        onSelectPerson={setSelectedPerson}
+      />
+
+      <PersonDrawer
+        member={liveSelected}
+        onOpenChange={(open) => !open && setSelectedPerson(null)}
+        discKeys={liveSelected ? Array.from(discByMember.get(liveSelected.id) || []) : []}
+        volTeams={liveSelected ? Array.from(volunteerByMember.get(liveSelected.id) || []) : []}
+        discLabel={(k) => DISCIPLESHIP_DEFS.find((d) => d.key === k)?.label ?? k}
+        status={liveSelected && statusByMember ? statusByMember.get(liveSelected.id) ?? null : null}
       />
     </div>
   );
