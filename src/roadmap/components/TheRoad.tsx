@@ -11,14 +11,33 @@ interface RoadProps {
   counts: Record<Stage, number>;
   total: number;
   onStageClick?: (stage: Stage) => void;
+  belongingBuckets?: { memberCount: number; regularCount: number };
+  onBelongingBucketClick?: (bucket: "member" | "regular") => void;
 }
 
-export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
-  // Threshold milestones (linear, crossed once)
+const MEMBER_COLOR = "hsl(199 89% 60%)";
+const REGULAR_COLOR = "hsl(258 80% 72%)";
+
+export default function TheRoad({
+  counts,
+  total,
+  onStageClick,
+  belongingBuckets,
+  onBelongingBucketClick,
+}: RoadProps) {
+  // Doorway milestones (linear, crossed once) — Belonging is rendered separately as two interlocking circles.
   const thresholds = [
     { key: "connect" as Stage, x: 200, y: 240, color: "hsl(var(--stage-connect))", Icon: ConnectingIcon, num: "01", sub: "Outside Christ → in Christ → baptized" },
-    { key: "belong"  as Stage, x: 560, y: 240, color: "hsl(var(--stage-belong))",  Icon: BelongingIcon,  num: "02", sub: "A two-way commitment — member ↔ church" },
   ];
+
+  // Belonging — two interlocking circles: Members + Regular Attenders
+  const belCx = 560;
+  const belCy = 240;
+  const belR = 42;
+  const memX = belCx - 28;
+  const regX = belCx + 28;
+  const memCount = belongingBuckets?.memberCount ?? counts.belong ?? 0;
+  const regCount = belongingBuckets?.regularCount ?? 0;
 
   // Venn rhythms (simultaneous, lifelong) — centered around (920, 260)
   const vcx = 920, vcy = 260, vr = 78;
@@ -90,6 +109,50 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
             </g>
           );
         })}
+
+        {/* Belonging — two interlocking circles */}
+        <g>
+          {/* Members circle (left) — solid outline */}
+          <g className="cursor-pointer" onClick={() => onBelongingBucketClick?.("member")}>
+            <title>Members — click to see who's here</title>
+            <circle cx={memX} cy={belCy} r={belR}
+              fill="hsl(var(--background))" fillOpacity="0.85"
+              stroke={MEMBER_COLOR} strokeWidth="2.2" />
+            <text x={memX - 14} y={belCy + 5} textAnchor="middle"
+              fontFamily="JetBrains Mono, monospace" fontSize="16" fontWeight="800" fill={MEMBER_COLOR}>
+              {memCount}
+            </text>
+            <text x={memX - 14} y={belCy + belR + 20} textAnchor="middle"
+              fontFamily="Outfit, sans-serif" fontSize="12" fontWeight="700" fill="hsl(var(--foreground))">
+              Members
+            </text>
+          </g>
+          {/* Regulars circle (right) — dashed outline signals not-yet-committed */}
+          <g className="cursor-pointer" onClick={() => onBelongingBucketClick?.("regular")}>
+            <title>Regular Attenders — click to see who's here</title>
+            <circle cx={regX} cy={belCy} r={belR}
+              fill="hsl(var(--background))" fillOpacity="0.85"
+              stroke={REGULAR_COLOR} strokeWidth="2.2" strokeDasharray="5 4" />
+            <text x={regX + 14} y={belCy + 5} textAnchor="middle"
+              fontFamily="JetBrains Mono, monospace" fontSize="16" fontWeight="800" fill={REGULAR_COLOR}>
+              {regCount}
+            </text>
+            <text x={regX + 14} y={belCy + belR + 20} textAnchor="middle"
+              fontFamily="Outfit, sans-serif" fontSize="12" fontWeight="700" fill="hsl(var(--foreground))">
+              Regulars
+            </text>
+          </g>
+          {/* Shared belonging icon in the overlap */}
+          <g transform={`translate(${belCx - 15}, ${belCy - 15})`} style={{ color: "hsl(var(--stage-belong))" }} pointerEvents="none">
+            <BelongingIcon width={30} height={30} />
+          </g>
+          {/* number badge (02) — top-right of the pair */}
+          <circle cx={belCx + belR + 22} cy={belCy - belR - 2} r="14" fill="hsl(var(--accent))" />
+          <text x={belCx + belR + 22} y={belCy - belR + 2} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="11" fontWeight="800" fill="hsl(var(--accent-foreground))">02</text>
+          {/* main label + subtitle */}
+          <text x={belCx} y={belCy + 78} textAnchor="middle" fontFamily="Outfit, sans-serif" fontSize="20" fontWeight="700" fill="hsl(var(--foreground))">Belonging</text>
+          <text x={belCx} y={belCy + 100} textAnchor="middle" fontFamily="Georgia, serif" fontStyle="italic" fontSize="12" fill="hsl(var(--accent))">A two-way commitment — member ↔ church</text>
+        </g>
 
         {/* Venn circles (rhythms) */}
         {rhythms.map((r) => (
