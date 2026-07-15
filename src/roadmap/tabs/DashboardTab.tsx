@@ -3,6 +3,7 @@ import TheRoad from "../components/TheRoad";
 import StatBlock from "../components/StatBlock";
 import EngagementMatrix from "../components/EngagementMatrix";
 import StageDetailDialog from "../components/StageDetailDialog";
+import BelongingBreakdown from "../components/BelongingBreakdown";
 import {
   useMembers,
   useActivityEvents,
@@ -88,11 +89,11 @@ export default function DashboardTab() {
       <section>
         <div className="eyebrow mb-3">— Snapshot · {month}</div>
         <h1 className="font-display text-5xl md:text-6xl font-black leading-[1.05] text-foreground max-w-4xl">
-          A church <em className="font-serif-italic gradient-gold-text font-semibold not-italic-mark">on the road</em><br />
+          A church <em className="font-serif-italic gradient-gold-text font-semibold not-italic-mark">on the pathway</em><br />
           from Connecting to Multiplying.
         </h1>
         <p className="text-muted-foreground mt-6 max-w-2xl">
-          Every disciple at Ashe Alliance is somewhere on this road. The point isn't where they are today — it's whether they're moving.
+          Every disciple at Ashe Alliance is somewhere on this pathway to becoming a fully formed disciple. The point isn't where they are today — it's whether they're moving.
         </p>
       </section>
 
@@ -124,7 +125,7 @@ export default function DashboardTab() {
         <StatBlock value={family ?? "—"} label="Members + regular attenders" />
         <StatBlock value={moves30d} label="Stage changes · last 30 days" />
         <StatBlock value={counts.multiply} label="Multiplying disciples" gold />
-        <StatBlock value={stillOnRoad} label="Still on the road" />
+        <StatBlock value={stillOnRoad} label="Still on the pathway" />
       </div>
 
       <section>
@@ -133,9 +134,16 @@ export default function DashboardTab() {
           Five stages, <em className="font-serif-italic gradient-gold-text font-semibold not-italic-mark">one direction.</em>
         </h2>
         <p className="text-muted-foreground mb-8 max-w-3xl">
-          The pipeline isn't a funnel — it's a road. Connecting → Belonging → Maturing → Ministering → Multiplying. Track movement, not attendance.
+          The pipeline isn't a funnel — it's a pathway to becoming a fully formed disciple. Connecting → Belonging → Maturing → Ministering → Multiplying. Track movement, not attendance.
         </p>
         <TheRoad counts={counts} total={total} onStageClick={setOpenStage} />
+      </section>
+
+      <section>
+        <BelongingBreakdown
+          familyMembers={familyMembers}
+          statusByMember={statusByMember ?? new Map()}
+        />
       </section>
 
       <section>
