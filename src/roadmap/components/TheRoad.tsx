@@ -97,9 +97,6 @@ export default function TheRoad({
               <g transform={`translate(${s.x - 22}, ${s.y - 22})`} style={{ color: s.color }}>
                 <Icon width={44} height={44} />
               </g>
-              {/* number badge */}
-              <circle cx={s.x + 34} cy={s.y - 34} r="14" fill="hsl(var(--accent))" />
-              <text x={s.x + 34} y={s.y - 30} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="11" fontWeight="800" fill="hsl(var(--accent-foreground))">{s.num}</text>
               {/* count badge */}
               <circle cx={s.x - 34} cy={s.y - 34} r="13" fill="hsl(var(--card))" stroke={s.color} strokeWidth="1.5" />
               <text x={s.x - 34} y={s.y - 30} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="11" fontWeight="700" fill="hsl(var(--foreground))">{count}</text>
