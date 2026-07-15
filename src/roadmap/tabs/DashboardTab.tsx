@@ -3,7 +3,7 @@ import TheRoad from "../components/TheRoad";
 import StatBlock from "../components/StatBlock";
 import EngagementMatrix from "../components/EngagementMatrix";
 import StageDetailDialog from "../components/StageDetailDialog";
-import BelongingBreakdown from "../components/BelongingBreakdown";
+import BelongingBucketDialog, { type BelongingBucket } from "../components/BelongingBucketDialog";
 import {
   useMembers,
   useActivityEvents,
@@ -27,6 +27,7 @@ export default function DashboardTab() {
   const { data: taggedIds } = useTaggedMemberIds();
   const { data: statusByMember } = useMemberStatuses();
   const [openStage, setOpenStage] = useState<Stage | null>(null);
+  const [belongBucket, setBelongBucket] = useState<BelongingBucket | null>(null);
   const [statusFilter, setStatusFilter] = useState<Set<MemberStatus>>(
     () => new Set(["member", "regular", "visitor"])
   );
@@ -61,6 +62,19 @@ export default function DashboardTab() {
     });
     return c;
   }, [familyMembers]);
+
+  const belongingBucketMembers = useMemo(() => {
+    const mem: any[] = [];
+    const reg: any[] = [];
+    if (statusByMember) {
+      familyMembers.forEach((m: any) => {
+        const s = statusByMember.get(m.id);
+        if (s === "member") mem.push(m);
+        else if (s === "regular") reg.push(m);
+      });
+    }
+    return { member: mem, regular: reg };
+  }, [familyMembers, statusByMember]);
 
   // From the PCO source-of-truth lists (synced via fetch-pco-list-counts)
   const family = pcoListCounts
@@ -136,13 +150,15 @@ export default function DashboardTab() {
         <p className="text-muted-foreground mb-8 max-w-3xl">
           The pipeline isn't a funnel — it's a pathway to becoming a fully formed disciple. Connecting → Belonging → Maturing → Ministering → Multiplying. Track movement, not attendance.
         </p>
-        <TheRoad counts={counts} total={total} onStageClick={setOpenStage} />
-      </section>
-
-      <section>
-        <BelongingBreakdown
-          familyMembers={familyMembers}
-          statusByMember={statusByMember ?? new Map()}
+        <TheRoad
+          counts={counts}
+          total={total}
+          onStageClick={setOpenStage}
+          belongingBuckets={{
+            memberCount: belongingBucketMembers.member.length,
+            regularCount: belongingBucketMembers.regular.length,
+          }}
+          onBelongingBucketClick={setBelongBucket}
         />
       </section>
 
@@ -155,6 +171,12 @@ export default function DashboardTab() {
         onClose={() => setOpenStage(null)}
         members={familyMembers}
         statusByMember={statusByMember ?? new Map()}
+      />
+
+      <BelongingBucketDialog
+        bucket={belongBucket}
+        members={belongBucket ? belongingBucketMembers[belongBucket] : []}
+        onClose={() => setBelongBucket(null)}
       />
     </div>
   );
