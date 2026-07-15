@@ -75,33 +75,6 @@ const STAGE_CHIPS: Record<Stage, Chip[]> = {
   ],
 };
 
-// What tags appear on the per-person row at this stage
-const STAGE_PERSON_TAGS: Record<Stage, Array<{ key: string; match: (g: any) => boolean }>> = {
-  connect: [
-    { key: "NEW", match: () => false },
-  ],
-  belong: [
-    { key: "MEM", match: () => false }, // populated below from membership_status
-  ],
-  mature: [
-    { key: "LG", match: (g) => g.group_name === "Life Groups" },
-    { key: "BS", match: (g) => g.group_name.toLowerCase().includes("bible") },
-    { key: "PT", match: (g) => g.group_name === "PT Mentorship" },
-    { key: "DG", match: (g) => g.group_name === "Discipleship Groups" },
-  ],
-  minister: [
-    { key: "LG", match: (g) => g.group_name === "Life Groups" },
-    { key: "BS", match: (g) => g.group_name.toLowerCase().includes("bible") },
-    { key: "SRV", match: (g) => g.group_type === "volunteer" },
-  ],
-  multiply: [
-    { key: "LG", match: (g) => g.group_name === "Life Groups" },
-    { key: "BS", match: (g) => g.group_name.toLowerCase().includes("bible") },
-    { key: "SRV", match: (g) => g.group_type === "volunteer" },
-    { key: "TIM", match: (g) => g.group_name === "PT Mentorship" || g.group_name === "Discipleship Groups" },
-  ],
-};
-
 const STAGE_QUOTE: Record<Stage, string> = {
   connect: "In orbit — attending but not yet committed to Christ. The mission field that walks through your doors.",
   belong: "Came to faith, baptized, joined the church family. The decisive turn from outside to inside.",
