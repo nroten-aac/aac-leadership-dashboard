@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMembers, dbStageToRoadmap } from "../hooks/useRoadmapData";
 import { useTaggedMemberIds } from "../hooks/useTaggedMembers";
 import { STAGE_NAMES, STAGE_ORDER, type Stage } from "../types";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ENG_COLS: Array<{ key: string; label: string; match: (g: string) => boolean }> = [
   { key: "LG", label: "Life Groups",          match: (g) => g === "Life Groups" },
@@ -22,11 +25,17 @@ function useMemberGroups() {
   });
 }
 
-export default function EngagementMatrix() {
+interface Props {
+  onSelectPerson?: (m: any) => void;
+  onStageClick?: (stage: Stage) => void;
+}
+
+export default function EngagementMatrix({ onSelectPerson, onStageClick }: Props) {
   const { data: members = [] } = useMembers();
   const { data: groups = [] } = useMemberGroups();
   const { data: taggedIds } = useTaggedMemberIds();
   const scoped = taggedIds ? members.filter((m: any) => taggedIds.has(m.id)) : members;
+  const [selectedCell, setSelectedCell] = useState<{ stage: Stage; col: string; label: string } | null>(null);
 
   // Build stage x engagement matrix
   const stageOf = new Map<string, Stage>();
@@ -60,6 +69,11 @@ export default function EngagementMatrix() {
 
   const stageBarColor = (s: Stage) => `hsl(var(--stage-${s}))`;
 
+  const cellPeople = selectedCell
+    ? scoped.filter((m: any) => counts[selectedCell.stage][selectedCell.col].has(m.id))
+    : [];
+  const cellColor = selectedCell ? stageBarColor(selectedCell.stage) : "";
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Engagement Matrix */}
@@ -90,11 +104,22 @@ export default function EngagementMatrix() {
                     {ENG_COLS.map((c) => {
                       const v = counts[s][c.key].size;
                       const isMax = v > 0 && v === maxCell;
+                      const clickable = v > 0;
                       return (
                         <td key={c.key} className="px-1 py-1">
-                          <div className={`h-10 rounded-md flex items-center justify-center text-foreground ${isMax ? "bg-accent/20 ring-1 ring-accent/50" : "bg-background/40 border border-border/40"}`}>
+                          <button
+                            type="button"
+                            disabled={!clickable}
+                            onClick={() => setSelectedCell({ stage: s, col: c.key, label: c.label })}
+                            className={`h-10 w-full rounded-md flex items-center justify-center text-foreground transition ${
+                              clickable
+                                ? "hover:brightness-110 cursor-pointer"
+                                : "cursor-default"
+                            } ${isMax ? "bg-accent/20 ring-1 ring-accent/50" : "bg-background/40 border border-border/40"}`}
+                            style={clickable ? { borderColor: `${stageBarColor(s)}66` } : {}}
+                          >
                             {v || <span className="text-muted-foreground/40">·</span>}
-                          </div>
+                          </button>
                         </td>
                       );
                     })}
@@ -127,7 +152,12 @@ export default function EngagementMatrix() {
             const v = stageTotals[s];
             const pct = total ? (v / total) * 100 : 0;
             return (
-              <div key={s} className="grid grid-cols-[140px_1fr_90px] items-center gap-3 font-mono text-xs">
+              <button
+                key={s}
+                type="button"
+                onClick={() => onStageClick?.(s)}
+                className="grid grid-cols-[140px_1fr_90px] items-center gap-3 font-mono text-xs w-full text-left rounded-lg hover:bg-background/40 transition p-2 -m-2"
+              >
                 <div className="tracking-widest" style={{ color: stageBarColor(s) }}>
                   {idx + 1}. {STAGE_NAMES[s].toUpperCase()}
                 </div>
@@ -137,7 +167,7 @@ export default function EngagementMatrix() {
                 <div className="text-right text-foreground">
                   <span className="font-semibold">{v}</span> <span className="text-muted-foreground">· {pct.toFixed(1)}%</span>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -146,6 +176,54 @@ export default function EngagementMatrix() {
           <span className="gradient-gold-text font-display text-2xl font-bold align-middle">{total}</span> people total · click any stage on the road for details
         </div>
       </div>
+
+      {/* Engagement cell detail dialog */}
+      <Dialog open={!!selectedCell} onOpenChange={(o) => !o && setSelectedCell(null)}>
+        <DialogContent className="max-w-3xl p-0 bg-card border-border max-h-[85vh] overflow-hidden">
+          {selectedCell && (
+            <>
+              <div className="p-6 border-b border-border/60">
+                <div className="eyebrow">— Engagement · {STAGE_NAMES[selectedCell.stage]}</div>
+                <h2 className="font-display text-3xl font-bold mt-1" style={{ color: cellColor }}>
+                  {selectedCell.label}{" "}
+                  <span className="text-muted-foreground/70 font-mono text-lg">· {cellPeople.length}</span>
+                </h2>
+              </div>
+              <ScrollArea className="max-h-[65vh]">
+                <div className="p-6">
+                  {cellPeople.length === 0 ? (
+                    <p className="text-center font-serif-italic text-sm text-muted-foreground">No one here.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 rounded-xl border border-border/60 bg-background/40 p-3">
+                      {cellPeople.map((m: any) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            onSelectPerson?.(m);
+                            setSelectedCell(null);
+                          }}
+                          className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[12px] text-foreground hover:brightness-125 hover:-translate-y-px transition"
+                          style={{
+                            border: `1.5px solid ${cellColor}`,
+                            background: "hsl(var(--background) / 0.4)",
+                          }}
+                        >
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ background: cellColor, border: `1.5px solid ${cellColor}` }}
+                          />
+                          {m.first_name} {m.last_name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
