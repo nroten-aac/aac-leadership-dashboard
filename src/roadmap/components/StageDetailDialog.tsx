@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { type MemberStatus } from "../hooks/useRoadmapData";
-import { STAGE_NAMES, STAGE_ORDER, type Stage } from "../types";
+import { STAGE_NAMES, type Stage } from "../types";
 import { STAGE_ICONS } from "@/components/icons/StageIcons";
 import { Plus, X, Search } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -75,33 +75,6 @@ const STAGE_CHIPS: Record<Stage, Chip[]> = {
   ],
 };
 
-// What tags appear on the per-person row at this stage
-const STAGE_PERSON_TAGS: Record<Stage, Array<{ key: string; match: (g: any) => boolean }>> = {
-  connect: [
-    { key: "NEW", match: () => false },
-  ],
-  belong: [
-    { key: "MEM", match: () => false }, // populated below from membership_status
-  ],
-  mature: [
-    { key: "LG", match: (g) => g.group_name === "Life Groups" },
-    { key: "BS", match: (g) => g.group_name.toLowerCase().includes("bible") },
-    { key: "PT", match: (g) => g.group_name === "PT Mentorship" },
-    { key: "DG", match: (g) => g.group_name === "Discipleship Groups" },
-  ],
-  minister: [
-    { key: "LG", match: (g) => g.group_name === "Life Groups" },
-    { key: "BS", match: (g) => g.group_name.toLowerCase().includes("bible") },
-    { key: "SRV", match: (g) => g.group_type === "volunteer" },
-  ],
-  multiply: [
-    { key: "LG", match: (g) => g.group_name === "Life Groups" },
-    { key: "BS", match: (g) => g.group_name.toLowerCase().includes("bible") },
-    { key: "SRV", match: (g) => g.group_type === "volunteer" },
-    { key: "TIM", match: (g) => g.group_name === "PT Mentorship" || g.group_name === "Discipleship Groups" },
-  ],
-};
-
 const STAGE_QUOTE: Record<Stage, string> = {
   connect: "In orbit — attending but not yet committed to Christ. The mission field that walks through your doors.",
   belong: "Came to faith, baptized, joined the church family. The decisive turn from outside to inside.",
@@ -147,15 +120,6 @@ const STAGE_KEY_TO_DB: Record<Stage, keyof typeof STAGE_ICONS> = {
   mature: "maturing",
   minister: "ministering",
   multiply: "multiplying",
-};
-
-// Single-letter shorthand for the per-person milestone pill row.
-const STAGE_SHORT: Record<Stage, string> = {
-  connect: "C",
-  belong:  "B",
-  mature:  "M",
-  minister: "Mi",
-  multiply: "Mu",
 };
 
 const STATUS_STYLE: Record<MemberStatus, { label: string; color: string }> = {
@@ -285,18 +249,6 @@ export default function StageDetailDialog({ stage, onClose, members, statusByMem
   });
 
   const chips = STAGE_CHIPS[stage];
-  const tagDefs = STAGE_PERSON_TAGS[stage];
-  const tagsByMember = new Map<string, string[]>();
-  stageMembers.forEach((m: any) => {
-    const memberGroups = groupsByMember.get(m.id) || [];
-    const tags: string[] = [];
-    if (stage === "belong" && m.membership_status === "active") tags.push("MEM");
-    tagDefs.forEach((td) => {
-      if (memberGroups.some(td.match) && !tags.includes(td.key)) tags.push(td.key);
-    });
-    if (tags.length) tagsByMember.set(m.id, tags);
-  });
-
   const coaching = STAGE_COACHING[stage];
   const visiblePeople = stageMembers.slice(0, 100);
 
@@ -431,92 +383,40 @@ export default function StageDetailDialog({ stage, onClose, members, statusByMem
                   <p className="text-center font-serif-italic text-sm text-muted-foreground">{STAGE_EMPTY[stage]}</p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {visiblePeople.map((m: any) => {
-                    const initials = `${m.first_name?.[0] || ""}${m.last_name?.[0] || ""}`;
-                    const tags = tagsByMember.get(m.id) || [];
-                    const sub = m.household_name
-                      ? `${m.household_name}${tags.length ? " · " + tags.join(" + ") : ""}`
-                      : tags.length ? tags.join(" + ") : "—";
-                    const active = activeStages(m);
-                    const status = statusByMember.get(m.id);
-                    return (
-                      <div
-                        key={m.id}
+                <div className="flex flex-wrap gap-2">
+                  {visiblePeople.map((m: any) => (
+                    <div key={m.id} className="relative group">
+                      <button
+                        type="button"
                         onClick={() => onSelectPerson?.(m)}
-                        className={`flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 p-3 ${onSelectPerson ? "cursor-pointer hover:border-accent/60 transition" : ""}`}
+                        className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[12px] text-foreground hover:brightness-125 hover:-translate-y-px transition"
+                        style={{
+                          border: `1.5px solid ${color}`,
+                          background: "hsl(var(--background) / 0.4)",
+                        }}
                       >
-                        {m.photo_url ? (
-                          <img src={m.photo_url} alt="" className="h-10 w-10 rounded-full object-cover shrink-0" />
-                        ) : (
-                          <div className="h-10 w-10 rounded-full flex items-center justify-center font-mono text-xs font-bold shrink-0" style={{ background: `${color}33`, color }}>
-                            {initials}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <div className="font-display font-semibold text-sm text-foreground truncate">{m.first_name} {m.last_name}</div>
-                            {status && (
-                              <span
-                                className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border shrink-0"
-                                style={{ color: STATUS_STYLE[status].color, borderColor: STATUS_STYLE[status].color + "66" }}
-                              >
-                                {STATUS_STYLE[status].label}
-                              </span>
-                            )}
-                          </div>
-                          <div className="font-mono text-[11px] text-muted-foreground truncate">{sub}</div>
-                          {/* Milestone indicators — click to toggle membership in any milestone */}
-                          <div className="flex items-center gap-1 mt-1.5">
-                             {STAGE_ORDER.filter((s) => active.has(s)).map((s) => {
-                              const on = true;
-                              const isThis = s === stage;
-                              return (
-                                <button
-                                  key={s}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateMilestone.mutate({
-                                      memberId: m.id,
-                                      target: s,
-                                      action: on ? "remove" : "add",
-                                      current: m,
-                                    });
-                                  }}
-                                  disabled={updateMilestone.isPending}
-                                  title={`Currently in ${STAGE_NAMES[s]} — click to remove`}
-                                  className={`h-5 min-w-[20px] px-1 rounded-md font-mono text-[9px] font-bold border transition ${
-                                    isThis ? "ring-1 ring-offset-1 ring-offset-background" : ""
-                                  }`}
-                                  style={{
-                                          background: `hsl(var(--stage-${s}))`,
-                                          borderColor: `hsl(var(--stage-${s}))`,
-                                          color: "hsl(var(--background))",
-                                          ...(isThis ? { ['--tw-ring-color' as any]: `hsl(var(--stage-${s}))` } : {}),
-                                        }}
-                                >
-                                  {STAGE_SHORT[s]}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            updateMilestone.mutate({ memberId: m.id, target: stage, action: "remove", current: m });
-                          }}
-                          disabled={updateMilestone.isPending}
-                          title={`Remove from ${STAGE_NAMES[stage]}`}
-                          className="shrink-0 h-7 w-7 rounded-full border border-border/60 bg-background/60 flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/60 transition"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    );
-                  })}
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{ background: color, border: `1.5px solid ${color}` }}
+                        />
+                        {m.first_name} {m.last_name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateMilestone.mutate({ memberId: m.id, target: stage, action: "remove", current: m });
+                        }}
+                        disabled={updateMilestone.isPending}
+                        title={`Remove from ${STAGE_NAMES[stage]}`}
+                        className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full border border-border/60 bg-background flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 transition hover:text-destructive hover:border-destructive/60"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
                   {here > visiblePeople.length && (
-                    <div className="text-center text-xs text-muted-foreground italic pt-3 border-t border-dashed border-border/40">
+                    <div className="w-full text-center text-xs text-muted-foreground italic pt-3 border-t border-dashed border-border/40">
                       + {here - visiblePeople.length} more · refine the filter at the top of the dashboard to narrow this list.
                     </div>
                   )}
