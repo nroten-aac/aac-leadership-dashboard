@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { type MemberStatus } from "../hooks/useRoadmapData";
-import { STAGE_NAMES, STAGE_ORDER, type Stage } from "../types";
+import { STAGE_NAMES, type Stage } from "../types";
 import { STAGE_ICONS } from "@/components/icons/StageIcons";
 import { Plus, X, Search } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
