@@ -117,7 +117,13 @@ export default function DashboardTab() {
     if (statusByMember) {
       familyMembers.forEach((m: any) => {
         const s = statusByMember.get(m.id);
-        if (s === "member") mem.push(m);
+        if (s === "member") {
+          // Only surface members who haven't yet stepped into a rhythm — those
+          // already in a rhythm belong further down the pathway.
+          const rs: string[] = Array.isArray(m.rhythms) ? m.rhythms : [];
+          const inRhythm = rs.length > 0 || m.phase === "rhythms";
+          if (!inRhythm) mem.push(m);
+        }
         else if (s === "regular") reg.push(m);
       });
     }
