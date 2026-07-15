@@ -194,9 +194,10 @@ interface Props {
   onClose: () => void;
   members: any[];
   statusByMember: Map<string, MemberStatus>;
+  onSelectPerson?: (m: any) => void;
 }
 
-export default function StageDetailDialog({ stage, onClose, members, statusByMember }: Props) {
+export default function StageDetailDialog({ stage, onClose, members, statusByMember, onSelectPerson }: Props) {
   const { data: groups = [] } = useMemberGroups();
   const qc = useQueryClient();
   const [adding, setAdding] = useState(false);
@@ -440,7 +441,11 @@ export default function StageDetailDialog({ stage, onClose, members, statusByMem
                     const active = activeStages(m);
                     const status = statusByMember.get(m.id);
                     return (
-                      <div key={m.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 p-3">
+                      <div
+                        key={m.id}
+                        onClick={() => onSelectPerson?.(m)}
+                        className={`flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 p-3 ${onSelectPerson ? "cursor-pointer hover:border-accent/60 transition" : ""}`}
+                      >
                         {m.photo_url ? (
                           <img src={m.photo_url} alt="" className="h-10 w-10 rounded-full object-cover shrink-0" />
                         ) : (
@@ -463,20 +468,21 @@ export default function StageDetailDialog({ stage, onClose, members, statusByMem
                           <div className="font-mono text-[11px] text-muted-foreground truncate">{sub}</div>
                           {/* Milestone indicators — click to toggle membership in any milestone */}
                           <div className="flex items-center gap-1 mt-1.5">
-                            {STAGE_ORDER.map((s) => {
+                             {STAGE_ORDER.map((s) => {
                               const on = active.has(s);
                               const isThis = s === stage;
                               return (
                                 <button
                                   key={s}
-                                  onClick={() =>
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     updateMilestone.mutate({
                                       memberId: m.id,
                                       target: s,
                                       action: on ? "remove" : "add",
                                       current: m,
-                                    })
-                                  }
+                                    });
+                                  }}
                                   disabled={updateMilestone.isPending}
                                   title={`${on ? "Remove from" : "Add to"} ${STAGE_NAMES[s]}`}
                                   className={`h-5 min-w-[20px] px-1 rounded-md font-mono text-[9px] font-bold border transition ${
@@ -505,9 +511,10 @@ export default function StageDetailDialog({ stage, onClose, members, statusByMem
                           </div>
                         </div>
                         <button
-                          onClick={() =>
-                            updateMilestone.mutate({ memberId: m.id, target: stage, action: "remove", current: m })
-                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateMilestone.mutate({ memberId: m.id, target: stage, action: "remove", current: m });
+                          }}
                           disabled={updateMilestone.isPending}
                           title={`Remove from ${STAGE_NAMES[stage]}`}
                           className="shrink-0 h-7 w-7 rounded-full border border-border/60 bg-background/60 flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/60 transition"
