@@ -468,8 +468,8 @@ export default function StageDetailDialog({ stage, onClose, members, statusByMem
                           <div className="font-mono text-[11px] text-muted-foreground truncate">{sub}</div>
                           {/* Milestone indicators — click to toggle membership in any milestone */}
                           <div className="flex items-center gap-1 mt-1.5">
-                             {STAGE_ORDER.map((s) => {
-                              const on = active.has(s);
+                             {STAGE_ORDER.filter((s) => active.has(s)).map((s) => {
+                              const on = true;
                               const isThis = s === stage;
                               return (
                                 <button
@@ -484,25 +484,16 @@ export default function StageDetailDialog({ stage, onClose, members, statusByMem
                                     });
                                   }}
                                   disabled={updateMilestone.isPending}
-                                  title={`${on ? "Remove from" : "Add to"} ${STAGE_NAMES[s]}`}
+                                  title={`Currently in ${STAGE_NAMES[s]} — click to remove`}
                                   className={`h-5 min-w-[20px] px-1 rounded-md font-mono text-[9px] font-bold border transition ${
                                     isThis ? "ring-1 ring-offset-1 ring-offset-background" : ""
                                   }`}
-                                  style={
-                                    on
-                                      ? {
+                                  style={{
                                           background: `hsl(var(--stage-${s}))`,
                                           borderColor: `hsl(var(--stage-${s}))`,
                                           color: "hsl(var(--background))",
                                           ...(isThis ? { ['--tw-ring-color' as any]: `hsl(var(--stage-${s}))` } : {}),
-                                        }
-                                      : {
-                                          background: `hsl(var(--stage-${s}) / 0.14)`,
-                                          borderColor: `hsl(var(--stage-${s}) / 0.55)`,
-                                          color: `hsl(var(--stage-${s}))`,
-                                          ...(isThis ? { ['--tw-ring-color' as any]: `hsl(var(--stage-${s}))` } : {}),
-                                        }
-                                  }
+                                        }}
                                 >
                                   {STAGE_SHORT[s]}
                                 </button>
