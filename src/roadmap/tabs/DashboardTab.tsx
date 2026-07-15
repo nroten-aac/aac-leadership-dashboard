@@ -217,7 +217,7 @@ export default function DashboardTab() {
       </section>
 
       <section>
-        <EngagementMatrix />
+        <EngagementMatrix onSelectPerson={setSelectedPerson} onStageClick={setOpenStage} />
       </section>
 
       <StageDetailDialog
