@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMembers, dbStageToRoadmap } from "../hooks/useRoadmapData";
 import { useTaggedMemberIds } from "../hooks/useTaggedMembers";
 import { STAGE_NAMES, STAGE_ORDER, type Stage } from "../types";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ENG_COLS: Array<{ key: string; label: string; match: (g: string) => boolean }> = [
   { key: "LG", label: "Life Groups",          match: (g) => g === "Life Groups" },
