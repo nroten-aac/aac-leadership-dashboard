@@ -149,15 +149,6 @@ const STAGE_KEY_TO_DB: Record<Stage, keyof typeof STAGE_ICONS> = {
   multiply: "multiplying",
 };
 
-// Single-letter shorthand for the per-person milestone pill row.
-const STAGE_SHORT: Record<Stage, string> = {
-  connect: "C",
-  belong:  "B",
-  mature:  "M",
-  minister: "Mi",
-  multiply: "Mu",
-};
-
 const STATUS_STYLE: Record<MemberStatus, { label: string; color: string }> = {
   member:  { label: "Member",  color: "hsl(199 89% 60%)" },
   regular: { label: "Regular", color: "hsl(258 80% 72%)" },
