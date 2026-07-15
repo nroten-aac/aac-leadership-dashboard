@@ -16,7 +16,7 @@ const DashboardSidebar = () => {
     { icon: LayoutDashboard, label: "Summary Overview", path: "/", tabId: "dashboard" },
     { icon: DollarSign, label: "Giving", path: "/giving", tabId: "giving" },
     { icon: ClipboardEdit, label: "Data Entry", path: "/data-entry", tabId: "data-entry" },
-    { icon: Calendar, label: "Attendance", path: "/attendance", tabId: "attendance" },
+    { icon: Calendar, label: "Projects", path: "/projects", tabId: "projects" },
     { icon: BookOpen, label: "Discipleship", path: "/discipleship", tabId: "discipleship" },
   ];
 
