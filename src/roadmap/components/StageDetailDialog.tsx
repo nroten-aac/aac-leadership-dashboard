@@ -276,18 +276,6 @@ export default function StageDetailDialog({ stage, onClose, members, statusByMem
   });
 
   const chips = STAGE_CHIPS[stage];
-  const tagDefs = STAGE_PERSON_TAGS[stage];
-  const tagsByMember = new Map<string, string[]>();
-  stageMembers.forEach((m: any) => {
-    const memberGroups = groupsByMember.get(m.id) || [];
-    const tags: string[] = [];
-    if (stage === "belong" && m.membership_status === "active") tags.push("MEM");
-    tagDefs.forEach((td) => {
-      if (memberGroups.some(td.match) && !tags.includes(td.key)) tags.push(td.key);
-    });
-    if (tags.length) tagsByMember.set(m.id, tags);
-  });
-
   const coaching = STAGE_COACHING[stage];
   const visiblePeople = stageMembers.slice(0, 100);
 
