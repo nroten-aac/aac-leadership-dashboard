@@ -40,9 +40,9 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
     <div className="relative w-full overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-b from-card to-background p-6 shadow-card">
       <div className="mb-4 flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <div className="eyebrow mb-1">The Road · Live</div>
+          <div className="eyebrow mb-1">The Pathway · Live</div>
           <h3 className="font-display text-xl font-semibold text-foreground">
-            Two thresholds, crossed once. <em className="font-serif-italic text-accent">Three rhythms, lived forever.</em>
+            Two doorways, crossed once. <em className="font-serif-italic text-accent">Three rhythms, lived forever.</em>
           </h3>
         </div>
         <div className="flex gap-2">
@@ -50,7 +50,7 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
         </div>
       </div>
 
-      <svg viewBox="0 0 1180 520" className="w-full h-auto" role="img" aria-label="Two thresholds and three rhythms of discipleship">
+      <svg viewBox="0 0 1180 520" className="w-full h-auto" role="img" aria-label="Two doorways and three rhythms of discipleship">
         <defs>
           <marker id="arrow-end" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
             <path d="M0,0 L10,5 L0,10 z" fill="hsl(var(--accent))" />
@@ -58,7 +58,7 @@ export default function TheRoad({ counts, total, onStageClick }: RoadProps) {
         </defs>
 
         {/* Section headers */}
-        <text x="320" y="50" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" letterSpacing="3" fontWeight="700" fill="hsl(var(--accent))">TWO THRESHOLDS — CROSSED ONCE</text>
+        <text x="320" y="50" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" letterSpacing="3" fontWeight="700" fill="hsl(var(--accent))">TWO DOORWAYS — CROSSED ONCE</text>
         <text x="920" y="50" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="13" letterSpacing="3" fontWeight="700" fill="hsl(var(--accent))">THREE RHYTHMS — LIFELONG</text>
 
         {/* Dashed connector across thresholds, arrow into rhythms */}
