@@ -97,9 +97,6 @@ export default function TheRoad({
               <g transform={`translate(${s.x - 22}, ${s.y - 22})`} style={{ color: s.color }}>
                 <Icon width={44} height={44} />
               </g>
-              {/* number badge */}
-              <circle cx={s.x + 34} cy={s.y - 34} r="14" fill="hsl(var(--accent))" />
-              <text x={s.x + 34} y={s.y - 30} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="11" fontWeight="800" fill="hsl(var(--accent-foreground))">{s.num}</text>
               {/* count badge */}
               <circle cx={s.x - 34} cy={s.y - 34} r="13" fill="hsl(var(--card))" stroke={s.color} strokeWidth="1.5" />
               <text x={s.x - 34} y={s.y - 30} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="11" fontWeight="700" fill="hsl(var(--foreground))">{count}</text>
@@ -146,9 +143,6 @@ export default function TheRoad({
           <g transform={`translate(${belCx - 12}, ${belCy - 12})`} style={{ color: "hsl(var(--stage-belong))" }} pointerEvents="none">
             <BelongingIcon width={24} height={24} />
           </g>
-          {/* number badge (02) — top-right of the pair */}
-          <circle cx={belCx + belR + 22} cy={memY - belR + 6} r="14" fill="hsl(var(--accent))" />
-          <text x={belCx + belR + 22} y={memY - belR + 10} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="11" fontWeight="800" fill="hsl(var(--accent-foreground))">02</text>
           {/* main label + subtitle */}
           <text x={belCx} y={belCy + 104} textAnchor="middle" fontFamily="Outfit, sans-serif" fontSize="20" fontWeight="700" fill="hsl(var(--foreground))">Belonging</text>
           <text x={belCx} y={belCy + 126} textAnchor="middle" fontFamily="Georgia, serif" fontStyle="italic" fontSize="12" fill="hsl(var(--accent))">A two-way commitment — member ↔ church</text>

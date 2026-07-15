@@ -3,7 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const MEMBER_COLOR = "hsl(199 89% 60%)";
 const REGULAR_COLOR = "hsl(210 80% 40%)";
-const RING = "hsl(280 85% 68%)";
+const RING = REGULAR_COLOR;
 
 export type BelongingBucket = "member" | "regular";
 
@@ -79,7 +79,7 @@ export default function BelongingBucketDialog({ bucket, members, onClose, onSele
                     boxShadow: `0 0 0 2px hsl(var(--card)), 0 0 0 3.5px ${RING}`,
                   }}
                 />
-                Violet ring = invite to membership
+                Solid ring = in a rhythm · invite to membership
               </span>
               <span className="inline-flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ border: `1.5px dashed ${color}` }} />
