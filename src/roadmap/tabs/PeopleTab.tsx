@@ -354,6 +354,25 @@ export default function PeopleTab() {
           // Only surface the member marker for those who haven't yet stepped into a rhythm —
           // members already active in rhythms don't need the extra tag.
           const isMember = status === "member" && !inRhythms;
+          // For people in the rhythms phase, split the stage ring into three arcs —
+          // one per rhythm — lighting up only the rhythms they are actually in.
+          const rhythmArcs = inRhythms
+            ? ([
+                { key: "maturing",    start: 3,   end: 117, color: "hsl(var(--stage-mature))" },
+                { key: "ministering", start: 123, end: 237, color: "hsl(var(--stage-minister))" },
+                { key: "multiplying", start: 243, end: 357, color: "hsl(var(--stage-multiply))" },
+              ] as const)
+            : null;
+          const polar = (deg: number, r: number) => {
+            const rad = ((deg - 90) * Math.PI) / 180;
+            return { x: 26 + r * Math.cos(rad), y: 26 + r * Math.sin(rad) };
+          };
+          const arcPath = (start: number, end: number, r = 24) => {
+            const s = polar(start, r);
+            const e = polar(end, r);
+            const large = end - start > 180 ? 1 : 0;
+            return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y}`;
+          };
           return (
             <div key={m.id} onClick={() => setSelected(m)} className="group relative rounded-xl border border-border/60 bg-card p-4 hover:border-accent/40 transition cursor-pointer flex flex-col gap-3">
               {allRhythms && (
@@ -375,13 +394,35 @@ export default function PeopleTab() {
                 <div className="relative shrink-0">
                   {m.photo_url ? (
                     <img src={m.photo_url} alt={`${m.first_name} ${m.last_name}`}
-                      className={`h-12 w-12 rounded-full object-cover ${isMember ? "ring-2 ring-amber-400" : "ring-2"}`}
-                      style={isMember ? undefined : { ['--tw-ring-color' as any]: `hsl(var(--stage-${stage}) / 0.5)` }} />
+                      className={`h-12 w-12 rounded-full object-cover ${isMember ? "ring-2 ring-amber-400" : rhythmArcs ? "" : "ring-2"}`}
+                      style={isMember || rhythmArcs ? undefined : { ['--tw-ring-color' as any]: `hsl(var(--stage-${stage}) / 0.5)` }} />
                   ) : (
                     <div className={`flex h-12 w-12 items-center justify-center rounded-full font-mono text-xs font-bold ${isMember ? "ring-2 ring-amber-400" : ""}`}
                       style={{ background: `hsl(var(--stage-${stage}) / 0.2)`, color: `hsl(var(--stage-${stage}))` }}>
                       {initials}
                     </div>
+                  )}
+                  {rhythmArcs && !isMember && (
+                    <svg
+                      viewBox="0 0 52 52"
+                      className="pointer-events-none absolute -inset-0.5 h-[52px] w-[52px]"
+                      aria-label="Active rhythms"
+                    >
+                      {rhythmArcs.map((a) => {
+                        const on = rhythmsArr.includes(a.key);
+                        return (
+                          <path
+                            key={a.key}
+                            d={arcPath(a.start, a.end)}
+                            fill="none"
+                            stroke={on ? a.color : "hsl(var(--border))"}
+                            strokeOpacity={on ? 1 : 0.35}
+                            strokeWidth={2.5}
+                            strokeLinecap="round"
+                          />
+                        );
+                      })}
+                    </svg>
                   )}
                   {isMember && (
                     <BadgeCheck
