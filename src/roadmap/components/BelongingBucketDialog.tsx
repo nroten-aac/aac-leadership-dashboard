@@ -79,7 +79,7 @@ export default function BelongingBucketDialog({ bucket, members, onClose, onSele
                     boxShadow: `0 0 0 2px hsl(var(--card)), 0 0 0 3.5px ${RING}`,
                   }}
                 />
-                Violet ring = invite to membership
+                Solid ring = in a rhythm · invite to membership
               </span>
               <span className="inline-flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ border: `1.5px dashed ${color}` }} />
