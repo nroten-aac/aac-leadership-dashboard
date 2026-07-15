@@ -33,9 +33,9 @@ export default function TheRoad({
   // Belonging — two vertically interlocking circles: Members (top) + Regular Attenders (bottom)
   const belCx = 560;
   const belCy = 240;
-  const belR = 36;
-  const memY = belCy - 24;
-  const regY = belCy + 24;
+  const belR = 44;
+  const memY = belCy - 30;
+  const regY = belCy + 30;
   const memCount = belongingBuckets?.memberCount ?? counts.belong ?? 0;
   const regCount = belongingBuckets?.regularCount ?? 0;
 
