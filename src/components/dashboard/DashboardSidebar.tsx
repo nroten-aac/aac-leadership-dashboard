@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Calendar, DollarSign, BookOpen, Settings, LogOut, ClipboardEdit, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, DollarSign, Settings, LogOut, ClipboardEdit, Shield } from "lucide-react";
 import SheepIcon from "@/components/icons/SheepIcon";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/usePermissions";
@@ -15,9 +15,8 @@ const DashboardSidebar = () => {
     { icon: Users, label: "Shepherding", path: "/members", tabId: "members" },
     { icon: LayoutDashboard, label: "Summary Overview", path: "/", tabId: "dashboard" },
     { icon: DollarSign, label: "Giving", path: "/giving", tabId: "giving" },
-    { icon: ClipboardEdit, label: "Data Entry", path: "/data-entry", tabId: "data-entry" },
     { icon: Calendar, label: "Projects", path: "/projects", tabId: "projects" },
-    { icon: BookOpen, label: "Discipleship", path: "/discipleship", tabId: "discipleship" },
+    { icon: ClipboardEdit, label: "Data Entry", path: "/data-entry", tabId: "data-entry" },
   ];
 
   // Filter nav items based on permissions (admins see all)
