@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Calendar, DollarSign, BookOpen, Settings, LogOut, ClipboardEdit, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, DollarSign, Settings, LogOut, ClipboardEdit, Shield } from "lucide-react";
 import SheepIcon from "@/components/icons/SheepIcon";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/usePermissions";
