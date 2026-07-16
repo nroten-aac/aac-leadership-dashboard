@@ -95,12 +95,11 @@ const ProjectsPage = () => {
   );
 
   const grouped = useMemo(() => {
-    const map: Record<Status, Project[]> = {
+    const map: Record<Status, Task[]> = {
       backlog: [], todo: [], in_progress: [], review: [], done: [],
-    } as unknown as Record<Status, Task[]>;
-    const m = map as unknown as Record<Status, Task[]>;
-    for (const t of projectTasks) m[t.status].push(t);
-    return m;
+    };
+    for (const t of projectTasks) map[t.status].push(t);
+    return map;
   }, [projectTasks]);
 
   // ---- Project CRUD ----
