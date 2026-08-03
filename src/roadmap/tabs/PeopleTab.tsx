@@ -361,6 +361,31 @@ export default function PeopleTab() {
         )}
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="eyebrow text-[10px] mr-1">Household</span>
+        <select
+          value={householdFilter}
+          onChange={(e) => setHouseholdFilter(e.target.value)}
+          className="rounded-full border border-border bg-card px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:border-accent/40 transition max-w-[260px]"
+        >
+          <option value="">All households ({allHouseholds.length})</option>
+          {allHouseholds.map((h) => (
+            <option key={h} value={h}>{h}</option>
+          ))}
+        </select>
+        <button
+          onClick={() => setGroupByHousehold((v) => !v)}
+          className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ${
+            groupByHousehold ? "border-accent bg-accent/15 text-accent" : "border-border bg-card text-muted-foreground hover:border-accent/40"
+          }`}
+        >
+          View by household
+        </button>
+        {householdFilter && (
+          <button onClick={() => setHouseholdFilter("")} className="text-[10px] text-muted-foreground underline ml-1">clear</button>
+        )}
+      </div>
+
         <div className="flex items-center justify-between gap-3">
           <div className="text-xs text-muted-foreground">
             Showing <span className="font-mono text-foreground">{filtered.length}</span> of {statusByMember.size}
@@ -376,7 +401,18 @@ export default function PeopleTab() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-        {filtered.map((m: any) => {
+        {displayItems.map((item: any, idx: number) => {
+          if (item.type === "header") {
+            return (
+              <div key={`h-${item.name}-${idx}`} className="col-span-full flex items-center gap-3 pt-4 first:pt-0">
+                <Home className="h-3.5 w-3.5 text-accent shrink-0" />
+                <span className="font-display font-semibold text-sm text-foreground">{item.name}</span>
+                <span className="font-mono text-[10px] text-muted-foreground">{item.count}</span>
+                <span className="h-px flex-1 bg-border/60" />
+              </div>
+            );
+          }
+          const m: any = item.m;
           const stage = dbStageToRoadmap(m.discipleship_stage);
           const initials = `${m.first_name?.[0] || ""}${m.last_name?.[0] || ""}`;
           const stageDays = m.stage_updated_at
