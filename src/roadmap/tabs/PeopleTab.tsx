@@ -102,6 +102,8 @@ export default function PeopleTab() {
   const [volFilter, setVolFilter] = useState<Set<string>>(new Set());
   const [ageFilter, setAgeFilter] = useState<Set<AgeKey>>(new Set());
   const [genderFilter, setGenderFilter] = useState<Set<GenderKey>>(new Set());
+  const [householdFilter, setHouseholdFilter] = useState<string>("");
+  const [groupByHousehold, setGroupByHousehold] = useState(false);
 
   const toggle = <T,>(set: Set<T>, val: T, setter: (s: Set<T>) => void) => {
     const next = new Set(set);
@@ -149,9 +151,45 @@ export default function PeopleTab() {
         const key: GenderKey = g === "male" ? "male" : g === "female" ? "female" : "other";
         if (!genderFilter.has(key)) return false;
       }
+      if (householdFilter) {
+        if ((m.household_name || "") !== householdFilter) return false;
+      }
       return true;
     });
-  }, [members, q, stageFilter, statusFilter, discFilter, volFilter, ageFilter, genderFilter, statusByMember, ageByMember, discByMember, volunteerByMember]);
+  }, [members, q, stageFilter, statusFilter, discFilter, volFilter, ageFilter, genderFilter, householdFilter, statusByMember, ageByMember, discByMember, volunteerByMember]);
+
+  // All households present among categorized people (for the filter dropdown)
+  const allHouseholds = useMemo(() => {
+    const s = new Set<string>();
+    (members as any[]).forEach((m) => {
+      if (statusByMember.has(m.id) && m.household_name) s.add(m.household_name);
+    });
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [members, statusByMember]);
+
+  // Flat list, or grouped into household sections when "View by household" is on
+  const displayItems = useMemo(() => {
+    if (!groupByHousehold) return (filtered as any[]).map((m) => ({ type: "person" as const, m }));
+    const groups = new Map<string, any[]>();
+    (filtered as any[]).forEach((m) => {
+      const key = m.household_name || "No household";
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(m);
+    });
+    const sorted = Array.from(groups.entries()).sort((a, b) => {
+      if (a[0] === "No household") return 1;
+      if (b[0] === "No household") return -1;
+      return a[0].localeCompare(b[0]);
+    });
+    const items: any[] = [];
+    sorted.forEach(([name, people]) => {
+      items.push({ type: "header" as const, name, count: people.length });
+      people
+        .sort((x, y) => (x.last_name || "").localeCompare(y.last_name || ""))
+        .forEach((m) => items.push({ type: "person" as const, m }));
+    });
+    return items;
+  }, [filtered, groupByHousehold]);
 
   const exportCsv = () => {
     const headers = ["First Name","Last Name","Email","Phone","Gender","Household","Status","Age","Stage","Discipleship","Serving"];
@@ -323,6 +361,31 @@ export default function PeopleTab() {
         )}
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="eyebrow text-[10px] mr-1">Household</span>
+        <select
+          value={householdFilter}
+          onChange={(e) => setHouseholdFilter(e.target.value)}
+          className="rounded-full border border-border bg-card px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:border-accent/40 transition max-w-[260px]"
+        >
+          <option value="">All households ({allHouseholds.length})</option>
+          {allHouseholds.map((h) => (
+            <option key={h} value={h}>{h}</option>
+          ))}
+        </select>
+        <button
+          onClick={() => setGroupByHousehold((v) => !v)}
+          className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ${
+            groupByHousehold ? "border-accent bg-accent/15 text-accent" : "border-border bg-card text-muted-foreground hover:border-accent/40"
+          }`}
+        >
+          View by household
+        </button>
+        {householdFilter && (
+          <button onClick={() => setHouseholdFilter("")} className="text-[10px] text-muted-foreground underline ml-1">clear</button>
+        )}
+      </div>
+
         <div className="flex items-center justify-between gap-3">
           <div className="text-xs text-muted-foreground">
             Showing <span className="font-mono text-foreground">{filtered.length}</span> of {statusByMember.size}
@@ -338,7 +401,18 @@ export default function PeopleTab() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-        {filtered.map((m: any) => {
+        {displayItems.map((item: any, idx: number) => {
+          if (item.type === "header") {
+            return (
+              <div key={`h-${item.name}-${idx}`} className="col-span-full flex items-center gap-3 pt-4 first:pt-0">
+                <Home className="h-3.5 w-3.5 text-accent shrink-0" />
+                <span className="font-display font-semibold text-sm text-foreground">{item.name}</span>
+                <span className="font-mono text-[10px] text-muted-foreground">{item.count}</span>
+                <span className="h-px flex-1 bg-border/60" />
+              </div>
+            );
+          }
+          const m: any = item.m;
           const stage = dbStageToRoadmap(m.discipleship_stage);
           const initials = `${m.first_name?.[0] || ""}${m.last_name?.[0] || ""}`;
           const stageDays = m.stage_updated_at
