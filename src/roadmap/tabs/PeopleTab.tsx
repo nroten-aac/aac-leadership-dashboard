@@ -102,6 +102,8 @@ export default function PeopleTab() {
   const [volFilter, setVolFilter] = useState<Set<string>>(new Set());
   const [ageFilter, setAgeFilter] = useState<Set<AgeKey>>(new Set());
   const [genderFilter, setGenderFilter] = useState<Set<GenderKey>>(new Set());
+  const [householdFilter, setHouseholdFilter] = useState<string>("");
+  const [groupByHousehold, setGroupByHousehold] = useState(false);
 
   const toggle = <T,>(set: Set<T>, val: T, setter: (s: Set<T>) => void) => {
     const next = new Set(set);
@@ -149,9 +151,45 @@ export default function PeopleTab() {
         const key: GenderKey = g === "male" ? "male" : g === "female" ? "female" : "other";
         if (!genderFilter.has(key)) return false;
       }
+      if (householdFilter) {
+        if ((m.household_name || "") !== householdFilter) return false;
+      }
       return true;
     });
-  }, [members, q, stageFilter, statusFilter, discFilter, volFilter, ageFilter, genderFilter, statusByMember, ageByMember, discByMember, volunteerByMember]);
+  }, [members, q, stageFilter, statusFilter, discFilter, volFilter, ageFilter, genderFilter, householdFilter, statusByMember, ageByMember, discByMember, volunteerByMember]);
+
+  // All households present among categorized people (for the filter dropdown)
+  const allHouseholds = useMemo(() => {
+    const s = new Set<string>();
+    (members as any[]).forEach((m) => {
+      if (statusByMember.has(m.id) && m.household_name) s.add(m.household_name);
+    });
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [members, statusByMember]);
+
+  // Flat list, or grouped into household sections when "View by household" is on
+  const displayItems = useMemo(() => {
+    if (!groupByHousehold) return (filtered as any[]).map((m) => ({ type: "person" as const, m }));
+    const groups = new Map<string, any[]>();
+    (filtered as any[]).forEach((m) => {
+      const key = m.household_name || "No household";
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(m);
+    });
+    const sorted = Array.from(groups.entries()).sort((a, b) => {
+      if (a[0] === "No household") return 1;
+      if (b[0] === "No household") return -1;
+      return a[0].localeCompare(b[0]);
+    });
+    const items: any[] = [];
+    sorted.forEach(([name, people]) => {
+      items.push({ type: "header" as const, name, count: people.length });
+      people
+        .sort((x, y) => (x.last_name || "").localeCompare(y.last_name || ""))
+        .forEach((m) => items.push({ type: "person" as const, m }));
+    });
+    return items;
+  }, [filtered, groupByHousehold]);
 
   const exportCsv = () => {
     const headers = ["First Name","Last Name","Email","Phone","Gender","Household","Status","Age","Stage","Discipleship","Serving"];
