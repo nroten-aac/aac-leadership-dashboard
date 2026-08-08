@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import VisionBanner from "../components/VisionBanner";
 import StatBlock from "../components/StatBlock";
 import PersonDrawer from "../components/PersonDrawer";
+import PathwayGaps from "../components/PathwayGaps";
 import { useActionCompletions, useAllActions, useActivityEvents, useMembers, dbStageToRoadmap, useMemberStatuses } from "../hooks/useRoadmapData";
 import { LAWS } from "../seed";
 import { STAGE_NAMES, type Stage } from "../types";
