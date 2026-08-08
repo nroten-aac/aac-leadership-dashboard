@@ -7,6 +7,11 @@ const STATUS_OPTIONS: { key: MemberStatus; label: string; color: string }[] = [
   { key: "visitor", label: "Visitors", color: "hsl(38 92% 60%)" },
 ];
 
+const AUDIENCE_OPTIONS: { key: Audience; label: string; color: string }[] = [
+  { key: "adults", label: "Adults", color: "hsl(var(--stage-minister))" },
+  { key: "children", label: "Children", color: "hsl(var(--stage-mature))" },
+];
+
 const displayName = (m: any) => `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim() || "Unnamed";
 
 const rhythmsOf = (m: any): string[] => (Array.isArray(m.rhythms) ? m.rhythms : []);
@@ -17,8 +22,12 @@ interface Props {
   statusByMember: Map<string, MemberStatus>;
   discByMember: Map<string, Set<string>>;
   volunteerByMember: Map<string, Set<string>>;
+  isChildByMember?: Map<string, boolean>;
   onSelectPerson?: (m: any) => void;
 }
+
+type Audience = "adults" | "children";
+
 
 export default function PathwayGaps({
   members,
