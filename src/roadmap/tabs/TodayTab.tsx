@@ -1,10 +1,16 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import VisionBanner from "../components/VisionBanner";
 import StatBlock from "../components/StatBlock";
-import { useActionCompletions, useAllActions, useActivityEvents, useMembers, dbStageToRoadmap } from "../hooks/useRoadmapData";
+import PersonDrawer from "../components/PersonDrawer";
+import { useActionCompletions, useAllActions, useActivityEvents, useMembers, dbStageToRoadmap, useMemberStatuses } from "../hooks/useRoadmapData";
 import { LAWS } from "../seed";
 import { STAGE_NAMES, type Stage } from "../types";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Pencil, MessageSquare } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 const SCRIPTURES = [
   { ref: "Matthew 28:19–20", text: "Therefore, go and make disciples of all nations, baptizing them … and teaching them to obey everything I have commanded you." },
