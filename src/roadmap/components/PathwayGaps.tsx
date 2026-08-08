@@ -7,6 +7,11 @@ const STATUS_OPTIONS: { key: MemberStatus; label: string; color: string }[] = [
   { key: "visitor", label: "Visitors", color: "hsl(38 92% 60%)" },
 ];
 
+const AUDIENCE_OPTIONS: { key: Audience; label: string; color: string }[] = [
+  { key: "adults", label: "Adults", color: "hsl(var(--stage-minister))" },
+  { key: "children", label: "Children", color: "hsl(var(--stage-mature))" },
+];
+
 const displayName = (m: any) => `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim() || "Unnamed";
 
 const rhythmsOf = (m: any): string[] => (Array.isArray(m.rhythms) ? m.rhythms : []);
@@ -17,25 +22,35 @@ interface Props {
   statusByMember: Map<string, MemberStatus>;
   discByMember: Map<string, Set<string>>;
   volunteerByMember: Map<string, Set<string>>;
+  isChildByMember?: Map<string, boolean>;
   onSelectPerson?: (m: any) => void;
 }
+
+type Audience = "adults" | "children";
+
 
 export default function PathwayGaps({
   members,
   statusByMember,
   discByMember,
   volunteerByMember,
+  isChildByMember,
   onSelectPerson,
 }: Props) {
   // Defaults to Members only — the group leadership reviews most often.
   const [statuses, setStatuses] = useState<Set<MemberStatus>>(() => new Set<MemberStatus>(["member"]));
+  // Default both adults and children so nothing is hidden at first glance.
+  const [audiences, setAudiences] = useState<Set<Audience>>(() => new Set<Audience>(["adults", "children"]));
 
   const scoped = useMemo(
     () => members.filter((m) => {
       const s = statusByMember.get(m.id);
-      return !!s && statuses.has(s);
+      if (!s || !statuses.has(s)) return false;
+      const isChild = !!isChildByMember?.get(m.id);
+      const audience = isChild ? "children" : "adults";
+      return audiences.has(audience);
     }),
-    [members, statusByMember, statuses]
+    [members, statusByMember, statuses, audiences, isChildByMember]
   );
 
   const buckets = useMemo(() => {
@@ -88,6 +103,14 @@ export default function PathwayGaps({
       return next.size ? next : prev;
     });
 
+  const toggleAudience = (key: Audience) =>
+    setAudiences((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next.size ? next : prev;
+    });
+
+
   return (
     <section>
       <div className="eyebrow mb-3">— Review our people</div>
@@ -112,6 +135,23 @@ export default function PathwayGaps({
               style={on ? { background: s.color, color: "hsl(var(--background))" } : { color: s.color }}
             >
               {s.label}
+            </button>
+          );
+        })}
+        <div className="mx-2 h-4 w-px bg-border/60" />
+        <span className="eyebrow text-[10px] mr-1">Age</span>
+        {AUDIENCE_OPTIONS.map((a) => {
+          const on = audiences.has(a.key);
+          return (
+            <button
+              key={a.key}
+              onClick={() => toggleAudience(a.key)}
+              className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ${
+                on ? "border-transparent" : "border-border bg-background/40 text-muted-foreground hover:text-foreground"
+              }`}
+              style={on ? { background: a.color, color: "hsl(var(--background))" } : { color: a.color }}
+            >
+              {a.label}
             </button>
           );
         })}
