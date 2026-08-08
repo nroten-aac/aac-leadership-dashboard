@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import VisionBanner from "../components/VisionBanner";
 import StatBlock from "../components/StatBlock";
 import PersonDrawer from "../components/PersonDrawer";
+import PathwayGaps from "../components/PathwayGaps";
 import { useActionCompletions, useAllActions, useActivityEvents, useMembers, dbStageToRoadmap, useMemberStatuses } from "../hooks/useRoadmapData";
 import { LAWS } from "../seed";
 import { STAGE_NAMES, type Stage } from "../types";
@@ -62,14 +63,18 @@ export default function TodayTab() {
     },
   });
 
-  const { discByMember, volunteerByMember } = useMemo(() => {
+  const { discByMember, volunteerByMember, isChildByMember } = useMemo(() => {
     const disc = new Map<string, Set<string>>();
     const vol = new Map<string, Set<string>>();
+    const isChild = new Map<string, boolean>();
     (groups as any[]).forEach((g) => {
       if (g.group_type === "volunteer") {
         const set = vol.get(g.member_id) ?? new Set<string>();
         set.add(g.group_name);
         vol.set(g.member_id, set);
+      }
+      if (g.group_name?.toLowerCase().includes("children")) {
+        isChild.set(g.member_id, true);
       }
       const def = DISCIPLESHIP_DEFS.find((d) => d.match(g.group_name));
       if (def) {
@@ -78,7 +83,7 @@ export default function TodayTab() {
         disc.set(g.member_id, set);
       }
     });
-    return { discByMember: disc, volunteerByMember: vol };
+    return { discByMember: disc, volunteerByMember: vol, isChildByMember: isChild };
   }, [groups]);
 
   const liveSelected = useMemo(
@@ -293,6 +298,15 @@ export default function TodayTab() {
         volTeams={liveSelected ? Array.from(volunteerByMember.get(liveSelected.id) || []) : []}
         discLabel={(k) => DISCIPLESHIP_DEFS.find((d) => d.key === k)?.label ?? k}
         status={liveSelected && statusByMember ? statusByMember.get(liveSelected.id) ?? null : null}
+      />
+
+      <PathwayGaps
+        members={members}
+        statusByMember={statusByMember ?? new Map()}
+        discByMember={discByMember}
+        volunteerByMember={volunteerByMember}
+        isChildByMember={isChildByMember}
+        onSelectPerson={setSelectedPerson}
       />
 
       {/* Scripture footer */}
