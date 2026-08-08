@@ -138,6 +138,23 @@ export default function PathwayGaps({
             </button>
           );
         })}
+        <div className="mx-2 h-4 w-px bg-border/60" />
+        <span className="eyebrow text-[10px] mr-1">Age</span>
+        {AUDIENCE_OPTIONS.map((a) => {
+          const on = audiences.has(a.key);
+          return (
+            <button
+              key={a.key}
+              onClick={() => toggleAudience(a.key)}
+              className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ${
+                on ? "border-transparent" : "border-border bg-background/40 text-muted-foreground hover:text-foreground"
+              }`}
+              style={on ? { background: a.color, color: "hsl(var(--background))" } : { color: a.color }}
+            >
+              {a.label}
+            </button>
+          );
+        })}
         <span className="ml-auto font-mono text-[10px] text-muted-foreground">{scoped.length} people in view</span>
       </div>
 
