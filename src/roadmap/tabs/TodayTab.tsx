@@ -63,14 +63,18 @@ export default function TodayTab() {
     },
   });
 
-  const { discByMember, volunteerByMember } = useMemo(() => {
+  const { discByMember, volunteerByMember, isChildByMember } = useMemo(() => {
     const disc = new Map<string, Set<string>>();
     const vol = new Map<string, Set<string>>();
+    const isChild = new Map<string, boolean>();
     (groups as any[]).forEach((g) => {
       if (g.group_type === "volunteer") {
         const set = vol.get(g.member_id) ?? new Set<string>();
         set.add(g.group_name);
         vol.set(g.member_id, set);
+      }
+      if (g.group_name?.toLowerCase().includes("children")) {
+        isChild.set(g.member_id, true);
       }
       const def = DISCIPLESHIP_DEFS.find((d) => d.match(g.group_name));
       if (def) {
@@ -79,7 +83,7 @@ export default function TodayTab() {
         disc.set(g.member_id, set);
       }
     });
-    return { discByMember: disc, volunteerByMember: vol };
+    return { discByMember: disc, volunteerByMember: vol, isChildByMember: isChild };
   }, [groups]);
 
   const liveSelected = useMemo(
