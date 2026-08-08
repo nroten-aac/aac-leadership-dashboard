@@ -42,10 +42,49 @@ const DISCIPLESHIP_DEFS = [
 ] as const;
 
 export default function TodayTab() {
+  const qc = useQueryClient();
   const { data: members = [] } = useMembers();
   const { data: events = [] } = useActivityEvents(20);
+  const { data: statusByMember } = useMemberStatuses();
   const { completions, toggle } = useActionCompletions();
   const allActions = useAllActions();
+  const [selectedPerson, setSelectedPerson] = useState<any | null>(null);
+  const [quickNote, setQuickNote] = useState<Record<string, string>>({});
+
+  const { data: groups = [] } = useQuery({
+    queryKey: ["member_groups", "all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("member_groups")
+        .select("member_id, group_name, group_type");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { discByMember, volunteerByMember } = useMemo(() => {
+    const disc = new Map<string, Set<string>>();
+    const vol = new Map<string, Set<string>>();
+    (groups as any[]).forEach((g) => {
+      if (g.group_type === "volunteer") {
+        const set = vol.get(g.member_id) ?? new Set<string>();
+        set.add(g.group_name);
+        vol.set(g.member_id, set);
+      }
+      const def = DISCIPLESHIP_DEFS.find((d) => d.match(g.group_name));
+      if (def) {
+        const set = disc.get(g.member_id) ?? new Set<string>();
+        set.add(def.key);
+        disc.set(g.member_id, set);
+      }
+    });
+    return { discByMember: disc, volunteerByMember: vol };
+  }, [groups]);
+
+  const liveSelected = useMemo(
+    () => (selectedPerson ? (members as any[]).find((m) => m.id === selectedPerson.id) ?? selectedPerson : null),
+    [selectedPerson, members]
+  );
 
   const phase1 = allActions.filter((a) => a.phase === 1);
   const phase1Done = phase1.filter((a) => completions[a.id]).length;
@@ -57,6 +96,27 @@ export default function TodayTab() {
   }, [members]);
 
   const stageMoves7d = events.filter((e) => e.type === "stage-move" && Date.now() - e.ts < 7 * 86400000).length;
+
+  // Quick note + mark contacted from the follow-up list
+  const logQuickNote = useMutation({
+    mutationFn: async ({ memberId, note }: { memberId: string; note: string }) => {
+      const now = new Date().toISOString();
+      const { error: noteError } = await supabase
+        .from("pastoral_notes" as any)
+        .upsert({ member_id: memberId, note, updated_at: now } as any, { onConflict: "member_id" } as any);
+      if (noteError) throw noteError;
+      const { error: memberError } = await supabase
+        .from("members")
+        .update({ stage_updated_at: now })
+        .eq("id", memberId);
+      if (memberError) throw memberError;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["roadmap", "members"] });
+      toast({ title: "Follow-up logged" });
+    },
+    onError: (e: any) => toast({ title: "Could not log follow-up", description: e?.message ?? String(e), variant: "destructive" }),
+  });
 
   // Follow-ups: members not touched in 14 days (using stage_updated_at as a proxy)
   const followUps = useMemo(() => {
