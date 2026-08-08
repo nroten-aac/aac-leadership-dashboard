@@ -34,17 +34,23 @@ export default function PathwayGaps({
   statusByMember,
   discByMember,
   volunteerByMember,
+  isChildByMember,
   onSelectPerson,
 }: Props) {
   // Defaults to Members only — the group leadership reviews most often.
   const [statuses, setStatuses] = useState<Set<MemberStatus>>(() => new Set<MemberStatus>(["member"]));
+  // Default both adults and children so nothing is hidden at first glance.
+  const [audiences, setAudiences] = useState<Set<Audience>>(() => new Set<Audience>(["adults", "children"]));
 
   const scoped = useMemo(
     () => members.filter((m) => {
       const s = statusByMember.get(m.id);
-      return !!s && statuses.has(s);
+      if (!s || !statuses.has(s)) return false;
+      const isChild = !!isChildByMember?.get(m.id);
+      const audience = isChild ? "children" : "adults";
+      return audiences.has(audience);
     }),
-    [members, statusByMember, statuses]
+    [members, statusByMember, statuses, audiences, isChildByMember]
   );
 
   const buckets = useMemo(() => {
@@ -96,6 +102,14 @@ export default function PathwayGaps({
       next.has(key) ? next.delete(key) : next.add(key);
       return next.size ? next : prev;
     });
+
+  const toggleAudience = (key: Audience) =>
+    setAudiences((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next.size ? next : prev;
+    });
+
 
   return (
     <section>
