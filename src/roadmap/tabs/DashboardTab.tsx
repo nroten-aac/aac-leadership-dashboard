@@ -6,6 +6,7 @@ import StatBlock from "../components/StatBlock";
 import EngagementMatrix from "../components/EngagementMatrix";
 import StageDetailDialog from "../components/StageDetailDialog";
 import BelongingBucketDialog, { type BelongingBucket } from "../components/BelongingBucketDialog";
+import PathwayGaps from "../components/PathwayGaps";
 import PersonDrawer from "../components/PersonDrawer";
 import {
   useMembers,
@@ -158,7 +159,7 @@ export default function DashboardTab() {
         <div className="eyebrow mb-3">— Snapshot · {month}</div>
         <h1 className="font-display text-5xl md:text-6xl font-black leading-[1.05] text-foreground max-w-4xl">
           A church <em className="font-serif-italic gradient-gold-text font-semibold not-italic-mark">on the pathway</em><br />
-          from Connecting to Multiplying.
+          from Believing to Multiplying.
         </h1>
         <p className="text-muted-foreground mt-6 max-w-2xl">
           Every disciple at Ashe Alliance is somewhere on this pathway to becoming a fully formed disciple. The point isn't where they are today — it's whether they're moving.
@@ -202,7 +203,7 @@ export default function DashboardTab() {
           Five stages, <em className="font-serif-italic gradient-gold-text font-semibold not-italic-mark">one direction.</em>
         </h2>
         <p className="text-muted-foreground mb-8 max-w-3xl">
-          The pipeline isn't a funnel — it's a pathway to becoming a fully formed disciple. Connecting → Belonging → Maturing → Ministering → Multiplying. Track movement, not attendance.
+          The pipeline isn't a funnel — it's a pathway to becoming a fully formed disciple. Believing → Belonging → Maturing → Ministering → Multiplying. Track movement, not attendance.
         </p>
         <TheRoad
           counts={counts}
@@ -219,6 +220,14 @@ export default function DashboardTab() {
       <section>
         <EngagementMatrix onSelectPerson={setSelectedPerson} onStageClick={setOpenStage} />
       </section>
+
+      <PathwayGaps
+        members={scopedMembers}
+        statusByMember={statusByMember ?? new Map()}
+        discByMember={discByMember}
+        volunteerByMember={volunteerByMember}
+        onSelectPerson={setSelectedPerson}
+      />
 
       <StageDetailDialog
         stage={openStage}
