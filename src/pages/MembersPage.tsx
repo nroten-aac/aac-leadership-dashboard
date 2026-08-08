@@ -227,7 +227,7 @@ const STAGES: Array<{
 }> = [
   {
     key: "connecting",
-    label: "Connecting",
+    label: "Believing",
     description: "In orbit — attending but not yet committed to Christ",
     color: "hsl(215, 16%, 47%)",
     bg: "bg-slate-100",
