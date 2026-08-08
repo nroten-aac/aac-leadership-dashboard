@@ -300,6 +300,15 @@ export default function TodayTab() {
         status={liveSelected && statusByMember ? statusByMember.get(liveSelected.id) ?? null : null}
       />
 
+      <PathwayGaps
+        members={members}
+        statusByMember={statusByMember ?? new Map()}
+        discByMember={discByMember}
+        volunteerByMember={volunteerByMember}
+        isChildByMember={isChildByMember}
+        onSelectPerson={setSelectedPerson}
+      />
+
       {/* Scripture footer */}
       <footer className="text-center py-12 border-t border-border/40">
         <p className="font-serif-italic text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">"{verse.text}"</p>
