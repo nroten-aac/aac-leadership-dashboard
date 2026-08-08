@@ -21,7 +21,7 @@ export type PhaseN = 1 | 2 | 3 | 4;
 export const STAGE_ORDER: Stage[] = ['connect', 'belong', 'mature', 'minister', 'multiply'];
 
 export const STAGE_NAMES: Record<Stage, string> = {
-  connect:  'Connecting',
+  connect:  'Believing',
   belong:   'Belonging',
   mature:   'Maturing',
   minister: 'Ministering',

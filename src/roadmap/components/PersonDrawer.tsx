@@ -13,7 +13,7 @@ type Phase = "connecting" | "belonging" | "rhythms";
 type Rhythm = "maturing" | "ministering" | "multiplying";
 
 const PHASE_LABEL: Record<Phase, string> = {
-  connecting: "Connecting",
+  connecting: "Believing",
   belonging: "Belonging",
   rhythms: "Rhythms",
 };
