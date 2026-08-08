@@ -286,6 +286,15 @@ export default function TodayTab() {
         </div>
       </section>
 
+      <PersonDrawer
+        member={liveSelected}
+        onOpenChange={(open) => !open && setSelectedPerson(null)}
+        discKeys={liveSelected ? Array.from(discByMember.get(liveSelected.id) || []) : []}
+        volTeams={liveSelected ? Array.from(volunteerByMember.get(liveSelected.id) || []) : []}
+        discLabel={(k) => DISCIPLESHIP_DEFS.find((d) => d.key === k)?.label ?? k}
+        status={liveSelected && statusByMember ? statusByMember.get(liveSelected.id) ?? null : null}
+      />
+
       {/* Scripture footer */}
       <footer className="text-center py-12 border-t border-border/40">
         <p className="font-serif-italic text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">"{verse.text}"</p>
