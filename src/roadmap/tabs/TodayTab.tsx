@@ -34,6 +34,13 @@ const SOURCE_STYLE: Record<string, string> = {
 };
 const SOURCE_LABEL: Record<string, string> = { chip: "CHIP · TEACHING", jim: "JIM · COACHING", impl: "IMPLEMENTATION" };
 
+const DISCIPLESHIP_DEFS = [
+  { key: "LG", label: "Life Groups", match: (g: string) => g === "Life Groups" },
+  { key: "BS", label: "Bible Studies", match: (g: string) => g.toLowerCase().includes("bible") },
+  { key: "PT", label: "PT Mentorship", match: (g: string) => g === "PT Mentorship" },
+  { key: "DG", label: "Discipleship Groups", match: (g: string) => g === "Discipleship Groups" },
+] as const;
+
 export default function TodayTab() {
   const { data: members = [] } = useMembers();
   const { data: events = [] } = useActivityEvents(20);
