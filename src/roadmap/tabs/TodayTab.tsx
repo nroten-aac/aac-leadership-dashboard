@@ -193,24 +193,67 @@ export default function TodayTab() {
           <div className="eyebrow mb-3">— Reach out</div>
           <h3 className="font-display text-3xl font-bold mb-2">People needing <em className="font-serif-italic gradient-gold-text font-semibold not-italic-mark">follow-up</em></h3>
           <p className="text-sm text-muted-foreground mb-6">No pastoral note or stage update in the last 14 days.</p>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {followUps.length === 0 && <p className="text-sm text-muted-foreground italic">Everyone has been touched recently. 🙌</p>}
             {followUps.map((m: any) => {
               const initials = `${m.first_name?.[0] || ""}${m.last_name?.[0] || ""}`;
               const stage = dbStageToRoadmap(m.discipleship_stage);
+              const isExpanded = !!quickNote[m.id] || quickNote[m.id] === "";
               return (
-                <div key={m.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-card p-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/30 font-mono text-xs font-bold text-secondary">{initials}</div>
-                  <div className="flex-1">
-                    <div className="font-display font-semibold text-sm">{m.first_name} {m.last_name}</div>
-                    <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
-                      Last touched {timeAgo(new Date(m.stage_updated_at).getTime())}
-                    </div>
+                <div key={m.id} className="rounded-xl border border-border/60 bg-card p-3 group">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSelectedPerson(m)}
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary/30 font-mono text-xs font-bold text-secondary transition hover:scale-105"
+                    >
+                      {initials}
+                    </button>
+                    <button
+                      onClick={() => setSelectedPerson(m)}
+                      className="flex-1 text-left transition"
+                    >
+                      <div className="font-display font-semibold text-sm group-hover:text-accent">{m.first_name} {m.last_name}</div>
+                      <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
+                        Last touched {timeAgo(new Date(m.stage_updated_at).getTime())}
+                      </div>
+                    </button>
+                    <span className={`rounded-full border px-2 py-0.5 font-mono text-[10px] tracking-wider`}
+                      style={{ color: `hsl(var(--stage-${stage}))`, borderColor: `hsl(var(--stage-${stage}) / 0.4)` }}>
+                      {STAGE_NAMES[stage].toUpperCase()}
+                    </span>
+                    <button
+                      onClick={() => setQuickNote((prev) => ({ ...prev, [m.id]: prev[m.id] ?? "" }))}
+                      className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-background/50 px-2 py-1 font-mono text-[10px] tracking-wider text-muted-foreground transition hover:border-accent/60 hover:text-accent"
+                      title="Quick note"
+                    >
+                      <Pencil className="h-3 w-3" /> Note
+                    </button>
                   </div>
-                  <span className={`rounded-full border px-2 py-0.5 font-mono text-[10px] tracking-wider`}
-                    style={{ color: `hsl(var(--stage-${stage}))`, borderColor: `hsl(var(--stage-${stage}) / 0.4)` }}>
-                    {STAGE_NAMES[stage].toUpperCase()}
-                  </span>
+                  {isExpanded && (
+                    <div className="mt-3 space-y-2 pl-12">
+                      <Textarea
+                        value={quickNote[m.id] ?? ""}
+                        onChange={(e) => setQuickNote((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                        placeholder="What happened? (e.g., called, texted, prayed...)"
+                        className="min-h-[60px] text-sm"
+                      />
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setQuickNote((prev) => { const next = { ...prev }; delete next[m.id]; return next; })}
+                          className="rounded-lg px-3 py-1.5 font-mono text-[10px] text-muted-foreground hover:text-foreground"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => logQuickNote.mutate({ memberId: m.id, note: quickNote[m.id] ?? "" })}
+                          disabled={logQuickNote.isPending || !(quickNote[m.id] ?? "").trim()}
+                          className="inline-flex items-center gap-1 rounded-lg bg-accent px-3 py-1.5 font-mono text-[10px] font-bold text-accent-foreground transition hover:scale-[1.02] disabled:opacity-50"
+                        >
+                          <MessageSquare className="h-3 w-3" /> Log follow-up
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
