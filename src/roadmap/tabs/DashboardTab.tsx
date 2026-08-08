@@ -221,17 +221,18 @@ export default function DashboardTab() {
         />
       </section>
 
-      <section>
-        <EngagementMatrix onSelectPerson={setSelectedPerson} onStageClick={setOpenStage} />
-      </section>
-
       <PathwayGaps
         members={scopedMembers}
         statusByMember={statusByMember ?? new Map()}
         discByMember={discByMember}
         volunteerByMember={volunteerByMember}
+        isChildByMember={isChildByMember}
         onSelectPerson={setSelectedPerson}
       />
+
+      <section>
+        <EngagementMatrix onSelectPerson={setSelectedPerson} onStageClick={setOpenStage} />
+      </section>
 
       <StageDetailDialog
         stage={openStage}
