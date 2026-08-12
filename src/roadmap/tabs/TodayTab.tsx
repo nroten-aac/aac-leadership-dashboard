@@ -155,9 +155,10 @@ export default function TodayTab() {
       <VisionBanner />
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
         <StatBlock value={`${phase1Done} / ${phase1.length}`} label="Phase 1 done · this week" />
         <StatBlock value={followUps.length} label="People overdue follow-up" />
+        <StatBlock value={stageMoves7d} label="Stage moves · last 7 days" gold={stageMoves7d > 0} />
         <StatBlock value={openSteps} label="Open action steps" gold={openSteps > 0} />
         <StatBlock value={stageCounts.multiply} label="Multiplying disciples" gold />
       </div>
