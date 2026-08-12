@@ -297,6 +297,8 @@ export default function TodayTab() {
         </div>
       </section>
 
+      <ActionStepsBoard members={members as any[]} onSelectPerson={setSelectedPerson} />
+
       <PersonDrawer
         member={liveSelected}
         onOpenChange={(open) => !open && setSelectedPerson(null)}
