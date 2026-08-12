@@ -5,6 +5,7 @@ import VisionBanner from "../components/VisionBanner";
 import StatBlock from "../components/StatBlock";
 import PersonDrawer from "../components/PersonDrawer";
 import PathwayGaps from "../components/PathwayGaps";
+import ActionStepsBoard, { useActionSteps } from "../components/ActionStepsBoard";
 import { useActionCompletions, useAllActions, useActivityEvents, useMembers, dbStageToRoadmap, useMemberStatuses } from "../hooks/useRoadmapData";
 import { LAWS } from "../seed";
 import { STAGE_NAMES, type Stage } from "../types";
@@ -48,6 +49,7 @@ export default function TodayTab() {
   const { data: events = [] } = useActivityEvents(20);
   const { data: statusByMember } = useMemberStatuses();
   const { completions, toggle } = useActionCompletions();
+  const { data: actionSteps = [] } = useActionSteps();
   const allActions = useAllActions();
   const [selectedPerson, setSelectedPerson] = useState<any | null>(null);
   const [quickNote, setQuickNote] = useState<Record<string, string>>({});
@@ -107,8 +109,8 @@ export default function TodayTab() {
     mutationFn: async ({ memberId, note }: { memberId: string; note: string }) => {
       const now = new Date().toISOString();
       const { error: noteError } = await supabase
-        .from("pastoral_notes" as any)
-        .upsert({ member_id: memberId, note, updated_at: now } as any, { onConflict: "member_id" } as any);
+        .from("pastoral_note_entries" as any)
+        .insert({ member_id: memberId, note } as any);
       if (noteError) throw noteError;
       const { error: memberError } = await supabase
         .from("members")
@@ -118,6 +120,7 @@ export default function TodayTab() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["roadmap", "members"] });
+      qc.invalidateQueries({ queryKey: ["pastoral_note_entries"] });
       toast({ title: "Follow-up logged" });
     },
     onError: (e: any) => toast({ title: "Could not log follow-up", description: e?.message ?? String(e), variant: "destructive" }),
@@ -132,6 +135,8 @@ export default function TodayTab() {
   }, [members]);
 
   const recentMoves = events.filter((e) => e.type === "stage-move").slice(0, 6);
+
+  const openSteps = (actionSteps as any[]).filter((s) => s.status !== "done").length;
 
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }).toUpperCase();
@@ -150,10 +155,11 @@ export default function TodayTab() {
       <VisionBanner />
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
         <StatBlock value={`${phase1Done} / ${phase1.length}`} label="Phase 1 done · this week" />
         <StatBlock value={followUps.length} label="People overdue follow-up" />
         <StatBlock value={stageMoves7d} label="Stage moves · last 7 days" gold={stageMoves7d > 0} />
+        <StatBlock value={openSteps} label="Open action steps" gold={openSteps > 0} />
         <StatBlock value={stageCounts.multiply} label="Multiplying disciples" gold />
       </div>
 
@@ -290,6 +296,8 @@ export default function TodayTab() {
           </div>
         </div>
       </section>
+
+      <ActionStepsBoard members={members as any[]} onSelectPerson={setSelectedPerson} />
 
       <PersonDrawer
         member={liveSelected}

@@ -450,6 +450,53 @@ export type Database = {
         }
         Relationships: []
       }
+      member_action_steps: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          details: string | null
+          due_date: string | null
+          id: string
+          member_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          due_date?: string | null
+          id?: string
+          member_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          due_date?: string | null
+          id?: string
+          member_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_action_steps_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_groups: {
         Row: {
           created_at: string
@@ -586,6 +633,41 @@ export type Database = {
           year?: number
         }
         Relationships: []
+      }
+      pastoral_note_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          member_id: string
+          note: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          member_id: string
+          note: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          member_id?: string
+          note?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pastoral_note_entries_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pastoral_notes: {
         Row: {
