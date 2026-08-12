@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone, Home, ArrowRight, ArrowLeft, Check, Pencil, Trash2, X, Sparkles } from "lucide-react";
+import { Mail, Phone, Home, ArrowRight, ArrowLeft, Check, Pencil, Trash2, X, Sparkles, Plus, Square, CheckSquare } from "lucide-react";
 import { STAGE_NAMES, STAGE_ORDER, STAGE_DESC, type Stage } from "../types";
 import { dbStageToRoadmap } from "../hooks/useRoadmapData";
 import { formatDistanceToNow } from "date-fns";
@@ -54,34 +54,105 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
     ? Math.floor((Date.now() - new Date(member.stage_updated_at).getTime()) / 86400000)
     : null;
 
-  // Pastoral note
-  const { data: noteRow } = useQuery({
-    queryKey: ["pastoral_note", member?.id],
+  // Pastoral notes (chronological log — each save is a new entry)
+  const { data: noteEntries = [] } = useQuery({
+    queryKey: ["pastoral_note_entries", member?.id],
     queryFn: async () => {
-      if (!member?.id) return null;
-      const { data } = await supabase.from("pastoral_notes" as any).select("note").eq("member_id", member.id).maybeSingle();
-      return data as any;
+      if (!member?.id) return [];
+      const { data } = await supabase
+        .from("pastoral_note_entries" as any)
+        .select("id, note, created_at")
+        .eq("member_id", member.id)
+        .order("created_at", { ascending: false });
+      return (data as any[]) || [];
     },
     enabled: !!member?.id,
   });
   const [note, setNote] = useState("");
-  useEffect(() => { setNote((noteRow as any)?.note ?? ""); }, [noteRow, member?.id]);
+  useEffect(() => { setNote(""); }, [member?.id]);
 
   const saveNote = useMutation({
     mutationFn: async (value: string) => {
+      const now = new Date().toISOString();
       const { error } = await supabase
-        .from("pastoral_notes" as any)
-        .upsert(
-          { member_id: member.id, note: value, updated_at: new Date().toISOString() } as any,
-          { onConflict: "member_id" } as any
-        );
+        .from("pastoral_note_entries" as any)
+        .insert({ member_id: member.id, note: value } as any);
       if (error) throw error;
+      await supabase.from("members").update({ stage_updated_at: now }).eq("id", member.id);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["pastoral_note", member?.id] });
-      toast({ title: "Pastoral note saved" });
+      setNote("");
+      qc.invalidateQueries({ queryKey: ["pastoral_note_entries", member?.id] });
+      qc.invalidateQueries({ queryKey: ["roadmap", "members"] });
+      toast({ title: "Pastoral note added" });
     },
     onError: (e: any) => toast({ title: "Could not save note", description: e?.message ?? String(e), variant: "destructive" }),
+  });
+
+  const deleteNote = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("pastoral_note_entries" as any).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pastoral_note_entries", member?.id] }),
+  });
+
+  // Action steps
+  const { data: steps = [] } = useQuery({
+    queryKey: ["member_action_steps", member?.id],
+    queryFn: async () => {
+      if (!member?.id) return [];
+      const { data } = await supabase
+        .from("member_action_steps" as any)
+        .select("id, title, due_date, status, completed_at, created_at")
+        .eq("member_id", member.id)
+        .order("status", { ascending: true })
+        .order("due_date", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: false });
+      return (data as any[]) || [];
+    },
+    enabled: !!member?.id,
+  });
+  const [stepTitle, setStepTitle] = useState("");
+  const [stepDue, setStepDue] = useState("");
+  useEffect(() => { setStepTitle(""); setStepDue(""); }, [member?.id]);
+
+  const invalidateSteps = () => {
+    qc.invalidateQueries({ queryKey: ["member_action_steps", member?.id] });
+    qc.invalidateQueries({ queryKey: ["action_steps", "all"] });
+  };
+
+  const addStep = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("member_action_steps" as any).insert({
+        member_id: member.id,
+        title: stepTitle.trim(),
+        due_date: stepDue || null,
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => { setStepTitle(""); setStepDue(""); invalidateSteps(); toast({ title: "Action step added" }); },
+    onError: (e: any) => toast({ title: "Could not add action step", description: e?.message ?? String(e), variant: "destructive" }),
+  });
+
+  const toggleStep = useMutation({
+    mutationFn: async (s: any) => {
+      const done = s.status === "done";
+      const { error } = await supabase.from("member_action_steps" as any)
+        .update({ status: done ? "open" : "done", completed_at: done ? null : new Date().toISOString() } as any)
+        .eq("id", s.id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateSteps,
+    onError: (e: any) => toast({ title: "Could not update step", description: e?.message ?? String(e), variant: "destructive" }),
+  });
+
+  const deleteStep = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("member_action_steps" as any).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateSteps,
   });
 
   // Stage history
@@ -375,23 +446,104 @@ export default function PersonDrawer({ member, onOpenChange, discKeys, volTeams,
           )}
         </div>
 
-        {/* Pastoral note */}
+        {/* Action steps */}
+        <div className="p-6 border-b border-border/60">
+          <div className="eyebrow mb-3">Action steps</div>
+          <div className="flex flex-col gap-2 mb-3">
+            <input
+              value={stepTitle}
+              onChange={(e) => setStepTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && stepTitle.trim()) addStep.mutate(); }}
+              placeholder="Next step — e.g. Invite to Life Group"
+              className="w-full rounded-lg border border-border bg-background/40 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
+            />
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={stepDue}
+                onChange={(e) => setStepDue(e.target.value)}
+                className="rounded-lg border border-border bg-background/40 px-2 py-1.5 font-mono text-[11px] text-foreground"
+              />
+              <button
+                onClick={() => stepTitle.trim() && addStep.mutate()}
+                disabled={addStep.isPending || !stepTitle.trim()}
+                className="ml-auto inline-flex items-center gap-1 rounded-lg bg-accent px-3 py-1.5 font-mono text-[10px] font-bold text-accent-foreground disabled:opacity-50"
+              >
+                <Plus className="h-3 w-3" /> ADD STEP
+              </button>
+            </div>
+          </div>
+          {steps.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic">No action steps yet.</p>
+          ) : (
+            <div className="space-y-1.5">
+              {steps.map((s: any) => {
+                const done = s.status === "done";
+                const overdue = !done && s.due_date && new Date(s.due_date) < new Date(new Date().toDateString());
+                return (
+                  <div key={s.id} className={`group flex items-start gap-2 rounded-lg border border-border/60 bg-background/40 px-3 py-2 ${done ? "opacity-50" : ""}`}>
+                    <button onClick={() => toggleStep.mutate(s)} className="mt-0.5 text-accent">
+                      {done ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-muted-foreground" />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-sm ${done ? "line-through" : ""}`}>{s.title}</div>
+                      {s.due_date && (
+                        <div className={`font-mono text-[10px] uppercase tracking-wider ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
+                          due {new Date(s.due_date + "T12:00:00").toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => deleteStep.mutate(s.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded text-destructive hover:bg-destructive/20 transition"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Pastoral notes log */}
         <div className="p-6 border-b border-border/60">
           <div className="flex items-center justify-between mb-2">
-            <div className="eyebrow">Pastoral note</div>
+            <div className="eyebrow">Pastoral notes</div>
             <button
-              onClick={() => saveNote.mutate(note)}
+              onClick={() => note.trim() && saveNote.mutate(note)}
               className="font-mono text-[10px] text-accent hover:underline"
             >
-              {saveNote.isPending ? "saving…" : "save"}
+              {saveNote.isPending ? "saving…" : "add note"}
             </button>
           </div>
           <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="What prompted this update? Conversations, milestones, prayer requests…"
-            className="min-h-[100px] bg-background/40 border-border resize-none font-serif-italic text-sm"
+            className="min-h-[90px] bg-background/40 border-border resize-none font-serif-italic text-sm"
           />
+          {noteEntries.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <div className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">History · {noteEntries.length}</div>
+              {noteEntries.map((n: any) => (
+                <div key={n.id} className="group rounded-lg border border-border/60 bg-background/40 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-serif-italic text-sm whitespace-pre-wrap flex-1">{n.note}</p>
+                    <button
+                      onClick={() => deleteNote.mutate(n.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded text-destructive hover:bg-destructive/20 transition"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] text-muted-foreground">
+                    {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })} · {new Date(n.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Contact */}
