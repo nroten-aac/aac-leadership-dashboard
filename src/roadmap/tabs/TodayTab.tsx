@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import VisionBanner from "../components/VisionBanner";
 import StatBlock from "../components/StatBlock";
@@ -53,6 +54,22 @@ export default function TodayTab() {
   const allActions = useAllActions();
   const [selectedPerson, setSelectedPerson] = useState<any | null>(null);
   const [quickNote, setQuickNote] = useState<Record<string, string>>({});
+  const { user } = useAuth();
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+  const displayName = profile?.display_name?.split(" ")[0] || user?.email?.split("@")[0] || "there";
 
   const { data: groups = [] } = useQuery({
     queryKey: ["member_groups", "all"],
@@ -148,7 +165,7 @@ export default function TodayTab() {
       <section>
         <div className="eyebrow mb-3">{dateStr}</div>
         <h1 className="font-display text-6xl md:text-7xl font-black leading-[1.05] text-foreground">
-          Good <em className="font-serif-italic gradient-gold-text font-semibold not-italic-mark">{greeting()}</em>, Pastor.
+          Good <em className="font-serif-italic gradient-gold-text font-semibold not-italic-mark">{greeting()}</em>, {displayName}.
         </h1>
       </section>
 
