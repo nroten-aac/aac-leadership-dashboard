@@ -20,3 +20,7 @@ verify_jwt = false
 
 [functions.drive-audio]
 verify_jwt = false
+
+[functions.fetch-pco-list-counts]
+verify_jwt = false
+
