@@ -165,7 +165,7 @@ export default function TodayTab() {
       <section>
         <div className="eyebrow mb-3">{dateStr}</div>
         <h1 className="font-display text-6xl md:text-7xl font-black leading-[1.05] text-foreground">
-          Good <em className="font-serif-italic gradient-gold-text font-semibold not-italic-mark">{greeting()}</em>, Pastor.
+          Good <em className="font-serif-italic gradient-gold-text font-semibold not-italic-mark">{greeting()}</em>, {displayName}.
         </h1>
       </section>
 
